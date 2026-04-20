@@ -122,11 +122,11 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
         <div className="space-y-3 border-t border-sidebar-border p-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-sm font-semibold">
-              MJ
+              {initials}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-medium">Marcus Joseph</div>
-              <div className="truncate text-xs text-muted-foreground">Coalpot Restaurant</div>
+              <div className="truncate text-sm font-medium">{contactName}</div>
+              <div className="truncate text-xs text-muted-foreground">{businessName}</div>
             </div>
             <button
               type="button"

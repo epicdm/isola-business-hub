@@ -15,7 +15,10 @@ import {
   LogOut,
 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { clearProfile, getInitials, readProfile } from "@/lib/profile";
+import { accountDefaults } from "@/lib/mock-data";
 import logoEpic from "@/assets/logo-epic.png";
 
 const sections = [

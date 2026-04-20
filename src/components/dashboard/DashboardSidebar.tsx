@@ -61,10 +61,21 @@ const sections = [
 export default function DashboardSidebar({ currentPath = "/dashboard" }: { currentPath?: string }) {
   const navigate = useNavigate();
 
+  const [profile, setProfile] = useState<{ contactName?: string; businessName?: string }>({});
+
+  useEffect(() => {
+    setProfile(readProfile());
+  }, []);
+
+  const contactName = profile.contactName?.trim() || accountDefaults.ownerName;
+  const businessName = profile.businessName?.trim() || accountDefaults.businessName;
+  const initials = getInitials(contactName);
+
   const handleSignOut = () => {
     if (typeof window !== "undefined") {
       window.localStorage.removeItem("mockLoggedIn");
     }
+    clearProfile();
     toast.success("Signed out");
     navigate({ to: "/" });
   };

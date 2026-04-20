@@ -129,3 +129,126 @@ export const emaInitialMessages = [
 export const emaQuickActions = ["Today's digest", "How's this week?", "Launch campaign", "Show escalations"];
 
 export type Channel = "whatsapp" | "voice" | "instagram" | "messenger";
+
+// ---------- Inbox ----------
+
+export const conversations = [
+  {
+    id: "c1",
+    channel: "whatsapp" as Channel,
+    customer: "Aaliyah George",
+    preview: "Perfect, see you Friday at 7!",
+    time: "2m ago",
+    unread: 0,
+    status: "ai" as const,
+    messages: [
+      { id: 1, from: "customer" as const, text: "Hi! Do you have a table for 4 on Friday at 7pm?", time: "7:42 PM" },
+      { id: 2, from: "ai" as const, text: "Hi Aaliyah! 🌴 Yes, we have a table for 4 available at 7:00 PM Friday. Any dietary preferences I should note?", time: "7:42 PM" },
+      { id: 3, from: "customer" as const, text: "One of us is vegetarian. Also, do you do birthday cakes?", time: "7:43 PM" },
+      { id: 4, from: "ai" as const, text: "Noted — 1 vegetarian. We don't bake cakes in-house, but we'll happily plate any cake you bring (no fee). Want me to lock in the reservation?", time: "7:43 PM" },
+      { id: 5, from: "customer" as const, text: "Yes please, under Aaliyah George.", time: "7:44 PM" },
+      { id: 6, from: "ai" as const, text: "Booked ✓ Table for 4, Friday 7:00 PM, under Aaliyah George. We'll send a reminder Friday morning. See you then!", time: "7:44 PM" },
+      { id: 7, from: "customer" as const, text: "Perfect, see you Friday at 7!", time: "7:45 PM" },
+    ],
+  },
+  {
+    id: "c2",
+    channel: "whatsapp" as Channel,
+    customer: "Kareem L.",
+    preview: "Can you do a private dinner for 12?",
+    time: "44m ago",
+    unread: 2,
+    status: "escalated" as const,
+    messages: [
+      { id: 1, from: "customer" as const, text: "Hi, I'd like to host a private dinner for 12 people next Saturday. Is that something you do?", time: "6:58 PM" },
+      { id: 2, from: "ai" as const, text: "Hi Kareem! Private dinners are something the chef arranges personally. Let me flag this for Marcus and he'll be in touch shortly with options and pricing.", time: "6:58 PM" },
+      { id: 3, from: "customer" as const, text: "Can you do a private dinner for 12?", time: "7:01 PM" },
+    ],
+  },
+  {
+    id: "c3",
+    channel: "instagram" as Channel,
+    customer: "@island_eats_dom",
+    preview: "Loved the snapper last night!",
+    time: "14m ago",
+    unread: 0,
+    status: "ai" as const,
+    messages: [
+      { id: 1, from: "customer" as const, text: "Loved the snapper last night! 🐟", time: "8:12 PM" },
+      { id: 2, from: "ai" as const, text: "So glad you enjoyed it 🌊 Tag us next time and we'll feature your photo on our story!", time: "8:12 PM" },
+    ],
+  },
+  {
+    id: "c4",
+    channel: "voice" as Channel,
+    customer: "Marcus Phillip",
+    preview: "Voice transcript: asked about hours",
+    time: "8m ago",
+    unread: 0,
+    status: "ai" as const,
+    messages: [
+      { id: 1, from: "customer" as const, text: "[Voice] Hello, what time you all close tonight?", time: "8:32 PM" },
+      { id: 2, from: "ai" as const, text: "[Voice] Good evening! We're open until 10:30 PM tonight, last seating at 9:45. Would you like to reserve a table?", time: "8:32 PM" },
+      { id: 3, from: "customer" as const, text: "[Voice] No that's fine, just walking in. Thanks!", time: "8:32 PM" },
+    ],
+  },
+  {
+    id: "c5",
+    channel: "messenger" as Channel,
+    customer: "Tania B.",
+    preview: "Where are you located exactly?",
+    time: "31m ago",
+    unread: 0,
+    status: "ai" as const,
+    messages: [
+      { id: 1, from: "customer" as const, text: "Where are you located exactly?", time: "8:08 PM" },
+      { id: 2, from: "ai" as const, text: "We're at 23 Castle St, Roseau — right by the bay. Here's a Google Maps link: maps.google.com/coalpot 🗺️", time: "8:08 PM" },
+    ],
+  },
+  {
+    id: "c6",
+    channel: "whatsapp" as Channel,
+    customer: "Cherise Joseph",
+    preview: "Confirmed for tomorrow at 6:30",
+    time: "22m ago",
+    unread: 0,
+    status: "ai" as const,
+    messages: [
+      { id: 1, from: "ai" as const, text: "Hi Cherise — friendly reminder for your reservation tomorrow at 6:30 PM, table for 2. Reply YES to confirm or RESCHEDULE if needed.", time: "8:17 PM" },
+      { id: 2, from: "customer" as const, text: "YES", time: "8:17 PM" },
+      { id: 3, from: "ai" as const, text: "Confirmed for tomorrow at 6:30 ✓ See you then!", time: "8:17 PM" },
+    ],
+  },
+];
+
+// ---------- Bookings ----------
+
+export const bookings = [
+  { id: "b1", guest: "Aaliyah George", party: 4, date: "2026-04-24", time: "7:00 PM", channel: "whatsapp" as Channel, status: "confirmed" as const, notes: "1 vegetarian" },
+  { id: "b2", guest: "Cherise Joseph", party: 2, date: "2026-04-21", time: "6:30 PM", channel: "whatsapp" as Channel, status: "confirmed" as const, notes: "" },
+  { id: "b3", guest: "Joelle M.", party: 3, date: "2026-04-22", time: "8:00 PM", channel: "whatsapp" as Channel, status: "cancelled" as const, notes: "Cancelled — rebooking next week" },
+  { id: "b4", guest: "Solange P.", party: 6, date: "2026-04-25", time: "7:30 PM", channel: "whatsapp" as Channel, status: "confirmed" as const, notes: "Birthday — bringing cake" },
+  { id: "b5", guest: "Devon R.", party: 2, date: "2026-04-23", time: "8:15 PM", channel: "instagram" as Channel, status: "pending" as const, notes: "Awaiting deposit" },
+  { id: "b6", guest: "Mireille A.", party: 5, date: "2026-04-26", time: "1:00 PM", channel: "messenger" as Channel, status: "confirmed" as const, notes: "Sunday brunch" },
+  { id: "b7", guest: "Kareem L.", party: 12, date: "2026-04-27", time: "7:00 PM", channel: "whatsapp" as Channel, status: "pending" as const, notes: "Private dinner — needs chef approval" },
+  { id: "b8", guest: "Tania B.", party: 2, date: "2026-04-21", time: "8:30 PM", channel: "messenger" as Channel, status: "confirmed" as const, notes: "" },
+  { id: "b9", guest: "Wesley F.", party: 4, date: "2026-04-24", time: "6:00 PM", channel: "voice" as Channel, status: "confirmed" as const, notes: "Window table requested" },
+  { id: "b10", guest: "Antoinette R.", party: 8, date: "2026-04-28", time: "7:00 PM", channel: "whatsapp" as Channel, status: "confirmed" as const, notes: "Anniversary" },
+];
+
+export type BookingStatus = "confirmed" | "pending" | "cancelled";
+
+// ---------- Contacts ----------
+
+export const contacts = [
+  { id: "p1", name: "Aaliyah George", phone: "+1 767 245 1182", channel: "whatsapp" as Channel, visits: 7, lastSeen: "2m ago", spend: 1240, tags: ["regular", "vegetarian"], notes: "Loves the snapper. Always books Fridays." },
+  { id: "p2", name: "Cherise Joseph", phone: "+1 767 614 9920", channel: "whatsapp" as Channel, visits: 12, lastSeen: "22m ago", spend: 2180, tags: ["vip", "regular"], notes: "Anniversary in November. Husband is gluten-free." },
+  { id: "p3", name: "Kareem L.", phone: "+1 767 555 0143", channel: "whatsapp" as Channel, visits: 2, lastSeen: "44m ago", spend: 480, tags: ["new"], notes: "Inquired about private dinners. Big spender potential." },
+  { id: "p4", name: "Solange P.", phone: "+1 758 488 7011", channel: "whatsapp" as Channel, visits: 4, lastSeen: "1h ago", spend: 920, tags: ["regular"], notes: "Tour group operator — repeat referrer." },
+  { id: "p5", name: "Joelle M.", phone: "+1 767 220 4488", channel: "whatsapp" as Channel, visits: 3, lastSeen: "2h ago", spend: 360, tags: [], notes: "" },
+  { id: "p6", name: "Devon R.", phone: "@devonr", channel: "instagram" as Channel, visits: 1, lastSeen: "3h ago", spend: 0, tags: ["new"], notes: "Found us via IG." },
+  { id: "p7", name: "Mireille A.", phone: "+1 758 311 6622", channel: "messenger" as Channel, visits: 5, lastSeen: "5h ago", spend: 740, tags: ["regular"], notes: "Sunday brunch regular." },
+  { id: "p8", name: "Wesley F.", phone: "+1 767 488 0011", channel: "voice" as Channel, visits: 9, lastSeen: "1d ago", spend: 1620, tags: ["regular", "vip"], notes: "Requests window table. Tips well." },
+  { id: "p9", name: "Antoinette R.", phone: "+1 767 622 9087", channel: "whatsapp" as Channel, visits: 14, lastSeen: "2d ago", spend: 3150, tags: ["vip"], notes: "Hosts annual anniversary dinner — table of 8." },
+  { id: "p10", name: "Tania B.", phone: "@taniab", channel: "messenger" as Channel, visits: 1, lastSeen: "31m ago", spend: 0, tags: ["new"], notes: "Walked in after asking for directions." },
+];

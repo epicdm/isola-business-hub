@@ -182,7 +182,7 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
         if (hasMeaningfulDraft) {
           toast("Resumed your draft", {
             description: "We restored your previous answers.",
-            duration: 10000,
+            duration: 3000,
           });
         }
       }

@@ -439,8 +439,30 @@ export default function InboxPage() {
     });
   };
 
+  const labelById = useMemo(
+    () => Object.fromEntries(labelLibrary.map((l) => [l.id, l])) as Record<string, LabelDef>,
+    [labelLibrary],
+  );
+
+  const getMeta = (id: string): ConversationMeta =>
+    convMeta[id] ?? { status: "open", labels: [], hoursSinceLastInbound: 0.5 };
+
+  const snoozedCount = useMemo(
+    () => conversations.filter((c) => getMeta(c.id).status === "snoozed").length,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [convMeta],
+  );
+
   const filtered = conversations.filter((c) => {
+    const m = getMeta(c.id);
+    if (statusTab === "snoozed") {
+      if (m.status !== "snoozed") return false;
+    } else if (m.status === "snoozed") {
+      return false;
+    }
     if (activeTab !== "all" && c.channel !== activeTab) return false;
+    if (statusFilter !== "all" && m.status !== statusFilter) return false;
+    if (labelFilter !== "all" && !m.labels.includes(labelFilter)) return false;
     if (search && !c.customer.toLowerCase().includes(search.toLowerCase())) return false;
     if (contactFilter && c.customer !== contactFilter) return false;
     return true;
@@ -448,8 +470,41 @@ export default function InboxPage() {
 
   const active = conversations.find((c) => c.id === activeId) ?? conversations[0];
   const ActiveChannelIcon = channelMeta[active.channel].icon;
+  const activeMeta = getMeta(active.id);
   const isAi = aiHandled[active.id];
   const composerDisabled = isAi || !draft.trim();
+  const isStale24h = activeMeta.hoursSinceLastInbound > 24;
+
+  const updateMeta = (id: string, patch: Partial<ConversationMeta>) => {
+    setConvMeta((prev) => ({
+      ...prev,
+      [id]: { ...getMeta(id), ...patch },
+    }));
+    void patchConversation(id, patch);
+  };
+
+  const setStatusFor = (id: string, status: ConversationStatus, snoozeUntil?: string) => {
+    updateMeta(id, { status, snoozeUntil: status === "snoozed" ? snoozeUntil : undefined });
+    toast.success(
+      status === "snoozed" && snoozeUntil
+        ? `Snoozed until ${format(new Date(snoozeUntil), "PPp")}`
+        : `Marked as ${statusMeta[status].label}`,
+    );
+  };
+
+  const toggleLabel = (id: string, labelId: string) => {
+    const cur = getMeta(id).labels;
+    const next = cur.includes(labelId) ? cur.filter((l) => l !== labelId) : [...cur, labelId];
+    updateMeta(id, { labels: next });
+  };
+
+  const snoozePresets = useMemo(
+    () => [
+      { key: "tomorrow", label: "Tomorrow 9am", date: (() => { const d = addDays(new Date(), 1); d.setHours(9, 0, 0, 0); return d; })() },
+      { key: "nextweek", label: "Next week", date: (() => { const d = addDays(new Date(), 7); d.setHours(9, 0, 0, 0); return d; })() },
+    ],
+    [],
+  );
 
   // Contact details for the drawer (look up by name; fall back to a synthetic record)
   const matchedContact = contacts.find((c) => c.name === active.customer);

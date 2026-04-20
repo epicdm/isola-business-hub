@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Calendar, List, Phone, PhoneCall, Instagram, MessageCircle, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, List, Phone, PhoneCall, Instagram, MessageCircle, Plus, ChevronLeft, ChevronRight, X, MessageSquare } from "lucide-react";
 import DashboardLayout from "../layout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { bookings, type Channel, type BookingStatus } from "@/lib/mock-data";
 
 const channelIcon: Record<Channel, typeof Phone> = {
@@ -37,11 +44,15 @@ function formatDate(iso: string) {
 export default function BookingsPage() {
   const [view, setView] = useState<"list" | "calendar">("list");
   const [statusFilter, setStatusFilter] = useState<"all" | BookingStatus>("all");
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const filtered = useMemo(
     () => (statusFilter === "all" ? bookings : bookings.filter((b) => b.status === statusFilter)),
     [statusFilter]
   );
+
+  const activeBooking = bookings.find((b) => b.id === openId);
+  const ActiveChannelIcon = activeBooking ? channelIcon[activeBooking.channel] : Phone;
 
   // Build a calendar week view (next 7 days from a fixed reference for SSR stability)
   const referenceDate = "2026-04-21";

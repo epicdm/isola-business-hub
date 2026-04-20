@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import {
@@ -142,11 +142,38 @@ interface OnboardingPageProps {
   setStep: (n: number) => void;
 }
 
+const STORAGE_KEY = "ema:onboarding:draft";
+
 export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
   const navigate = useNavigate();
   const [data, setData] = useState<OnboardingData>(defaultData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const hydrated = useRef(false);
+
+  // Hydrate from localStorage after mount (SSR-safe)
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<OnboardingData>;
+        setData((d) => ({ ...d, ...parsed }));
+      }
+    } catch {
+      // ignore corrupt draft
+    }
+    hydrated.current = true;
+  }, []);
+
+  // Autosave whenever data changes (after hydration)
+  useEffect(() => {
+    if (!hydrated.current) return;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch {
+      // ignore quota errors
+    }
+  }, [data]);
 
   const current = useMemo(
     () => STEPS.find((s) => s.id === step) ?? STEPS[0],
@@ -210,6 +237,7 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
     await new Promise((r) => setTimeout(r, 1100));
     window.localStorage.setItem("mockLoggedIn", "true");
     window.localStorage.setItem("mockOnboarded", "true");
+    window.localStorage.removeItem(STORAGE_KEY);
     toast.success("You're all set! Welcome to Ema 👋");
     setSubmitting(false);
     navigate({ to: "/dashboard" });

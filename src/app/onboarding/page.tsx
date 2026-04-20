@@ -239,6 +239,18 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
     if (step > 1) setStep(step - 1);
   };
 
+  const handleStartOver = () => {
+    try {
+      window.localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+    setData(defaultData);
+    setErrors({});
+    setStep(1);
+    toast.success("Wizard reset — starting fresh");
+  };
+
   const handleFinish = async () => {
     if (!validateCurrent()) {
       toast.error("Please fix the highlighted fields");
@@ -265,12 +277,39 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
             </div>
             <span className="font-semibold">Ema</span>
           </Link>
-          <Link
-            to="/dashboard"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            Skip for now
-          </Link>
+          <div className="flex items-center gap-4">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button
+                  type="button"
+                  className="text-sm text-muted-foreground hover:text-foreground"
+                >
+                  Start over
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Start over?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This clears your saved answers and sends you back to step 1. This
+                    can't be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleStartOver}>
+                    Yes, start over
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <Link
+              to="/dashboard"
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              Skip for now
+            </Link>
+          </div>
         </div>
       </header>
 

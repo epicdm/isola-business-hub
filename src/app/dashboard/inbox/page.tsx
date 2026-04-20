@@ -1924,3 +1924,299 @@ function RichCard({ card, fromCustomer }: { card: MessageCard; fromCustomer: boo
     </Card>
   );
 }
+
+// ---------- Media bubble (Section 4) ----------
+function MediaBubble({
+  media,
+  fromCustomer,
+  caption,
+  messageId,
+  playingAudioId,
+  audioProgress,
+  onPlayAudio,
+  onOpenLightbox,
+}: {
+  media: MessageMedia;
+  fromCustomer: boolean;
+  caption?: string;
+  messageId: string;
+  playingAudioId: string | null;
+  audioProgress: number;
+  onPlayAudio: (id: string, dur: number) => void;
+  onOpenLightbox: (url: string, alt: string, caption?: string) => void;
+}) {
+  const corner = fromCustomer ? "rounded-tl-sm" : "rounded-tr-sm";
+
+  if (media.kind === "image") {
+    return (
+      <div>
+        <button
+          onClick={() => onOpenLightbox(media.url, media.alt, media.caption ?? caption)}
+          className={`group block overflow-hidden rounded-2xl ${corner} border border-border/40 bg-card transition-transform hover:scale-[1.01]`}
+        >
+          <img
+            src={media.url}
+            alt={media.alt}
+            className="block h-auto w-full max-w-[300px] object-cover"
+            loading="lazy"
+          />
+        </button>
+        {(media.caption || caption) && (
+          <div className="mt-1 max-w-[300px] text-xs text-muted-foreground">
+            {media.caption ?? caption}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (media.kind === "audio") {
+    const playing = playingAudioId === messageId;
+    const progress = playing ? audioProgress : 0;
+    return (
+      <Card className={`flex items-center gap-3 rounded-2xl ${corner} border-border/60 bg-card px-3 py-2`}>
+        <button
+          onClick={() => onPlayAudio(messageId, media.duration)}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-300 transition-colors hover:bg-emerald-500/25"
+          aria-label={playing ? "Pause" : "Play"}
+        >
+          {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+        </button>
+        <div className="flex h-8 flex-1 items-center gap-[2px]">
+          {media.waveform.map((h, i) => {
+            const filled = i / media.waveform.length <= progress;
+            return (
+              <span
+                key={i}
+                className={`w-[3px] rounded-full transition-colors ${filled ? "bg-emerald-400" : "bg-muted-foreground/40"}`}
+                style={{ height: `${Math.max(15, h * 100)}%` }}
+              />
+            );
+          })}
+        </div>
+        <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+          {Math.floor(media.duration / 60)}:{String(Math.floor(media.duration % 60)).padStart(2, "0")}
+        </span>
+      </Card>
+    );
+  }
+
+  if (media.kind === "document") {
+    const Icon = media.ext === "pdf" ? FileText : FileArchive;
+    const display =
+      media.filename.length > 30
+        ? media.filename.slice(0, 14) + "…" + media.filename.slice(-12)
+        : media.filename;
+    const sizeLabel = media.sizeKb >= 1024 ? `${(media.sizeKb / 1024).toFixed(1)} MB` : `${media.sizeKb} KB`;
+    return (
+      <Card className={`flex items-center gap-3 rounded-2xl ${corner} border-border/60 bg-card px-3 py-2.5 transition-colors hover:bg-accent/30`}>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-medium">{display}</div>
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+            {media.ext} · {sizeLabel}
+          </div>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 shrink-0 px-2 text-xs"
+          onClick={() => toast.success(`Downloading ${media.filename}`)}
+        >
+          <Download className="h-3.5 w-3.5" /> Download
+        </Button>
+      </Card>
+    );
+  }
+
+  // location
+  const mapsUrl = `https://www.google.com/maps?q=${media.lat},${media.lng}`;
+  return (
+    <Card className={`overflow-hidden rounded-2xl ${corner} border-border/60 bg-card p-0`}>
+      <div className="relative flex h-[160px] w-[300px] items-center justify-center bg-gradient-to-br from-emerald-500/20 via-primary/15 to-violet/20">
+        <div
+          className="absolute inset-0 opacity-40"
+          style={{
+            backgroundImage:
+              "linear-gradient(0deg, transparent 24%, rgba(255,255,255,.08) 25%, rgba(255,255,255,.08) 26%, transparent 27%, transparent 74%, rgba(255,255,255,.08) 75%, rgba(255,255,255,.08) 76%, transparent 77%), linear-gradient(90deg, transparent 24%, rgba(255,255,255,.08) 25%, rgba(255,255,255,.08) 26%, transparent 27%, transparent 74%, rgba(255,255,255,.08) 75%, rgba(255,255,255,.08) 76%, transparent 77%)",
+            backgroundSize: "40px 40px",
+          }}
+        />
+        <div className="relative text-5xl drop-shadow">📍</div>
+      </div>
+      <div className="space-y-1 p-3">
+        <div className="text-sm font-semibold">{media.address}</div>
+        <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+        >
+          <MapPin className="h-3 w-3" /> Open in Maps →
+        </a>
+      </div>
+    </Card>
+  );
+}
+
+// ---------- Template composer (Section 2) ----------
+const templateCategoryColor: Record<string, string> = {
+  Marketing: "border-fuchsia-400/40 bg-fuchsia-500/10 text-fuchsia-300",
+  Utility: "border-emerald-400/40 bg-emerald-500/10 text-emerald-300",
+  Authentication: "border-sky-400/40 bg-sky-500/10 text-sky-300",
+};
+
+function humanizeVarName(name: string): string {
+  return name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function TemplateComposer({
+  templates,
+  search,
+  onSearch,
+  activeTemplateId,
+  onPickTemplate,
+  values,
+  onChangeValues,
+  onCancel,
+  onSend,
+}: {
+  templates: MessageTemplate[];
+  search: string;
+  onSearch: (s: string) => void;
+  activeTemplateId: string | null;
+  onPickTemplate: (id: string) => void;
+  values: Record<number, string>;
+  onChangeValues: (v: Record<number, string>) => void;
+  onCancel: () => void;
+  onSend: (tpl: MessageTemplate, rendered: string) => void;
+}) {
+  const [category, setCategory] = useState<"All" | "Marketing" | "Utility" | "Authentication">("All");
+  const active = templates.find((t) => t.id === activeTemplateId) ?? null;
+
+  if (active) {
+    const rendered = renderTemplate(active.body, values);
+    const allFilled = active.variables.every((_, i) => (values[i + 1] ?? "").trim().length > 0);
+    return (
+      <div className="space-y-3 rounded-xl border border-emerald-400/30 bg-emerald-500/5 p-3">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="text-sm font-semibold">{active.name}</div>
+              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${templateCategoryColor[active.category]}`}>
+                {active.category}
+              </span>
+            </div>
+            <div className="mt-0.5 text-[11px] text-muted-foreground">
+              {active.variables.length} variable{active.variables.length !== 1 ? "s" : ""} · {active.language.toUpperCase()}
+            </div>
+          </div>
+          <Button variant="ghost" size="sm" className="h-7" onClick={onCancel}>
+            <X className="h-3.5 w-3.5" /> Cancel
+          </Button>
+        </div>
+
+        {active.variables.length > 0 && (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {active.variables.map((vname, i) => {
+              const idx = i + 1;
+              return (
+                <div key={idx} className="space-y-1">
+                  <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {humanizeVarName(vname)}
+                  </Label>
+                  <Input
+                    value={values[idx] ?? ""}
+                    onChange={(e) => onChangeValues({ ...values, [idx]: e.target.value })}
+                    placeholder={`{{${idx}}}`}
+                    className="h-8 text-sm"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div>
+          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Live preview</div>
+          <div className="rounded-2xl rounded-tr-sm border border-border/40 bg-bubble-out px-4 py-2.5 text-sm text-bubble-out-foreground">
+            {rendered}
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" size="sm" onClick={onCancel}>Back to grid</Button>
+          <Button
+            size="sm"
+            disabled={!allFilled}
+            onClick={() => onSend(active, rendered)}
+            className="bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
+          >
+            <Send className="h-3.5 w-3.5" /> Send template
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const filtered = templates.filter((t) => {
+    if (category !== "All" && t.category !== category) return false;
+    if (search && !`${t.name} ${t.category}`.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  return (
+    <div className="space-y-2">
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(e) => onSearch(e.target.value)}
+          placeholder="Search templates…"
+          className="h-9 pl-9 text-sm"
+        />
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {(["All", "Marketing", "Utility", "Authentication"] as const).map((c) => (
+          <button
+            key={c}
+            onClick={() => setCategory(c)}
+            className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+              category === c
+                ? "border-emerald-400/50 bg-emerald-500/15 text-emerald-300"
+                : "border-border/60 bg-card/40 text-muted-foreground hover:bg-accent"
+            }`}
+          >
+            {c}
+          </button>
+        ))}
+      </div>
+      <div className="grid max-h-[260px] gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+        {filtered.length === 0 && (
+          <div className="col-span-full p-6 text-center text-xs text-muted-foreground">No templates match.</div>
+        )}
+        {filtered.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => onPickTemplate(t.id)}
+            className="group rounded-lg border border-border/60 bg-card/40 p-3 text-left transition-colors hover:border-emerald-400/50 hover:bg-emerald-500/5"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="text-sm font-semibold">{t.name}</div>
+              <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium ${templateCategoryColor[t.category]}`}>
+                {t.category}
+              </span>
+            </div>
+            <p className="mt-1.5 line-clamp-2 text-[11px] text-muted-foreground">{t.body}</p>
+            <div className="mt-2 inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+              <LayoutTemplate className="h-2.5 w-2.5" />
+              {t.variables.length === 0 ? "No variables" : `${t.variables.length} variable${t.variables.length === 1 ? "" : "s"}`}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}

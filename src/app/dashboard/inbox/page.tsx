@@ -32,6 +32,7 @@ import {
   Inbox as InboxIcon,
   Tag,
   FileText,
+  FileArchive,
   ImageIcon,
   Play,
   Pause,
@@ -40,6 +41,7 @@ import {
   ChevronDown,
   Camera,
   LayoutTemplate,
+  Bot,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
@@ -135,6 +137,16 @@ const tabs: Array<{ key: "all" | Channel; label: string }> = [
   { key: "instagram", label: "Instagram" },
   { key: "messenger", label: "Messenger" },
 ];
+
+// Mock — which agent handles which conversation. Read-only pill in header.
+const conversationAgent: Record<string, string> = {
+  c1: "ag-receptionist",
+  c2: "ag-receptionist",
+  c3: "ag-receptionist",
+  c4: "ag-receptionist",
+  c5: "ag-aftersales",
+  c6: "ag-receptionist",
+};
 
 type Qualification = "Lead" | "Customer" | "Blocked" | "Unknown";
 
@@ -316,7 +328,16 @@ export default function InboxPage() {
   const [templateValues, setTemplateValues] = useState<Record<number, string>>({});
 
   // ---- Turn 8 · Feature 3: Media (extras added at runtime) ----
+  // ---- Turn 8 · Feature 3: Media (extras added at runtime) ----
   const [extraMedia, setExtraMedia] = useState<Record<string, ThreadMsg[]>>({});
+
+  // ---- Turn 8 · Section 4: image lightbox ----
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [lightboxAlt, setLightboxAlt] = useState<string>("");
+  const [lightboxCaption, setLightboxCaption] = useState<string | undefined>(undefined);
+  // ---- Turn 8 · Section 4: audio playback simulation (one playing at a time) ----
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [audioProgress, setAudioProgress] = useState(0);
 
   // Persist meta + labels
   useEffect(() => {
@@ -775,6 +796,167 @@ export default function InboxPage() {
               </div>
             </div>
 
+            {/* Conversation meta row — status pill + label chips + assigned agent */}
+            <div className="flex flex-wrap items-center gap-2 border-b border-border/40 bg-card/20 px-6 py-2.5">
+              {/* Status pill + dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-opacity hover:opacity-80 ${statusMeta[activeMeta.status].pill}`}
+                  >
+                    <span className={`h-1.5 w-1.5 rounded-full ${statusMeta[activeMeta.status].dot}`} />
+                    {statusMeta[activeMeta.status].label}
+                    {activeMeta.status === "snoozed" && activeMeta.snoozeUntil && (
+                      <span className="opacity-70">· {format(new Date(activeMeta.snoozeUntil), "MMM d, p")}</span>
+                    )}
+                    <ChevronDown className="h-3 w-3 opacity-70" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-44">
+                  <DropdownMenuItem onClick={() => setStatusFor(active.id, "open")}>
+                    <span className="mr-2 h-1.5 w-1.5 rounded-full bg-emerald-400" /> Open
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFor(active.id, "pending")}>
+                    <span className="mr-2 h-1.5 w-1.5 rounded-full bg-amber-400" /> Pending
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setSnoozePopoverFor(active.id); setSnoozeCustomDate(undefined); }}>
+                    <Clock className="mr-1.5 h-3 w-3 text-violet" /> Snooze until…
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFor(active.id, "resolved")}>
+                    <span className="mr-2 h-1.5 w-1.5 rounded-full bg-slate-400" /> Resolved
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Snooze popover (controlled) */}
+              <Popover open={snoozePopoverFor === active.id} onOpenChange={(o) => !o && setSnoozePopoverFor(null)}>
+                <PopoverTrigger asChild><span className="sr-only">Snooze anchor</span></PopoverTrigger>
+                <PopoverContent className="w-auto p-3" align="start">
+                  <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Snooze until</div>
+                  <div className="flex flex-col gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="justify-start"
+                      onClick={() => {
+                        const d = addDays(new Date(), 1); d.setHours(9, 0, 0, 0);
+                        setStatusFor(active.id, "snoozed", d.toISOString());
+                        setSnoozePopoverFor(null);
+                      }}
+                    >
+                      Tomorrow 9am
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="justify-start"
+                      onClick={() => {
+                        const now = new Date();
+                        const day = now.getDay();
+                        const offset = (8 - day) % 7 || 7;
+                        const d = addDays(now, offset); d.setHours(9, 0, 0, 0);
+                        setStatusFor(active.id, "snoozed", d.toISOString());
+                        setSnoozePopoverFor(null);
+                      }}
+                    >
+                      Monday 9am
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="justify-start"
+                      onClick={() => {
+                        const d = addDays(new Date(), 7); d.setHours(9, 0, 0, 0);
+                        setStatusFor(active.id, "snoozed", d.toISOString());
+                        setSnoozePopoverFor(null);
+                      }}
+                    >
+                      Next week
+                    </Button>
+                  </div>
+                  <div className="mt-3 border-t border-border/40 pt-3">
+                    <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Custom</div>
+                    <Calendar
+                      mode="single"
+                      selected={snoozeCustomDate}
+                      onSelect={(d) => {
+                        setSnoozeCustomDate(d);
+                        if (d) {
+                          const dt = new Date(d); dt.setHours(9, 0, 0, 0);
+                          setStatusFor(active.id, "snoozed", dt.toISOString());
+                          setSnoozePopoverFor(null);
+                        }
+                      }}
+                      disabled={(d) => d < new Date(new Date().setHours(0,0,0,0))}
+                      className="pointer-events-auto rounded-md"
+                    />
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Label chips */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {activeMeta.labels.map((id) => {
+                  const lab = labelById[id];
+                  if (!lab) return null;
+                  const cls = labelColorClasses[lab.color];
+                  return (
+                    <span
+                      key={id}
+                      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${cls.chip}`}
+                    >
+                      {lab.name}
+                      <button
+                        onClick={() => toggleLabel(active.id, id)}
+                        aria-label={`Remove ${lab.name}`}
+                        className="-mr-0.5 rounded-full p-0.5 opacity-70 hover:bg-background/40 hover:opacity-100"
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                    </span>
+                  );
+                })}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="inline-flex items-center gap-1 rounded-full border border-dashed border-border/60 px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-accent">
+                      <Plus className="h-3 w-3" /> Add label
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="max-h-60 w-44 overflow-y-auto">
+                    {labelLibrary
+                      .filter((l) => !activeMeta.labels.includes(l.id))
+                      .map((l) => {
+                        const cls = labelColorClasses[l.color];
+                        return (
+                          <DropdownMenuItem key={l.id} onClick={() => toggleLabel(active.id, l.id)}>
+                            <span className={`mr-2 h-2.5 w-2.5 rounded-full ${cls.dot}`} />
+                            {l.name}
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    {labelLibrary.filter((l) => !activeMeta.labels.includes(l.id)).length === 0 && (
+                      <div className="px-2 py-1.5 text-[11px] text-muted-foreground">All labels applied</div>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              <div className="mx-1 h-4 w-px bg-border/60" />
+
+              {/* Assigned agent pill (read-only) */}
+              {(() => {
+                const aid = conversationAgent[active.id];
+                const ag = agents.find((a) => a.id === aid);
+                if (!ag) return null;
+                return (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/40 px-2.5 py-1 text-[11px] text-muted-foreground">
+                    <Bot className="h-3 w-3 text-primary" />
+                    <span className="font-medium text-foreground">{ag.name}</span>
+                  </span>
+                );
+              })()}
+            </div>
+
             {/* Manual-reply banner */}
             {!isAi && (
               <div className="flex items-center gap-2 border-b border-warning/30 bg-warning/10 px-6 py-2.5 text-xs text-warning">
@@ -791,8 +973,36 @@ export default function InboxPage() {
               </div>
             )}
 
+            {/* 24-hour template-only banner (Section 1) */}
+            {isStale24h && (
+              <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-amber-500/40 bg-amber-500/15 px-6 py-2.5 text-xs text-amber-200 backdrop-blur">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-400" />
+                <span className="flex-1">
+                  <span className="font-semibold">Outside the 24-hour window.</span>{" "}
+                  You can only send approved templates to this contact.
+                </span>
+                <button
+                  onClick={() => setComposerMode("template")}
+                  className="inline-flex items-center gap-1 rounded-md border border-amber-400/50 bg-amber-500/20 px-2.5 py-1 text-[11px] font-semibold text-amber-100 transition-colors hover:bg-amber-500/30"
+                >
+                  <LayoutTemplate className="h-3 w-3" /> Switch to Templates →
+                </button>
+              </div>
+            )}
+
             <div className="flex-1 space-y-4 overflow-y-auto px-6 py-6">
-              {[...(active.messages as ThreadMsg[]), ...(extraWhispers[active.id] ?? [])].map((m) => {
+              {(() => {
+                const baseMsgs = [...(active.messages as ThreadMsg[]), ...(extraWhispers[active.id] ?? [])];
+                const seedMedia = (conversationMedia[active.id] ?? []).map((mm) => ({
+                  id: mm.id,
+                  from: mm.from,
+                  text: mm.text ?? "",
+                  time: mm.time,
+                  media: mm.media,
+                })) as ThreadMsg[];
+                const extras = extraMedia[active.id] ?? [];
+                return [...baseMsgs, ...seedMedia, ...extras];
+              })().map((m) => {
                 if (m.from === "whisper") {
                   return (
                     <div key={m.id} className="w-full">
@@ -822,7 +1032,44 @@ export default function InboxPage() {
                           <Sparkles className="h-2.5 w-2.5 text-primary" /> AI replied
                         </div>
                       )}
-                      {m.card ? (
+                      {(m as ThreadMsg & { templateName?: string }).templateName && (
+                        <div className="mb-1 inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
+                          📋 Template: {(m as ThreadMsg & { templateName?: string }).templateName}
+                        </div>
+                      )}
+                      {m.media ? (
+                        <MediaBubble
+                          media={m.media}
+                          fromCustomer={m.from === "customer"}
+                          caption={m.text}
+                          messageId={String(m.id)}
+                          playingAudioId={playingAudioId}
+                          audioProgress={audioProgress}
+                          onPlayAudio={(id, dur) => {
+                            if (playingAudioId === id) {
+                              setPlayingAudioId(null);
+                              setAudioProgress(0);
+                              return;
+                            }
+                            setPlayingAudioId(id);
+                            setAudioProgress(0);
+                            const start = Date.now();
+                            const tick = () => {
+                              const elapsed = (Date.now() - start) / 1000;
+                              const p = Math.min(1, elapsed / dur);
+                              setAudioProgress(p);
+                              if (p < 1 && playingAudioId !== null) requestAnimationFrame(tick);
+                              else { setPlayingAudioId(null); setAudioProgress(0); }
+                            };
+                            requestAnimationFrame(tick);
+                          }}
+                          onOpenLightbox={(url, alt, caption) => {
+                            setLightboxUrl(url);
+                            setLightboxAlt(alt);
+                            setLightboxCaption(caption);
+                          }}
+                        />
+                      ) : m.card ? (
                         <RichCard card={m.card} fromCustomer={m.from === "customer"} />
                       ) : (
                         <Card
@@ -920,36 +1167,119 @@ export default function InboxPage() {
                 >
                   <StickyNote className="h-3 w-3" /> Whisper
                 </button>
+                <button
+                  type="button"
+                  onClick={() => { setComposerMode("template"); setActiveTemplateId(null); }}
+                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    composerMode === "template"
+                      ? "bg-emerald-500/20 text-emerald-300"
+                      : "text-muted-foreground hover:bg-accent/40"
+                  }`}
+                >
+                  <LayoutTemplate className="h-3 w-3" /> Template
+                </button>
               </div>
 
-              {composerMode === "reply" ? (
+              {composerMode === "reply" && (
                 <>
                   <div className={`flex items-end gap-2 rounded-xl border p-2 transition-colors ${isAi ? "border-border/40 bg-background/40 opacity-60" : "border-border/60 bg-background"}`}>
-                    <Button variant="ghost" size="icon" className="shrink-0" disabled={isAi}>
-                      <Paperclip className="h-4 w-4" />
-                    </Button>
+                    {/* Paperclip attachment menu */}
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className="shrink-0" disabled={isAi}>
+                          <Paperclip className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent align="start" className="w-44 p-1.5">
+                        {([
+                          { key: "photo", icon: Camera, label: "Photo" },
+                          { key: "doc", icon: FileText, label: "Document" },
+                          { key: "loc", icon: MapPin, label: "Location" },
+                        ] as const).map((opt) => {
+                          const Icon = opt.icon;
+                          return (
+                            <button
+                              key={opt.key}
+                              onClick={() => {
+                                const now = "just now";
+                                let media: MessageMedia;
+                                let text = "";
+                                if (opt.key === "photo") {
+                                  media = {
+                                    kind: "image",
+                                    url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=70",
+                                    alt: "Owner photo",
+                                    caption: "Sent from your phone",
+                                    width: 600,
+                                    height: 400,
+                                  };
+                                } else if (opt.key === "doc") {
+                                  media = {
+                                    kind: "document",
+                                    filename: "menu-april-2026.pdf",
+                                    ext: "pdf",
+                                    sizeKb: 312,
+                                  };
+                                  text = "Here's our latest menu";
+                                } else {
+                                  media = {
+                                    kind: "location",
+                                    address: "23 Castle St, Roseau · Coalpot Restaurant",
+                                    lat: 15.301,
+                                    lng: -61.388,
+                                  };
+                                }
+                                const id = `extra-${active.id}-${Date.now()}`;
+                                setExtraMedia((prev) => ({
+                                  ...prev,
+                                  [active.id]: [
+                                    ...(prev[active.id] ?? []),
+                                    { id, from: "owner", text, time: now, media } as ThreadMsg,
+                                  ],
+                                }));
+                                toast.success(`${opt.label} sent`);
+                              }}
+                              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-accent"
+                            >
+                              <Icon className="h-3.5 w-3.5 text-primary" /> {opt.label}
+                            </button>
+                          );
+                        })}
+                      </PopoverContent>
+                    </Popover>
                     <Input
                       value={draft}
                       onChange={(e) => setDraft(e.target.value)}
-                      placeholder={isAi ? "AI is handling this thread — take over to reply" : "Type your reply…"}
+                      placeholder={isAi ? "AI is handling this thread — take over to reply" : isStale24h ? "Outside 24h window — use a template" : "Type your reply…"}
                       disabled={isAi}
                       className="border-0 focus-visible:ring-0 disabled:cursor-not-allowed"
                     />
                     <Button variant="ghost" size="icon" className="shrink-0" disabled={isAi}>
                       <Smile className="h-4 w-4" />
                     </Button>
-                    <Button
-                      size="sm"
-                      className="shrink-0 bg-success text-success-foreground hover:bg-success/90"
-                      disabled={composerDisabled}
-                      onClick={() => {
-                        if (!draft.trim()) return;
-                        toast.success("Message sent");
-                        setDraft("");
-                      }}
-                    >
-                      <Send className="h-3.5 w-3.5" /> Send
-                    </Button>
+                    <TooltipProvider delayDuration={100}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>
+                            <Button
+                              size="sm"
+                              className="shrink-0 bg-success text-success-foreground hover:bg-success/90"
+                              disabled={composerDisabled || isStale24h}
+                              onClick={() => {
+                                if (!draft.trim()) return;
+                                toast.success("Message sent");
+                                setDraft("");
+                              }}
+                            >
+                              <Send className="h-3.5 w-3.5" /> Send
+                            </Button>
+                          </span>
+                        </TooltipTrigger>
+                        {isStale24h && (
+                          <TooltipContent>Templates only — outside 24h window.</TooltipContent>
+                        )}
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                   <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
                     <span className="flex items-center gap-1.5">
@@ -966,7 +1296,9 @@ export default function InboxPage() {
                     <span>Press ⌘⏎ to send</span>
                   </div>
                 </>
-              ) : (
+              )}
+
+              {composerMode === "whisper" && (
                 <>
                   <div className="rounded-xl border border-amber-500/40 bg-amber-950/30 p-2">
                     <div className="flex items-end gap-2">
@@ -1029,10 +1361,68 @@ export default function InboxPage() {
                   </label>
                 </>
               )}
+
+              {composerMode === "template" && (
+                <TemplateComposer
+                  templates={templates}
+                  search={templateSearch}
+                  onSearch={setTemplateSearch}
+                  activeTemplateId={activeTemplateId}
+                  onPickTemplate={(id) => {
+                    setActiveTemplateId(id);
+                    setTemplateValues({});
+                  }}
+                  values={templateValues}
+                  onChangeValues={setTemplateValues}
+                  onCancel={() => { setActiveTemplateId(null); setTemplateValues({}); }}
+                  onSend={(tpl, rendered) => {
+                    const id = `tpl-${active.id}-${Date.now()}`;
+                    setExtraMedia((prev) => ({
+                      ...prev,
+                      [active.id]: [
+                        ...(prev[active.id] ?? []),
+                        { id, from: "owner", text: rendered, time: "just now", templateName: tpl.name } as ThreadMsg & { templateName: string },
+                      ],
+                    }));
+                    setActiveTemplateId(null);
+                    setTemplateValues({});
+                    setComposerMode("reply");
+                    toast.success(`Template "${tpl.name}" sent`);
+                  }}
+                />
+              )}
             </div>
           </section>
         </div>
       </div>
+
+      {/* Image lightbox (Section 4) */}
+      <Dialog open={!!lightboxUrl} onOpenChange={(o) => !o && setLightboxUrl(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-sm">{lightboxAlt}</DialogTitle>
+          </DialogHeader>
+          {lightboxUrl && (
+            <div className="space-y-3">
+              <img src={lightboxUrl} alt={lightboxAlt} className="max-h-[70vh] w-full rounded-md object-contain" />
+              {lightboxCaption && (
+                <p className="text-sm text-muted-foreground">{lightboxCaption}</p>
+              )}
+              <DialogFooter>
+                <a
+                  href={lightboxUrl}
+                  download
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-card/40 px-3 py-1.5 text-xs font-medium hover:bg-accent"
+                >
+                  <Download className="h-3.5 w-3.5" /> Download
+                </a>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Take-over confirm dialog */}
       <AlertDialog open={!!confirmTakeOverFor} onOpenChange={(o) => !o && setConfirmTakeOverFor(null)}>
@@ -1532,5 +1922,301 @@ function RichCard({ card, fromCustomer }: { card: MessageCard; fromCustomer: boo
         </Button>
       </div>
     </Card>
+  );
+}
+
+// ---------- Media bubble (Section 4) ----------
+function MediaBubble({
+  media,
+  fromCustomer,
+  caption,
+  messageId,
+  playingAudioId,
+  audioProgress,
+  onPlayAudio,
+  onOpenLightbox,
+}: {
+  media: MessageMedia;
+  fromCustomer: boolean;
+  caption?: string;
+  messageId: string;
+  playingAudioId: string | null;
+  audioProgress: number;
+  onPlayAudio: (id: string, dur: number) => void;
+  onOpenLightbox: (url: string, alt: string, caption?: string) => void;
+}) {
+  const corner = fromCustomer ? "rounded-tl-sm" : "rounded-tr-sm";
+
+  if (media.kind === "image") {
+    return (
+      <div>
+        <button
+          onClick={() => onOpenLightbox(media.url, media.alt, media.caption ?? caption)}
+          className={`group block overflow-hidden rounded-2xl ${corner} border border-border/40 bg-card transition-transform hover:scale-[1.01]`}
+        >
+          <img
+            src={media.url}
+            alt={media.alt}
+            className="block h-auto w-full max-w-[300px] object-cover"
+            loading="lazy"
+          />
+        </button>
+        {(media.caption || caption) && (
+          <div className="mt-1 max-w-[300px] text-xs text-muted-foreground">
+            {media.caption ?? caption}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (media.kind === "audio") {
+    const playing = playingAudioId === messageId;
+    const progress = playing ? audioProgress : 0;
+    return (
+      <Card className={`flex items-center gap-3 rounded-2xl ${corner} border-border/60 bg-card px-3 py-2`}>
+        <button
+          onClick={() => onPlayAudio(messageId, media.duration)}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-300 transition-colors hover:bg-emerald-500/25"
+          aria-label={playing ? "Pause" : "Play"}
+        >
+          {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+        </button>
+        <div className="flex h-8 flex-1 items-center gap-[2px]">
+          {media.waveform.map((h, i) => {
+            const filled = i / media.waveform.length <= progress;
+            return (
+              <span
+                key={i}
+                className={`w-[3px] rounded-full transition-colors ${filled ? "bg-emerald-400" : "bg-muted-foreground/40"}`}
+                style={{ height: `${Math.max(15, h * 100)}%` }}
+              />
+            );
+          })}
+        </div>
+        <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+          {Math.floor(media.duration / 60)}:{String(Math.floor(media.duration % 60)).padStart(2, "0")}
+        </span>
+      </Card>
+    );
+  }
+
+  if (media.kind === "document") {
+    const Icon = media.ext === "pdf" ? FileText : FileArchive;
+    const display =
+      media.filename.length > 30
+        ? media.filename.slice(0, 14) + "…" + media.filename.slice(-12)
+        : media.filename;
+    const sizeLabel = media.sizeKb >= 1024 ? `${(media.sizeKb / 1024).toFixed(1)} MB` : `${media.sizeKb} KB`;
+    return (
+      <Card className={`flex items-center gap-3 rounded-2xl ${corner} border-border/60 bg-card px-3 py-2.5 transition-colors hover:bg-accent/30`}>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-medium">{display}</div>
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+            {media.ext} · {sizeLabel}
+          </div>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 shrink-0 px-2 text-xs"
+          onClick={() => toast.success(`Downloading ${media.filename}`)}
+        >
+          <Download className="h-3.5 w-3.5" /> Download
+        </Button>
+      </Card>
+    );
+  }
+
+  // location
+  const mapsUrl = `https://www.google.com/maps?q=${media.lat},${media.lng}`;
+  return (
+    <Card className={`overflow-hidden rounded-2xl ${corner} border-border/60 bg-card p-0`}>
+      <div className="relative flex h-[160px] w-[300px] items-center justify-center bg-gradient-to-br from-emerald-500/20 via-primary/15 to-violet/20">
+        <div
+          className="absolute inset-0 opacity-40"
+          style={{
+            backgroundImage:
+              "linear-gradient(0deg, transparent 24%, rgba(255,255,255,.08) 25%, rgba(255,255,255,.08) 26%, transparent 27%, transparent 74%, rgba(255,255,255,.08) 75%, rgba(255,255,255,.08) 76%, transparent 77%), linear-gradient(90deg, transparent 24%, rgba(255,255,255,.08) 25%, rgba(255,255,255,.08) 26%, transparent 27%, transparent 74%, rgba(255,255,255,.08) 75%, rgba(255,255,255,.08) 76%, transparent 77%)",
+            backgroundSize: "40px 40px",
+          }}
+        />
+        <div className="relative text-5xl drop-shadow">📍</div>
+      </div>
+      <div className="space-y-1 p-3">
+        <div className="text-sm font-semibold">{media.address}</div>
+        <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+        >
+          <MapPin className="h-3 w-3" /> Open in Maps →
+        </a>
+      </div>
+    </Card>
+  );
+}
+
+// ---------- Template composer (Section 2) ----------
+const templateCategoryColor: Record<string, string> = {
+  Marketing: "border-fuchsia-400/40 bg-fuchsia-500/10 text-fuchsia-300",
+  Utility: "border-emerald-400/40 bg-emerald-500/10 text-emerald-300",
+  Authentication: "border-sky-400/40 bg-sky-500/10 text-sky-300",
+};
+
+function humanizeVarName(name: string): string {
+  return name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function TemplateComposer({
+  templates,
+  search,
+  onSearch,
+  activeTemplateId,
+  onPickTemplate,
+  values,
+  onChangeValues,
+  onCancel,
+  onSend,
+}: {
+  templates: MessageTemplate[];
+  search: string;
+  onSearch: (s: string) => void;
+  activeTemplateId: string | null;
+  onPickTemplate: (id: string) => void;
+  values: Record<number, string>;
+  onChangeValues: (v: Record<number, string>) => void;
+  onCancel: () => void;
+  onSend: (tpl: MessageTemplate, rendered: string) => void;
+}) {
+  const [category, setCategory] = useState<"All" | "Marketing" | "Utility" | "Authentication">("All");
+  const active = templates.find((t) => t.id === activeTemplateId) ?? null;
+
+  if (active) {
+    const rendered = renderTemplate(active.body, values);
+    const allFilled = active.variables.every((_, i) => (values[i + 1] ?? "").trim().length > 0);
+    return (
+      <div className="space-y-3 rounded-xl border border-emerald-400/30 bg-emerald-500/5 p-3">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="text-sm font-semibold">{active.name}</div>
+              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${templateCategoryColor[active.category]}`}>
+                {active.category}
+              </span>
+            </div>
+            <div className="mt-0.5 text-[11px] text-muted-foreground">
+              {active.variables.length} variable{active.variables.length !== 1 ? "s" : ""} · {active.language.toUpperCase()}
+            </div>
+          </div>
+          <Button variant="ghost" size="sm" className="h-7" onClick={onCancel}>
+            <X className="h-3.5 w-3.5" /> Cancel
+          </Button>
+        </div>
+
+        {active.variables.length > 0 && (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {active.variables.map((vname, i) => {
+              const idx = i + 1;
+              return (
+                <div key={idx} className="space-y-1">
+                  <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {humanizeVarName(vname)}
+                  </Label>
+                  <Input
+                    value={values[idx] ?? ""}
+                    onChange={(e) => onChangeValues({ ...values, [idx]: e.target.value })}
+                    placeholder={`{{${idx}}}`}
+                    className="h-8 text-sm"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div>
+          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Live preview</div>
+          <div className="rounded-2xl rounded-tr-sm border border-border/40 bg-bubble-out px-4 py-2.5 text-sm text-bubble-out-foreground">
+            {rendered}
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" size="sm" onClick={onCancel}>Back to grid</Button>
+          <Button
+            size="sm"
+            disabled={!allFilled}
+            onClick={() => onSend(active, rendered)}
+            className="bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
+          >
+            <Send className="h-3.5 w-3.5" /> Send template
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const filtered = templates.filter((t) => {
+    if (category !== "All" && t.category !== category) return false;
+    if (search && !`${t.name} ${t.category}`.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  return (
+    <div className="space-y-2">
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(e) => onSearch(e.target.value)}
+          placeholder="Search templates…"
+          className="h-9 pl-9 text-sm"
+        />
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {(["All", "Marketing", "Utility", "Authentication"] as const).map((c) => (
+          <button
+            key={c}
+            onClick={() => setCategory(c)}
+            className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+              category === c
+                ? "border-emerald-400/50 bg-emerald-500/15 text-emerald-300"
+                : "border-border/60 bg-card/40 text-muted-foreground hover:bg-accent"
+            }`}
+          >
+            {c}
+          </button>
+        ))}
+      </div>
+      <div className="grid max-h-[260px] gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+        {filtered.length === 0 && (
+          <div className="col-span-full p-6 text-center text-xs text-muted-foreground">No templates match.</div>
+        )}
+        {filtered.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => onPickTemplate(t.id)}
+            className="group rounded-lg border border-border/60 bg-card/40 p-3 text-left transition-colors hover:border-emerald-400/50 hover:bg-emerald-500/5"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="text-sm font-semibold">{t.name}</div>
+              <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium ${templateCategoryColor[t.category]}`}>
+                {t.category}
+              </span>
+            </div>
+            <p className="mt-1.5 line-clamp-2 text-[11px] text-muted-foreground">{t.body}</p>
+            <div className="mt-2 inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+              <LayoutTemplate className="h-2.5 w-2.5" />
+              {t.variables.length === 0 ? "No variables" : `${t.variables.length} variable${t.variables.length === 1 ? "" : "s"}`}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

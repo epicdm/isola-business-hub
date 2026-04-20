@@ -93,6 +93,36 @@ export default function SettingsPage() {
   const [delStep, setDelStep] = useState<1 | 2>(1);
   const [delConfirm, setDelConfirm] = useState("");
 
+  // ---- Labels CRUD (Section 6) ----
+  const [labels, setLabels] = useState<LabelDef[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = window.localStorage.getItem("isola.labels");
+        if (raw) return JSON.parse(raw) as LabelDef[];
+      } catch {
+        /* ignore */
+      }
+    }
+    return seedLabels;
+  });
+  const [labelDialogOpen, setLabelDialogOpen] = useState(false);
+  const [editingLabel, setEditingLabel] = useState<LabelDef | null>(null);
+  const [labelDraftName, setLabelDraftName] = useState("");
+  const [labelDraftColor, setLabelDraftColor] = useState<LabelColor>("emerald");
+  const [confirmDeleteLabel, setConfirmDeleteLabel] = useState<LabelDef | null>(null);
+
+  // Persist labels — inbox re-reads on focus/storage events.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem("isola.labels", JSON.stringify(labels));
+      // Notify same-tab listeners (storage event only fires across tabs).
+      window.dispatchEvent(new Event("storage"));
+    } catch {
+      /* ignore */
+    }
+  }, [labels]);
+
   useEffect(() => {
     const p = readProfile();
     if (p.businessName) setBusinessName(p.businessName);

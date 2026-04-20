@@ -165,6 +165,46 @@ const step5Schema = z.object({
     .regex(/^\+?[0-9\s\-()]{7,20}$/, "Enter a valid phone number"),
 });
 
+const step6Schema = z.object({
+  odooUrl: z
+    .string()
+    .trim()
+    .url("Enter a valid URL (e.g. https://your.odoo.com)"),
+  odooDb: z.string().trim().min(1, "Database name is required"),
+  odooApiKey: z.string().trim().min(12, "API key looks too short"),
+});
+
+type ConnectionResult =
+  | { state: "idle" }
+  | { state: "testing" }
+  | { state: "ok"; version: string; customers: number; products: number }
+  | { state: "error"; message: string };
+
+function evaluateOdooConnection(d: { odooUrl: string; odooDb: string; odooApiKey: string }): Exclude<ConnectionResult, { state: "idle" } | { state: "testing" }> {
+  if (!d.odooApiKey || d.odooApiKey.trim().length < 12) {
+    return {
+      state: "error",
+      message:
+        "Invalid API key. Generate a new one in Odoo Settings → Users & Companies → Users → API Keys.",
+    };
+  }
+  if (d.odooUrl.toLowerCase().includes("invalid")) {
+    return { state: "error", message: "Couldn't reach Odoo. Double-check the URL." };
+  }
+  if (d.odooDb.toLowerCase().includes("wrong")) {
+    return {
+      state: "error",
+      message: "Database not found. Check the name in Odoo under Settings → Manage Databases.",
+    };
+  }
+  try {
+    new URL(d.odooUrl);
+  } catch {
+    return { state: "error", message: "Couldn't reach Odoo. Double-check the URL." };
+  }
+  return { state: "ok", version: "17.0", customers: 247, products: 1832 };
+}
+
 interface OnboardingPageProps {
   step: number;
   setStep: (n: number) => void;

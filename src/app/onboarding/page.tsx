@@ -286,6 +286,7 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
     await new Promise((r) => setTimeout(r, 1100));
     window.localStorage.setItem("mockLoggedIn", "true");
     window.localStorage.setItem("mockOnboarded", "true");
+    saveProfile({ contactName: data.contactName, businessName: data.businessName });
     window.localStorage.removeItem(STORAGE_KEY);
     toast.success("You're all set! Welcome to Ema 👋");
     setSubmitting(false);

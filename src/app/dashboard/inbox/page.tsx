@@ -209,6 +209,88 @@ export default function InboxPage() {
   );
   const [newTagDraft, setNewTagDraft] = useState("");
 
+  // ---- Feature 1: Ask Ema drawer ----
+  const [emaOpen, setEmaOpen] = useState(false);
+  const [emaChats, setEmaChats] = useState<Record<string, EmaConvChatMsg[]>>({});
+  const [emaInput, setEmaInput] = useState("");
+  const [emaThinking, setEmaThinking] = useState(false);
+  const emaScrollRef = useRef<HTMLDivElement | null>(null);
+
+  // ---- Feature 2: AI suggested replies ----
+  const [suggestionsByConv, setSuggestionsByConv] = useState<Record<string, string[]>>({});
+  const [suggestionRotation, setSuggestionRotation] = useState<Record<string, number>>({});
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+
+  // ---- Feature 3: Review mode + pending approval queue ----
+  const [reviewModeMap, setReviewModeMap] = useState<Record<string, boolean>>({});
+  const [leftPane, setLeftPane] = useState<"conversations" | "pending">("conversations");
+  const [pendingFilter, setPendingFilter] = useState<string>("all");
+  const [pendingQueue, setPendingQueue] = useState<PendingDraft[]>(seedPendingDrafts);
+  const [rejectingDraft, setRejectingDraft] = useState<PendingDraft | null>(null);
+  const [rejectNote, setRejectNote] = useState("");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const read = () => {
+      try {
+        const raw = window.localStorage.getItem("isola.reviewMode");
+        setReviewModeMap(raw ? (JSON.parse(raw) as Record<string, boolean>) : {});
+      } catch {
+        setReviewModeMap({});
+      }
+    };
+    read();
+    window.addEventListener("storage", read);
+    window.addEventListener("focus", read);
+    return () => {
+      window.removeEventListener("storage", read);
+      window.removeEventListener("focus", read);
+    };
+  }, []);
+
+  const anyReviewModeOn = useMemo(
+    () => agents.some((a) => reviewModeMap[a.id]),
+    [reviewModeMap],
+  );
+  const visiblePending = useMemo(
+    () =>
+      pendingQueue.filter((d) => {
+        if (!reviewModeMap[d.agentId]) return false;
+        if (pendingFilter !== "all" && d.agentId !== pendingFilter) return false;
+        return true;
+      }),
+    [pendingQueue, reviewModeMap, pendingFilter],
+  );
+
+  useEffect(() => {
+    if (!anyReviewModeOn && leftPane === "pending") setLeftPane("conversations");
+  }, [anyReviewModeOn, leftPane]);
+
+  const loadSuggestions = async (convId: string, rotation: number) => {
+    setSuggestionsLoading(true);
+    try {
+      const res = await fetchSuggestions(convId, rotation);
+      setSuggestionsByConv((p) => ({ ...p, [convId]: res.suggestions }));
+    } finally {
+      setSuggestionsLoading(false);
+    }
+  };
+
+  const aiHandledForActive = aiHandled[activeId];
+  useEffect(() => {
+    if (!aiHandledForActive) return;
+    if (suggestionsByConv[activeId]) return;
+    void loadSuggestions(activeId, suggestionRotation[activeId] ?? 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId, aiHandledForActive]);
+
+  useEffect(() => {
+    if (!emaOpen) return;
+    requestAnimationFrame(() => {
+      emaScrollRef.current?.scrollTo({ top: emaScrollRef.current.scrollHeight, behavior: "smooth" });
+    });
+  }, [emaChats, emaThinking, emaOpen]);
+
   const handleConfirmTakeOver = () => {
     if (!confirmTakeOverFor) return;
     const conv = conversations.find((c) => c.id === confirmTakeOverFor);

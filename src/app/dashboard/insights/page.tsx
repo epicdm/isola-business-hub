@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   RefreshCw,
@@ -18,6 +18,14 @@ import {
   UtensilsCrossed,
   ChevronRight,
   Database,
+  BedDouble,
+  Sparkles,
+  CalendarCheck,
+  CalendarX,
+  Stethoscope,
+  Pill,
+  UserPlus,
+  Briefcase,
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../layout";
@@ -43,15 +51,10 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import InsightCardMenu, {
-  type InsightAction,
-  type EmaContext,
-} from "@/components/dashboard/InsightCardMenu";
+import InsightCardMenu from "@/components/dashboard/InsightCardMenu";
 import Sparkline from "@/components/dashboard/Sparkline";
-import { insightsMockData } from "@/lib/mock-data";
+import { insightsByVertical, type InsightsVertical } from "@/lib/mock-data";
 import { useOdooConnection } from "@/hooks/use-odoo-connection";
-
-const data = insightsMockData.cards;
 
 type DrillKey =
   | "todaysSales"
@@ -124,21 +127,240 @@ function CardShell({
 }
 
 // ============================================================================
-// Drill-down Sheets (rendered conditionally)
+// Vertical config — labels, icons, tooltips, and helpers per vertical
 // ============================================================================
 
-function DrillContent({ which }: { which: DrillKey }) {
+type VerticalSlug = "Restaurants" | "Hotels" | "Clinics";
+const SLUG_TO_KEY: Record<VerticalSlug, InsightsVertical> = {
+  Restaurants: "restaurants",
+  Hotels: "hotels",
+  Clinics: "clinics",
+};
+
+type CardCopy = {
+  // Card titles
+  todaysSales: string; // KPI 1
+  openTabs: string;    // KPI 2
+  topCustomers: string;
+  menuPerformance: string;
+  lowStock: string;
+  staffTips: string;
+  // KPI tooltips
+  todaysSalesTip: string;
+  openTabsTip: string;
+  outstandingInvoicesTip: string;
+  topCustomersTip: string;
+  menuPerformanceTip: string;
+  lowStockTip: string;
+  staffTipsTip: string;
+  cashBalanceTip: string;
+  // Drill titles
+  drillTitles: Record<DrillKey, string>;
+  // Card-specific micro-copy
+  ordersWord: string;       // "orders" | "stays" | "appointments"
+  avgTicketWord: string;    // "per ticket" | "per night" | "per consult"
+  openTabsRowLabel: (id: string) => string; // Table 7 / RES-8842 / APT-3360
+  openTabsRowSubtitle: (server: string, minutes: number) => string;
+  openTabsBigUnitLabel: string; // "tables ·" | "arrivals ·" | "at-risk slots ·"
+  openTabsOldestLabel: string;  // "Oldest:" | "Latest arrival:" | "Highest-risk slot:"
+  openTabsSeatedOverLabel: string; // "seated >45 min" etc.
+  closeTabAction: string;   // "Close tab" | "Check in" | "Confirm slot"
+  closeTabToast: (id: string) => string;
+  staffTipsTotalLabel: string;     // "Pool today" | "Tips pool today" | "Billable today"
+  staffTipsAvgLabel: string;
+  staffTipsAvg30Label: string;
+  reorderToast: (name: string) => string;
+  // Icons
+  icons: {
+    todaysSales: typeof TrendingUp;
+    openTabs: typeof TrendingUp;
+    topCustomers: typeof TrendingUp;
+    menuPerformance: typeof TrendingUp;
+    lowStock: typeof TrendingUp;
+    staffTips: typeof TrendingUp;
+  };
+};
+
+const RESTAURANT_COPY: CardCopy = {
+  todaysSales: "Today's sales",
+  openTabs: "Open tabs",
+  topCustomers: "Top 5 customers",
+  menuPerformance: "Menu performance",
+  lowStock: "Low stock",
+  staffTips: "Staff tips",
+  todaysSalesTip: "Net revenue from all completed orders today, after refunds.",
+  openTabsTip: "Tables seated with unpaid balances, live from POS.",
+  outstandingInvoicesTip: "Total receivables from Odoo, grouped by aging bucket.",
+  topCustomersTip: "Highest-revenue accounts, last 30 days.",
+  menuPerformanceTip: "Best & worst-selling items in the last 30 days.",
+  lowStockTip: "SKUs at or below the reorder threshold in Odoo.",
+  staffTipsTip: "Today's pooled tips before distribution.",
+  cashBalanceTip: "Combined cash drawer + connected bank accounts.",
+  drillTitles: {
+    todaysSales: "Today's sales · full breakdown",
+    openTabs: "Open tabs · live tables",
+    outstandingInvoices: "Outstanding invoices · aging",
+    topCustomers: "Top customers · last 30 days",
+    menuPerformance: "Menu performance",
+    lowStock: "Low-stock alerts · inventory",
+    staffTips: "Staff tips · today",
+    cashBalance: "Cash + bank · transactions",
+  },
+  ordersWord: "orders",
+  avgTicketWord: "per ticket",
+  openTabsRowLabel: (id) => `Table ${id.replace("T.", "")}`,
+  openTabsRowSubtitle: (server, minutes) => `Server: ${server} · seated ${minutes} min`,
+  openTabsBigUnitLabel: "tables ·",
+  openTabsOldestLabel: "Oldest:",
+  openTabsSeatedOverLabel: "seated >45 min",
+  closeTabAction: "Close tab",
+  closeTabToast: (id) => `Tab ${id} closed`,
+  staffTipsTotalLabel: "Pool today",
+  staffTipsAvgLabel: "Avg / staff",
+  staffTipsAvg30Label: "30-day avg",
+  reorderToast: (n) => `PO drafted for ${n}`,
+  icons: {
+    todaysSales: ShoppingBag,
+    openTabs: Clock,
+    topCustomers: Users,
+    menuPerformance: UtensilsCrossed,
+    lowStock: PackageX,
+    staffTips: HandCoins,
+  },
+};
+
+const HOTEL_COPY: CardCopy = {
+  todaysSales: "RevPAR today",
+  openTabs: "Arrivals & front desk",
+  topCustomers: "Top 5 guests",
+  menuPerformance: "Excursion & room performance",
+  lowStock: "Housekeeping low stock",
+  staffTips: "Concierge & staff tips",
+  todaysSalesTip: "Revenue per available room today (occupancy × ADR), live from Odoo + PMS.",
+  openTabsTip: "Arrivals expected today and guests still awaiting check-in.",
+  outstandingInvoicesTip: "Open guest folios + group invoices, grouped by aging bucket.",
+  topCustomersTip: "Highest-folio guests, last 30 days.",
+  menuPerformanceTip: "Best & worst-performing room types and excursions, last 30 days.",
+  lowStockTip: "Linens, mini-bar, and amenity SKUs at or below the reorder threshold.",
+  staffTipsTip: "Today's pooled tips across concierge, bell and housekeeping.",
+  cashBalanceTip: "Combined cash drawer + connected bank accounts.",
+  drillTitles: {
+    todaysSales: "RevPAR today · breakdown",
+    openTabs: "Arrivals & departures · live front desk",
+    outstandingInvoices: "Open folios · aging",
+    topCustomers: "Top guests · last 30 days",
+    menuPerformance: "Excursion & room performance",
+    lowStock: "Housekeeping & amenity stock",
+    staffTips: "Concierge / bell / housekeeping tips · today",
+    cashBalance: "Cash + bank · transactions",
+  },
+  ordersWord: "stays",
+  avgTicketWord: "per night",
+  openTabsRowLabel: (id) => id,
+  openTabsRowSubtitle: (server, minutes) => `${server} · waiting ${minutes} min`,
+  openTabsBigUnitLabel: "arrivals ·",
+  openTabsOldestLabel: "Latest arrival:",
+  openTabsSeatedOverLabel: "awaiting check-in >45 min",
+  closeTabAction: "Check in",
+  closeTabToast: (id) => `${id} checked in`,
+  staffTipsTotalLabel: "Tips pool today",
+  staffTipsAvgLabel: "Avg / staff",
+  staffTipsAvg30Label: "30-day avg",
+  reorderToast: (n) => `PO drafted for ${n}`,
+  icons: {
+    todaysSales: BedDouble,
+    openTabs: CalendarCheck,
+    topCustomers: Users,
+    menuPerformance: Sparkles,
+    lowStock: PackageX,
+    staffTips: HandCoins,
+  },
+};
+
+const CLINIC_COPY: CardCopy = {
+  todaysSales: "Appointments today",
+  openTabs: "No-show risk",
+  topCustomers: "Top 5 patients",
+  menuPerformance: "Service performance",
+  lowStock: "Supplies low",
+  staffTips: "Provider hours billed",
+  todaysSalesTip: "Total billed across appointments today, including telehealth.",
+  openTabsTip: "Today's slots flagged as at-risk based on confirmation status.",
+  outstandingInvoicesTip: "Outstanding co-pays and pending insurance claims, by aging bucket.",
+  topCustomersTip: "Highest-billing patients, last 30 days.",
+  menuPerformanceTip: "Best & worst-billing services, last 30 days.",
+  lowStockTip: "Vaccines, PPE and lab supplies at or below the reorder threshold.",
+  staffTipsTip: "Today's billable provider + nurse hours.",
+  cashBalanceTip: "Combined cash drawer + connected bank accounts.",
+  drillTitles: {
+    todaysSales: "Appointments today · breakdown",
+    openTabs: "No-show risk · today's at-risk slots",
+    outstandingInvoices: "Co-pays & insurance claims · aging",
+    topCustomers: "Top patients · last 30 days",
+    menuPerformance: "Service performance",
+    lowStock: "Low supplies · inventory",
+    staffTips: "Provider hours billed · today",
+    cashBalance: "Cash + bank · transactions",
+  },
+  ordersWord: "appointments",
+  avgTicketWord: "per consult",
+  openTabsRowLabel: (id) => id,
+  openTabsRowSubtitle: (server, minutes) => `${server} · ${minutes}min until slot`,
+  openTabsBigUnitLabel: "at-risk slots ·",
+  openTabsOldestLabel: "Highest-risk slot:",
+  openTabsSeatedOverLabel: "unconfirmed within 4h of slot",
+  closeTabAction: "Confirm slot",
+  closeTabToast: (id) => `${id} confirmed`,
+  staffTipsTotalLabel: "Billable today",
+  staffTipsAvgLabel: "Avg / provider",
+  staffTipsAvg30Label: "30-day avg",
+  reorderToast: (n) => `PO drafted for ${n}`,
+  icons: {
+    todaysSales: Stethoscope,
+    openTabs: CalendarX,
+    topCustomers: UserPlus,
+    menuPerformance: Briefcase,
+    lowStock: Pill,
+    staffTips: HandCoins,
+  },
+};
+
+const COPY_BY_VERTICAL: Record<VerticalSlug, CardCopy> = {
+  Restaurants: RESTAURANT_COPY,
+  Hotels: HOTEL_COPY,
+  Clinics: CLINIC_COPY,
+};
+
+// ============================================================================
+// Drill-down Sheets
+// ============================================================================
+
+type CardsBundle = (typeof insightsByVertical)["restaurants"]["cards"];
+
+function DrillContent({ which, data, copy }: { which: DrillKey; data: CardsBundle; copy: CardCopy }) {
+  // Maps card 1/2 to the correct vertical key in raw data; restaurant cards are the canonical names.
+  // Hotels and clinics keep the SAME drill keys but the underlying data lives at different keys —
+  // we resolve them via accessors below.
+  const card1 = (data as { todaysSales?: typeof data.todaysSales; revpar?: typeof data.todaysSales; appointments?: typeof data.todaysSales }).todaysSales
+    ?? (data as { revpar?: typeof data.todaysSales }).revpar
+    ?? (data as { appointments?: typeof data.todaysSales }).appointments
+    ?? data.todaysSales;
+  const card2 = (data as { openTabs?: typeof data.openTabs; frontDesk?: typeof data.openTabs; noShows?: typeof data.openTabs }).openTabs
+    ?? (data as { frontDesk?: typeof data.openTabs }).frontDesk
+    ?? (data as { noShows?: typeof data.openTabs }).noShows
+    ?? data.openTabs;
+
   if (which === "todaysSales") {
-    const c = data.todaysSales;
+    const c = card1;
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-3 gap-3">
           <Stat label="Revenue" value={formatEC(c.amount)} />
-          <Stat label="Orders" value={c.orders.toString()} />
-          <Stat label="Avg ticket" value={formatEC(c.avgTicket)} />
+          <Stat label={copy.ordersWord.charAt(0).toUpperCase() + copy.ordersWord.slice(1)} value={c.orders.toString()} />
+          <Stat label={`Avg ${copy.avgTicketWord.replace("per ", "")}`} value={formatEC(c.avgTicket)} />
         </div>
         <section>
-          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Hourly sales</h4>
+          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Hourly</h4>
           <div className="rounded-lg border border-border bg-card/40 p-4">
             <Sparkline values={c.hourly.map((h) => h.v)} variant="bars" height={64} className="w-full" />
             <div className="mt-2 flex justify-between text-[10px] text-muted-foreground">
@@ -148,12 +370,7 @@ function DrillContent({ which }: { which: DrillKey }) {
         </section>
         <section>
           <div className="mb-2 flex items-center justify-between">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Top orders</h4>
-            <div className="flex gap-1 text-[10px]">
-              {["dine-in", "takeout", "delivery"].map((s) => (
-                <Badge key={s} variant="outline" className="cursor-pointer">{s}</Badge>
-              ))}
-            </div>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Top {copy.ordersWord}</h4>
           </div>
           <ul className="divide-y divide-border rounded-lg border border-border bg-card/40">
             {c.topOrders.map((o) => (
@@ -171,24 +388,24 @@ function DrillContent({ which }: { which: DrillKey }) {
     );
   }
   if (which === "openTabs") {
-    const c = data.openTabs;
+    const c = card2;
     return (
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
-          <Stat label="Open tables" value={`${c.tableCount}`} />
-          <Stat label="Combined unpaid" value={formatEC(c.total)} />
+          <Stat label={copy.openTabs} value={`${c.tableCount}`} />
+          <Stat label="Combined value" value={formatEC(c.total)} />
         </div>
         <ul className="divide-y divide-border rounded-lg border border-border bg-card/40">
           {c.tabs.map((t) => (
             <li key={t.table} className="flex items-center justify-between px-3 py-3 text-sm">
               <div>
-                <div className="font-medium">Table {t.table.replace("T.", "")}</div>
-                <div className="text-xs text-muted-foreground">Server: {t.server} · seated {t.minutes} min</div>
+                <div className="font-medium">{copy.openTabsRowLabel(t.table)}</div>
+                <div className="text-xs text-muted-foreground">{copy.openTabsRowSubtitle(t.server, t.minutes)}</div>
               </div>
               <div className="flex items-center gap-3">
                 <span className="font-semibold">{formatEC(t.total)}</span>
-                <Button size="sm" variant="outline" onClick={() => toast.success(`Tab ${t.table} closed`)}>
-                  Close tab
+                <Button size="sm" variant="outline" onClick={() => toast.success(copy.closeTabToast(t.table))}>
+                  {copy.closeTabAction}
                 </Button>
               </div>
             </li>
@@ -255,7 +472,7 @@ function DrillContent({ which }: { which: DrillKey }) {
             {c.best.map((m) => (
               <li key={m.name} className="flex items-center justify-between px-3 py-2 text-sm">
                 <span className="font-medium">{m.name}</span>
-                <span className="text-muted-foreground">{m.orders} orders · {formatEC(m.revenue)}</span>
+                <span className="text-muted-foreground">{m.orders} · {formatEC(m.revenue)}</span>
               </li>
             ))}
           </ul>
@@ -266,7 +483,7 @@ function DrillContent({ which }: { which: DrillKey }) {
             {c.worst.map((m) => (
               <li key={m.name} className="flex items-center justify-between px-3 py-2 text-sm">
                 <span className="font-medium">{m.name}</span>
-                <span className="text-muted-foreground">{m.orders} orders · {formatEC(m.revenue)}</span>
+                <span className="text-muted-foreground">{m.orders} · {formatEC(m.revenue)}</span>
               </li>
             ))}
           </ul>
@@ -288,7 +505,7 @@ function DrillContent({ which }: { which: DrillKey }) {
                 {s.qty} {s.unit} · reorder at {s.reorderAt} {s.unit} · {s.supplier}
               </div>
             </div>
-            <Button size="sm" variant="outline" onClick={() => toast.success(`PO drafted for ${s.name}`)}>
+            <Button size="sm" variant="outline" onClick={() => toast.success(copy.reorderToast(s.name))}>
               Reorder
             </Button>
           </li>
@@ -301,9 +518,9 @@ function DrillContent({ which }: { which: DrillKey }) {
     return (
       <div className="space-y-4">
         <div className="grid grid-cols-3 gap-3">
-          <Stat label="Pool today" value={formatEC(c.pool)} />
-          <Stat label="Avg / staff" value={formatEC(Math.round(c.pool / c.servers.length))} />
-          <Stat label="30-day avg" value={formatEC(c.avg30d)} />
+          <Stat label={copy.staffTipsTotalLabel} value={formatEC(c.pool)} />
+          <Stat label={copy.staffTipsAvgLabel} value={formatEC(Math.round(c.pool / c.servers.length))} />
+          <Stat label={copy.staffTipsAvg30Label} value={formatEC(c.avg30d)} />
         </div>
         <ul className="divide-y divide-border rounded-lg border border-border bg-card/40">
           {c.servers.map((s) => (
@@ -375,30 +592,51 @@ function BucketBar({ label, value, max, color }: { label: string; value: number;
 // Page
 // ============================================================================
 
-const DRILL_TITLES: Record<DrillKey, string> = {
-  todaysSales: "Today's sales · full breakdown",
-  openTabs: "Open tabs · live tables",
-  outstandingInvoices: "Outstanding invoices · aging",
-  topCustomers: "Top customers · last 30 days",
-  menuPerformance: "Menu performance",
-  lowStock: "Low-stock alerts · inventory",
-  staffTips: "Staff tips · today",
-  cashBalance: "Cash + bank · transactions",
-};
+/**
+ * Resolve the canonical card data regardless of vertical-specific keys.
+ * Hotel/clinic mock data uses revpar/appointments and frontDesk/noShows
+ * but the rest (outstandingInvoices, topCustomers, menuPerformance, lowStock,
+ * staffTips, cashBalance) match the restaurant shape exactly.
+ */
+function resolveCards(raw: (typeof insightsByVertical)[InsightsVertical]["cards"]): CardsBundle {
+  const r = raw as Record<string, unknown>;
+  const card1 = (r.todaysSales ?? r.revpar ?? r.appointments) as CardsBundle["todaysSales"];
+  const card2 = (r.openTabs ?? r.frontDesk ?? r.noShows) as CardsBundle["openTabs"];
+  return {
+    todaysSales: card1,
+    openTabs: card2,
+    outstandingInvoices: r.outstandingInvoices as CardsBundle["outstandingInvoices"],
+    topCustomers: r.topCustomers as CardsBundle["topCustomers"],
+    menuPerformance: r.menuPerformance as CardsBundle["menuPerformance"],
+    lowStock: r.lowStock as CardsBundle["lowStock"],
+    staffTips: r.staffTips as CardsBundle["staffTips"],
+    cashBalance: r.cashBalance as CardsBundle["cashBalance"],
+  };
+}
 
 export default function InsightsPage() {
   const [drill, setDrill] = useState<DrillKey | null>(null);
-  const [synced, setSynced] = useState(insightsMockData.lastSyncedMinutesAgo);
+  const [vertical, setVertical] = useState<VerticalSlug>("Restaurants");
+  const verticalKey = SLUG_TO_KEY[vertical];
+  const dataset = insightsByVertical[verticalKey];
+  const [synced, setSynced] = useState(dataset.lastSyncedMinutesAgo);
   const [refreshing, setRefreshing] = useState(false);
-  const [vertical, setVertical] = useState("Restaurants");
   const { connected: odooConnected } = useOdooConnection();
   const [paywallDismissed, setPaywallDismissed] = useState(false);
+
+  const copy = COPY_BY_VERTICAL[vertical];
+  const c = useMemo(() => resolveCards(dataset.cards), [dataset]);
 
   // Tick the "synced X min ago" pill
   useEffect(() => {
     const t = setInterval(() => setSynced((s) => s + 1), 60_000);
     return () => clearInterval(t);
   }, []);
+
+  // Reset sync timer when vertical changes
+  useEffect(() => {
+    setSynced(dataset.lastSyncedMinutesAgo);
+  }, [dataset]);
 
   // Read session-only paywall dismissal
   useEffect(() => {
@@ -423,17 +661,31 @@ export default function InsightsPage() {
   };
 
   const tryReconnect = () => {
-    // Mock optimistic re-check
     toast("Re-testing Odoo connection…");
     setTimeout(() => {
-      // Just confirm it's still disconnected unless they actually configured it elsewhere
       toast("Still disconnected — connect from setup.");
     }, 900);
   };
 
-  const c = data;
   const locked = odooConnected === false && !paywallDismissed;
   const blurred = odooConnected === false;
+
+  // Vertical-specific Ema summaries
+  const card1Summary =
+    vertical === "Restaurants"
+      ? `${formatEC(c.todaysSales.amount)} across ${c.todaysSales.orders} orders, +${c.todaysSales.trendPct}% vs yesterday.`
+      : vertical === "Hotels"
+      ? `${formatEC(c.todaysSales.amount)} RevPAR · ${c.todaysSales.orders} stays · +${c.todaysSales.trendPct}% vs yesterday.`
+      : `${formatEC(c.todaysSales.amount)} billed across ${c.todaysSales.orders} appointments, +${c.todaysSales.trendPct}% vs yesterday.`;
+
+  const card1Prompt =
+    vertical === "Restaurants"
+      ? "Why are sales up 18% today vs yesterday? What changed?"
+      : vertical === "Hotels"
+      ? "Why is RevPAR up vs yesterday? Which room types and channels drove it?"
+      : "Why are billed appointments up today? Which services and providers led it?";
+
+  const card2EmaTitle = vertical === "Restaurants" ? "Open tabs" : vertical === "Hotels" ? "Arrivals & front desk" : "No-show risk";
 
   return (
     <DashboardLayout currentPath="/dashboard/insights">
@@ -471,11 +723,11 @@ export default function InsightsPage() {
                 <DropdownMenuItem onSelect={() => setVertical("Restaurants")}>
                   Restaurants
                 </DropdownMenuItem>
-                <DropdownMenuItem disabled>
-                  Hotels <Badge variant="outline" className="ml-2 text-[9px]">Coming soon</Badge>
+                <DropdownMenuItem onSelect={() => setVertical("Hotels")}>
+                  Hotels
                 </DropdownMenuItem>
-                <DropdownMenuItem disabled>
-                  Clinics <Badge variant="outline" className="ml-2 text-[9px]">Coming soon</Badge>
+                <DropdownMenuItem onSelect={() => setVertical("Clinics")}>
+                  Clinics
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -496,7 +748,7 @@ export default function InsightsPage() {
           </div>
         )}
 
-        {/* 8-card grid (locked behind Odoo connection) */}
+        {/* 8-card grid */}
         <div className="relative">
           <div
             className={`grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 transition-all duration-300 ${
@@ -505,86 +757,100 @@ export default function InsightsPage() {
             aria-hidden={blurred}
           >
 
-          {/* CARD 1 — Today's sales */}
+          {/* CARD 1 — Sales / RevPAR / Appointments */}
           <InsightCardMenu
-            cardTitle="Today's sales"
+            cardTitle={copy.todaysSales}
             emaContext={{
-              cardTitle: "Today's sales",
-              summary: `${formatEC(c.todaysSales.amount)} across ${c.todaysSales.orders} orders, +${c.todaysSales.trendPct}% vs yesterday.`,
-              prompt: "Why are sales up 18% today vs yesterday? What changed?",
+              cardTitle: copy.todaysSales,
+              summary: card1Summary,
+              prompt: card1Prompt,
             }}
             actions={[
               { label: "Send to my accountant", toast: "✓ Snapshot emailed to accountant" },
               { label: "Compare to last week", toast: "✓ Comparison opened in drawer" },
             ]}
           >
-            <CardShell title="Today's sales" icon={ShoppingBag} tooltip="Net revenue from all completed orders today, after refunds." onClick={() => setDrill("todaysSales")}>
+            <CardShell title={copy.todaysSales} icon={copy.icons.todaysSales} tooltip={copy.todaysSalesTip} onClick={() => setDrill("todaysSales")}>
               <div className="text-3xl font-bold text-success">{formatEC(c.todaysSales.amount)}</div>
               <TrendPill delta={c.todaysSales.trendPct} compare="vs yesterday" />
               <div className="mt-3">
                 <Sparkline values={c.todaysSales.sparkline.map((p) => p.v)} className="w-full" height={36} />
               </div>
               <div className="mt-auto pt-3 text-xs text-muted-foreground">
-                {c.todaysSales.orders} orders · avg {formatEC(c.todaysSales.avgTicket)} per ticket
+                {c.todaysSales.orders} {copy.ordersWord} · avg {formatEC(c.todaysSales.avgTicket)} {copy.avgTicketWord}
               </div>
             </CardShell>
           </InsightCardMenu>
 
-          {/* CARD 2 — Open tabs */}
+          {/* CARD 2 — Open tabs / Arrivals / No-show risk */}
           <InsightCardMenu
-            cardTitle="Open tabs"
+            cardTitle={copy.openTabs}
             emaContext={{
-              cardTitle: "Open tabs",
-              summary: `${c.openTabs.tableCount} tables open, ${formatEC(c.openTabs.total)} unpaid. Oldest: Table 7 at 1h 23min.`,
-              prompt: "Which tables are running long and should I check on?",
+              cardTitle: card2EmaTitle,
+              summary:
+                vertical === "Restaurants"
+                  ? `${c.openTabs.tableCount} tables open, ${formatEC(c.openTabs.total)} unpaid. Oldest seated 1h 23min.`
+                  : vertical === "Hotels"
+                  ? `${c.openTabs.tableCount} arrivals expected today, ${c.openTabs.seatedOver45} still awaiting check-in.`
+                  : `${c.openTabs.tableCount} at-risk slots today · ${formatEC(c.openTabs.total)} potential revenue at risk.`,
+              prompt:
+                vertical === "Restaurants"
+                  ? "Which tables are running long and should I check on?"
+                  : vertical === "Hotels"
+                  ? "Which arrivals are running late — should I message them?"
+                  : "Which slots are highest-risk for no-show — send confirmations now?",
             }}
             actions={[
               {
-                label: "Close oldest tab",
-                confirm: { title: "Close Table 7?", body: <>EC$210 · seated 1h 23min · server Maria.</>, cta: "Close & print" },
-                toast: "✓ Tab closed, receipt printed",
+                label:
+                  vertical === "Restaurants"
+                    ? "Close oldest tab"
+                    : vertical === "Hotels"
+                    ? "Check in latest arrival"
+                    : "Send confirm to highest-risk",
+                toast:
+                  vertical === "Restaurants"
+                    ? "✓ Tab closed, receipt printed"
+                    : vertical === "Hotels"
+                    ? "✓ Guest checked in"
+                    : "✓ Confirmation WhatsApp sent",
               },
-              { label: "Ping server", toast: "✓ Maria pinged on the floor" },
+              {
+                label: vertical === "Restaurants" ? "Ping server" : vertical === "Hotels" ? "Page concierge" : "Page nurse",
+                toast: "✓ Ping sent",
+              },
             ]}
           >
-            <CardShell title="Open tabs" icon={Clock} tooltip="Tables seated with unpaid balances, live from POS." onClick={() => setDrill("openTabs")}>
+            <CardShell title={copy.openTabs} icon={copy.icons.openTabs} tooltip={copy.openTabsTip} onClick={() => setDrill("openTabs")}>
               <div className="text-3xl font-bold">
-                {c.openTabs.tableCount} <span className="text-base font-normal text-muted-foreground">tables ·</span>
+                {c.openTabs.tableCount} <span className="text-base font-normal text-muted-foreground">{copy.openTabsBigUnitLabel}</span>
                 <span className="ml-1 text-success">{formatEC(c.openTabs.total)}</span>
               </div>
-              <div className="text-xs text-warning">{c.openTabs.seatedOver45} seated &gt;45 min</div>
+              <div className="text-xs text-warning">{c.openTabs.seatedOver45} {copy.openTabsSeatedOverLabel}</div>
               <div className="mt-auto pt-3 text-xs text-muted-foreground">
-                Oldest: Table {c.openTabs.oldest.table.replace("T.", "")} · {Math.floor(c.openTabs.oldest.minutes / 60)}h {c.openTabs.oldest.minutes % 60}min · {formatEC(c.openTabs.oldest.total)}
+                {copy.openTabsOldestLabel} {copy.openTabsRowLabel(c.openTabs.oldest.table)} · {Math.floor(c.openTabs.oldest.minutes / 60)}h {c.openTabs.oldest.minutes % 60}min · {formatEC(c.openTabs.oldest.total)}
               </div>
             </CardShell>
           </InsightCardMenu>
 
-          {/* CARD 3 — Outstanding invoices */}
+          {/* CARD 3 — Outstanding invoices / folios / co-pays */}
           <InsightCardMenu
             cardTitle="Outstanding invoices"
             emaContext={{
-              cardTitle: "Outstanding invoices",
-              summary: `${formatEC(c.outstandingInvoices.total)} across ${c.outstandingInvoices.count} customers. ${c.outstandingInvoices.overdue} are overdue.`,
+              cardTitle: vertical === "Hotels" ? "Open folios" : vertical === "Clinics" ? "Co-pays & claims" : "Outstanding invoices",
+              summary: `${formatEC(c.outstandingInvoices.total)} across ${c.outstandingInvoices.count} ${vertical === "Clinics" ? "patients/claims" : vertical === "Hotels" ? "folios" : "customers"}. ${c.outstandingInvoices.overdue} are overdue.`,
               prompt: "Who's at risk of non-payment? Draft tailored reminders for the top 3.",
             }}
             actions={[
-              {
-                label: "Send all reminders",
-                confirm: {
-                  title: "Send reminders?",
-                  body: <>Send WhatsApp reminder to <b>8 customers</b> for <b>{formatEC(c.outstandingInvoices.total)} total</b>. 2 in 24h window will use template, 6 will reply directly.</>,
-                  cta: "Send all",
-                },
-                toast: "✓ 8 reminders sent · 2 via template, 6 direct reply",
-              },
-              { label: "Mark batch paid", toast: "✓ Open the drawer to mark invoices paid" },
-              { label: "Email chaser", toast: "✓ Email chaser sent to 8 customers" },
+              { label: "Send all reminders", toast: `✓ ${c.outstandingInvoices.count} reminders sent` },
+              { label: "Mark batch paid", toast: "✓ Open the drawer to mark items paid" },
+              { label: "Email chaser", toast: `✓ Email chaser sent to ${c.outstandingInvoices.count}` },
             ]}
           >
-            <CardShell title="Outstanding invoices" icon={ReceiptText} tooltip="Total receivables from Odoo, grouped by aging bucket." onClick={() => setDrill("outstandingInvoices")}>
+            <CardShell title={vertical === "Hotels" ? "Open folios" : vertical === "Clinics" ? "Co-pays & claims" : "Outstanding invoices"} icon={ReceiptText} tooltip={copy.outstandingInvoicesTip} onClick={() => setDrill("outstandingInvoices")}>
               <div className="text-3xl font-bold text-success">{formatEC(c.outstandingInvoices.total)}</div>
               <div className="text-xs text-muted-foreground">
-                {c.outstandingInvoices.count} invoices · <span className="text-destructive">{c.outstandingInvoices.overdue} overdue</span>
+                {c.outstandingInvoices.count} {vertical === "Hotels" ? "folios" : vertical === "Clinics" ? "claims" : "invoices"} · <span className="text-destructive">{c.outstandingInvoices.overdue} overdue</span>
               </div>
               <div className="mt-3 grid grid-cols-3 gap-1.5">
                 <BucketBar label="0–30 d" value={c.outstandingInvoices.buckets.d0_30} max={c.outstandingInvoices.total} color="bg-success" />
@@ -594,21 +860,21 @@ export default function InsightsPage() {
             </CardShell>
           </InsightCardMenu>
 
-          {/* CARD 4 — Top customers */}
+          {/* CARD 4 — Top customers / guests / patients */}
           <InsightCardMenu
-            cardTitle="Top 5 customers"
+            cardTitle={copy.topCustomers}
             emaContext={{
-              cardTitle: "Top customers (30d)",
-              summary: "5 accounts drove 72% of revenue. Janelle, Marcus, Dr. A lead the pack.",
-              prompt: "Draft a VIP appreciation message for the top 5 customers.",
+              cardTitle: copy.topCustomers,
+              summary: `${c.topCustomers.slice(0, 5).length} accounts drove the bulk of revenue. ${c.topCustomers.slice(0, 3).map((x) => x.name.split(" ")[0]).join(", ")} lead.`,
+              prompt: vertical === "Clinics" ? "Draft a wellness check-in to the top 5 patients." : `Draft a VIP appreciation message for the top 5 ${vertical === "Hotels" ? "guests" : "customers"}.`,
             }}
             actions={[
-              { label: "Send VIP appreciation", toast: "✓ VIP appreciation sent to 5 customers" },
-              { label: "Export to CSV", toast: "✓ top-customers-30d.csv downloaded" },
-              { label: "Create loyalty segment", toast: "✓ 'VIP regulars' segment created" },
+              { label: vertical === "Clinics" ? "Send wellness check-in" : "Send VIP appreciation", toast: "✓ Message sent to 5" },
+              { label: "Export to CSV", toast: "✓ CSV downloaded" },
+              { label: vertical === "Clinics" ? "Create care segment" : "Create loyalty segment", toast: "✓ Segment created" },
             ]}
           >
-            <CardShell title="Top 5 customers" icon={Users} tooltip="Highest-revenue accounts, last 30 days." onClick={() => setDrill("topCustomers")}>
+            <CardShell title={copy.topCustomers} icon={copy.icons.topCustomers} tooltip={copy.topCustomersTip} onClick={() => setDrill("topCustomers")}>
               <ul className="space-y-1.5 text-sm">
                 {c.topCustomers.slice(0, 5).map((cust) => (
                   <li key={cust.name} className="flex items-center justify-between gap-2">
@@ -623,36 +889,45 @@ export default function InsightsPage() {
                 ))}
               </ul>
               <div className="mt-auto pt-3 text-xs text-muted-foreground">
-                5 accounts · {formatEC(c.topCustomers.slice(0, 5).reduce((s, x) => s + x.spent, 0))} · 72% of total
+                5 accounts · {formatEC(c.topCustomers.slice(0, 5).reduce((s, x) => s + x.spent, 0))}
               </div>
             </CardShell>
           </InsightCardMenu>
 
-          {/* CARD 5 — Menu performance */}
+          {/* CARD 5 — Menu / Excursion / Service performance */}
           <InsightCardMenu
-            cardTitle="Menu performance"
+            cardTitle={copy.menuPerformance}
             emaContext={{
-              cardTitle: "Menu performance",
-              summary: "Tasting Menu, Lobster Thermidor and Jerk Lamb dominate. Caesar Salad, Grilled Veg and Quinoa Bowl are flatlining.",
-              prompt: "Should I 86 the bottom 3 items this week?",
+              cardTitle: copy.menuPerformance,
+              summary: `Top: ${c.menuPerformance.best.map((m) => m.name).join(", ")}. Underperforming: ${c.menuPerformance.worst.map((m) => m.name).join(", ")}.`,
+              prompt:
+                vertical === "Restaurants"
+                  ? "Should I 86 the bottom 3 items this week?"
+                  : vertical === "Hotels"
+                  ? "Should I bundle the underperforming room types into a weekend offer?"
+                  : "Should I sunset the bottom 3 services or reprice them?",
             }}
             actions={[
               {
-                label: "86 bottom 3",
-                confirm: { title: "Remove these 3 items?", body: <>Caesar Salad, Grilled Vegetables, Quinoa Bowl will be 86'd in Odoo. Agents will stop offering them.</>, cta: "86 in Odoo" },
-                toast: "✓ 3 items 86'd · Agents will stop offering them",
+                label:
+                  vertical === "Restaurants"
+                    ? "86 bottom 3"
+                    : vertical === "Hotels"
+                    ? "Bundle underperformers"
+                    : "Reprice bottom 3",
+                toast: "✓ Action queued in Odoo",
               },
               { label: "Feature top 3 in WA campaign", toast: "✓ Campaign drafted with top 3" },
-              { label: "Update menu in Odoo", toast: "✓ Menu sync queued in Odoo" },
+              { label: "Update catalog in Odoo", toast: "✓ Sync queued in Odoo" },
             ]}
           >
-            <CardShell title="Menu performance" icon={UtensilsCrossed} tooltip="Best & worst-selling items in the last 30 days." onClick={() => setDrill("menuPerformance")}>
+            <CardShell title={copy.menuPerformance} icon={copy.icons.menuPerformance} tooltip={copy.menuPerformanceTip} onClick={() => setDrill("menuPerformance")}>
               <div className="space-y-2 text-xs">
                 <div>
                   <div className="mb-1 font-semibold text-success">✅ Top 3</div>
                   <ul className="space-y-0.5 text-muted-foreground">
                     {c.menuPerformance.best.map((m) => (
-                      <li key={m.name} className="flex justify-between"><span>{m.name}</span><span>{m.orders}</span></li>
+                      <li key={m.name} className="flex justify-between"><span className="truncate pr-2">{m.name}</span><span>{m.orders}</span></li>
                     ))}
                   </ul>
                 </div>
@@ -660,38 +935,29 @@ export default function InsightsPage() {
                   <div className="mb-1 font-semibold text-warning">⚠ Bottom 3</div>
                   <ul className="space-y-0.5 text-muted-foreground">
                     {c.menuPerformance.worst.map((m) => (
-                      <li key={m.name} className="flex justify-between"><span>{m.name}</span><span>{m.orders}</span></li>
+                      <li key={m.name} className="flex justify-between"><span className="truncate pr-2">{m.name}</span><span>{m.orders}</span></li>
                     ))}
                   </ul>
                 </div>
               </div>
-              <div className="mt-auto pt-3 text-xs text-muted-foreground">Consider 86-ing bottom 3 this week</div>
             </CardShell>
           </InsightCardMenu>
 
-          {/* CARD 6 — Low stock */}
+          {/* CARD 6 — Low stock / housekeeping / supplies */}
           <InsightCardMenu
-            cardTitle="Low stock"
+            cardTitle={copy.lowStock}
             emaContext={{
-              cardTitle: "Low stock alerts",
-              summary: "4 SKUs below reorder threshold — 2 critical (rum punch, bread flour).",
-              prompt: "Draft POs for the 4 low-stock items based on supplier mapping.",
+              cardTitle: copy.lowStock,
+              summary: `${c.lowStock.length} SKUs below reorder threshold — ${c.lowStock.filter((s) => s.severity === "red").length} critical.`,
+              prompt: `Draft POs for the ${c.lowStock.length} low-stock items based on supplier mapping.`,
             }}
             actions={[
-              {
-                label: "Send PO to suppliers",
-                confirm: {
-                  title: "Draft 4 purchase orders?",
-                  body: <>Caribbean Spirits · Roseau Wholesale · Bayside Seafood · Mountain Dairy. POs will land on /dashboard/outbound for approval.</>,
-                  cta: "Draft POs",
-                },
-                toast: "✓ 4 POs drafted, awaiting approval on /dashboard/outbound",
-              },
+              { label: "Send PO to suppliers", toast: `✓ ${c.lowStock.length} POs drafted, awaiting approval on /dashboard/outbound` },
               { label: "Mark restocked", toast: "✓ Items marked restocked" },
               { label: "Update thresholds", toast: "✓ Open inventory drawer to adjust" },
             ]}
           >
-            <CardShell title="Low stock" icon={PackageX} tooltip="SKUs at or below the reorder threshold in Odoo." onClick={() => setDrill("lowStock")}>
+            <CardShell title={copy.lowStock} icon={copy.icons.lowStock} tooltip={copy.lowStockTip} onClick={() => setDrill("lowStock")}>
               <div className="text-3xl font-bold text-destructive">
                 {c.lowStock.length} <span className="text-base font-normal text-muted-foreground">items low</span>
               </div>
@@ -709,34 +975,36 @@ export default function InsightsPage() {
             </CardShell>
           </InsightCardMenu>
 
-          {/* CARD 7 — Staff tips */}
+          {/* CARD 7 — Staff tips / concierge tips / provider hours */}
           <InsightCardMenu
-            cardTitle="Staff tips"
+            cardTitle={copy.staffTips}
             emaContext={{
-              cardTitle: "Staff tips today",
-              summary: `Pool of ${formatEC(c.staffTips.pool)} across ${c.staffTips.servers.length} servers. Up ${formatEC(c.staffTips.diffVsLastWeek)} vs same day last week.`,
-              prompt: "Distribute today's tip pool evenly to the 5 servers.",
+              cardTitle: copy.staffTips,
+              summary: `${formatEC(c.staffTips.pool)} across ${c.staffTips.servers.length}. Up ${formatEC(c.staffTips.diffVsLastWeek)} vs same day last week.`,
+              prompt:
+                vertical === "Clinics"
+                  ? "Summarize provider utilization today and flag anyone over capacity."
+                  : `Distribute today's pool evenly to the ${c.staffTips.servers.length} ${vertical === "Hotels" ? "staff" : "servers"}.`,
             }}
             actions={[
               {
-                label: "Distribute now",
-                confirm: { title: "Distribute today's tip pool?", body: <>{formatEC(c.staffTips.pool)} split evenly across {c.staffTips.servers.length} servers.</>, cta: "Distribute" },
-                toast: "✓ Tips distributed · payslips queued",
+                label: vertical === "Clinics" ? "Approve hours" : "Distribute now",
+                toast: vertical === "Clinics" ? "✓ Hours approved · payroll queued" : "✓ Tips distributed · payslips queued",
               },
               { label: "Export payslip", toast: "✓ Payslip CSV downloaded" },
-              { label: "Report dispute", toast: "✓ Dispute logged, manager notified" },
+              { label: vertical === "Clinics" ? "Flag overtime" : "Report dispute", toast: "✓ Logged, manager notified" },
             ]}
           >
-            <CardShell title="Staff tips" icon={HandCoins} tooltip="Today's pooled tips before distribution." onClick={() => setDrill("staffTips")}>
+            <CardShell title={copy.staffTips} icon={copy.icons.staffTips} tooltip={copy.staffTipsTip} onClick={() => setDrill("staffTips")}>
               <div className="text-3xl font-bold text-success">{formatEC(c.staffTips.pool)}</div>
               <div className="text-xs text-success">+{formatEC(c.staffTips.diffVsLastWeek)} vs same day last week</div>
               <div className="mt-auto pt-3 text-xs text-muted-foreground">
-                {c.staffTips.servers.length} servers · {formatEC(Math.round(c.staffTips.pool / c.staffTips.servers.length))} avg per staff
+                {c.staffTips.servers.length} {vertical === "Clinics" ? "providers" : vertical === "Hotels" ? "staff" : "servers"} · {formatEC(Math.round(c.staffTips.pool / c.staffTips.servers.length))} avg
               </div>
             </CardShell>
           </InsightCardMenu>
 
-          {/* CARD 8 — Cash + bank */}
+          {/* CARD 8 — Cash + bank (universal) */}
           <InsightCardMenu
             cardTitle="Cash + bank"
             emaContext={{
@@ -745,16 +1013,12 @@ export default function InsightsPage() {
               prompt: "Will I have enough to cover payroll + supplier invoices this week?",
             }}
             actions={[
-              {
-                label: "Pay supplier batch",
-                confirm: { title: "Pay supplier batch?", body: <>{formatEC(c.cashBalance.supplierDue)} across pending supplier invoices via Fiserv.</>, cta: "Pay now" },
-                toast: "✓ Supplier batch paid · Fiserv reference attached",
-              },
+              { label: "Pay supplier batch", toast: "✓ Supplier batch paid · Fiserv reference attached" },
               { label: "Reconcile Odoo", toast: "✓ Reconciliation triggered in Odoo" },
               { label: "Export statement", toast: "✓ Statement exported as PDF" },
             ]}
           >
-            <CardShell title="Cash + bank" icon={Wallet} tooltip="Combined cash drawer + connected bank accounts." onClick={() => setDrill("cashBalance")}>
+            <CardShell title="Cash + bank" icon={Wallet} tooltip={copy.cashBalanceTip} onClick={() => setDrill("cashBalance")}>
               <div className="text-3xl font-bold text-success">{formatEC(c.cashBalance.total)}</div>
               <div className="text-xs text-muted-foreground">
                 Cash {formatEC(c.cashBalance.cashOnHand)} · Bank {formatEC(c.cashBalance.bank)}
@@ -778,8 +1042,8 @@ export default function InsightsPage() {
                 </div>
                 <h2 className="font-display text-lg font-bold">Connect Odoo to unlock Insights</h2>
                 <p className="mt-1.5 text-sm text-muted-foreground">
-                  Today's sales, open tabs, outstanding invoices, low stock,
-                  staff tips and cash balance — all live, all in one pane.
+                  Live revenue, open balances, top accounts, performance, stock, staff and cash —
+                  all live, all in one pane.
                 </p>
                 <div className="mt-5 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
                   <Button asChild className="gap-1.5">
@@ -816,11 +1080,11 @@ export default function InsightsPage() {
           {drill && (
             <>
               <SheetHeader>
-                <SheetTitle>{DRILL_TITLES[drill]}</SheetTitle>
+                <SheetTitle>{copy.drillTitles[drill]}</SheetTitle>
                 <SheetDescription>Live Odoo data · click any row for inline actions.</SheetDescription>
               </SheetHeader>
               <div className="mt-6">
-                <DrillContent which={drill} />
+                <DrillContent which={drill} data={c} copy={copy} />
               </div>
             </>
           )}

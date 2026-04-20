@@ -1790,6 +1790,280 @@ export const insightsMockData = {
   },
 };
 
+// ----- Hotel vertical -------------------------------------------------------
+
+export const hotelInsightsMockData = {
+  vertical: "hotels" as const,
+  lastSyncedMinutesAgo: 2,
+  cards: {
+    // CARD 1 — RevPAR today (revenue per available room)
+    revpar: {
+      amount: 312, // EC$
+      currency: "EC$",
+      trendPct: 9,
+      compare: "vs yesterday",
+      occupancyPct: 78,
+      adr: 400,
+      sparkline: [
+        { d: "Apr 6", v: 248 }, { d: "Apr 7", v: 264 }, { d: "Apr 8", v: 290 },
+        { d: "Apr 9", v: 271 }, { d: "Apr 10", v: 304 }, { d: "Apr 11", v: 318 },
+        { d: "Apr 12", v: 356 }, { d: "Apr 13", v: 298 }, { d: "Apr 14", v: 282 },
+        { d: "Apr 15", v: 295 }, { d: "Apr 16", v: 288 }, { d: "Apr 17", v: 306 },
+        { d: "Apr 18", v: 286 }, { d: "Apr 19", v: 312 },
+      ] as SparkPoint[],
+      hourly: [
+        { h: "12a", v: 0 }, { h: "3a", v: 0 }, { h: "6a", v: 80 },
+        { h: "9a", v: 220 }, { h: "12p", v: 410 }, { h: "3p", v: 540 },
+        { h: "6p", v: 380 }, { h: "9p", v: 220 },
+      ],
+      topOrders: [
+        { id: "RES-8841", customer: "Anders Family (Suite 401)", service: "5-night stay", total: 4200, time: "Check-in 3:14 PM" },
+        { id: "RES-8840", customer: "Marcus Charles (Room 212)", service: "2-night stay", total: 1240, time: "Check-in 2:50 PM" },
+        { id: "RES-8839", customer: "Janelle Thomas (Room 308)", service: "3-night stay", total: 1860, time: "Check-in 1:20 PM" },
+        { id: "RES-8838", customer: "Kareem Louis (Room 105)", service: "1-night stay", total: 540, time: "Check-in 12:48 PM" },
+        { id: "RES-8837", customer: "Devon Greene (Room 203)", service: "Day pass", total: 180, time: "10:14 AM" },
+      ],
+    },
+    // CARD 2 — Arrivals & departures (live front desk)
+    frontDesk: {
+      tableCount: 14, // arrivals today
+      total: 9, // departures today
+      seatedOver45: 3, // arrivals not yet checked in
+      oldest: { table: "RES-8842", minutes: 95, total: 2400, server: "Karine" }, // late arrival
+      tabs: [
+        { table: "RES-8842", minutes: 95, total: 2400, server: "Karine (front desk)" },
+        { table: "RES-8841", minutes: 62, total: 4200, server: "Maria" },
+        { table: "RES-8840", minutes: 48, total: 1240, server: "Devon" },
+        { table: "RES-8843", minutes: 30, total: 860, server: "Karine" },
+        { table: "RES-8844", minutes: 18, total: 1480, server: "Maria" },
+        { table: "RES-8845", minutes: 6, total: 720, server: "Devon" },
+      ],
+    },
+    // CARD 3 — Outstanding folios
+    outstandingInvoices: {
+      total: 6840,
+      count: 11,
+      overdue: 3,
+      buckets: { d0_30: 3200, d30_60: 2240, d60p: 1400 },
+      invoices: [
+        { id: "FOL/2026/0091", customer: "Caribbean Tours Ltd. (Group)", amount: 2400, daysOverdue: 38, lastReminder: "4d ago", status: "overdue" },
+        { id: "FOL/2026/0094", customer: "Marcus Charles (Suite 401)", amount: 1240, daysOverdue: 22, lastReminder: "2d ago", status: "overdue" },
+        { id: "FOL/2026/0097", customer: "Anders Family", amount: 920, daysOverdue: 12, lastReminder: "1d ago", status: "overdue" },
+        { id: "FOL/2026/0101", customer: "Bayside Wedding Co.", amount: 720, daysOverdue: 0, lastReminder: "—", status: "due" },
+        { id: "FOL/2026/0103", customer: "Dr. Alvarez", amount: 540, daysOverdue: 0, lastReminder: "—", status: "due" },
+        { id: "FOL/2026/0105", customer: "Janelle Thomas", amount: 480, daysOverdue: 0, lastReminder: "—", status: "due" },
+        { id: "FOL/2026/0107", customer: "Sarah Mitchell", amount: 280, daysOverdue: 0, lastReminder: "—", status: "due" },
+        { id: "FOL/2026/0108", customer: "Kareem Louis", amount: 180, daysOverdue: 0, lastReminder: "—", status: "due" },
+      ],
+    },
+    // CARD 4 — Top guests (last 30 days by total folio)
+    topCustomers: [
+      { name: "Anders Family", spent: 4200, visits: 2, segment: "VIP repeat" },
+      { name: "Caribbean Tours Ltd.", spent: 3840, visits: 4, segment: "Corporate" },
+      { name: "Marcus Charles", spent: 2480, visits: 3, segment: "VIP" },
+      { name: "Bayside Wedding Co.", spent: 1980, visits: 1, segment: "Group" },
+      { name: "Janelle Thomas", spent: 1860, visits: 2, segment: "Repeat" },
+      { name: "Dr. Alvarez", spent: 1240, visits: 2, segment: "Repeat" },
+      { name: "Sarah Mitchell", spent: 920, visits: 1, segment: "New" },
+      { name: "Kareem Louis", spent: 540, visits: 1, segment: "New" },
+    ],
+    // CARD 5 — Excursion / room-type performance
+    menuPerformance: {
+      best: [
+        { name: "Whale-watching tour", orders: 38, revenue: 5320 },
+        { name: "Ocean View Suite", orders: 24, revenue: 9600 },
+        { name: "Boiling Lake hike", orders: 21, revenue: 2940 },
+      ],
+      worst: [
+        { name: "Spa day-pass", orders: 2, revenue: 240 },
+        { name: "Standard Garden room", orders: 3, revenue: 540 },
+        { name: "Sunset cocktail tasting", orders: 4, revenue: 320 },
+      ],
+    },
+    // CARD 6 — Housekeeping / amenity stock
+    lowStock: [
+      { name: "Premium bath towels", qty: 6, unit: "ea", reorderAt: 30, severity: "red", supplier: "Caribbean Linens" },
+      { name: "Mini-bar rum (375ml)", qty: 4, unit: "btl", reorderAt: 15, severity: "red", supplier: "Caribbean Spirits Ltd." },
+      { name: "King bedsheets", qty: 8, unit: "set", reorderAt: 20, severity: "amber", supplier: "Caribbean Linens" },
+      { name: "Shampoo bottles", qty: 12, unit: "btl", reorderAt: 30, severity: "amber", supplier: "Roseau Wholesale" },
+    ],
+    // CARD 7 — Staff tips (concierge + bell + housekeeping pool)
+    staffTips: {
+      pool: 624,
+      diffVsLastWeek: 88,
+      servers: [
+        { name: "Karine S. (concierge)", share: 168, shifts: 1 },
+        { name: "Maria J. (front desk)", share: 142, shifts: 1 },
+        { name: "Devon G. (bell)", share: 124, shifts: 1 },
+        { name: "Tyrell B. (housekeeping)", share: 102, shifts: 1 },
+        { name: "Anika R. (concierge)", share: 88, shifts: 1 },
+      ],
+      avg30d: 540,
+    },
+    // CARD 8 — Cash + bank
+    cashBalance: {
+      total: 64200,
+      cashOnHand: 2400,
+      bank: 61800,
+      payrollDueDays: 5,
+      payrollAmount: 28400,
+      supplierDue: 6800,
+      sparkline: [
+        { d: "M", v: 58200 }, { d: "T", v: 59400 }, { d: "W", v: 60800 },
+        { d: "T", v: 61500 }, { d: "F", v: 62800 }, { d: "S", v: 63600 }, { d: "S", v: 64200 },
+      ] as SparkPoint[],
+      transactions: [
+        { kind: "deposit", label: "Fiserv batch clear (folio settlements)", amount: 4820, time: "Today 6:02 AM" },
+        { kind: "expense", label: "Caribbean Linens", amount: -1240, time: "Yesterday" },
+        { kind: "deposit", label: "Group deposit — Bayside Wedding", amount: 2400, time: "2d ago" },
+        { kind: "expense", label: "Mountain Dairy (breakfast supply)", amount: -680, time: "3d ago" },
+        { kind: "deposit", label: "Fiserv batch clear", amount: 5320, time: "3d ago" },
+      ],
+    },
+  },
+};
+
+// ----- Clinic vertical ------------------------------------------------------
+
+export const clinicInsightsMockData = {
+  vertical: "clinics" as const,
+  lastSyncedMinutesAgo: 2,
+  cards: {
+    // CARD 1 — Appointments today (revenue + count + avg consult)
+    appointments: {
+      amount: 2840, // EC$ billed today
+      currency: "EC$",
+      trendPct: 12,
+      compare: "vs yesterday",
+      orders: 28, // appointments
+      avgTicket: 102, // avg per consult
+      sparkline: [
+        { d: "Apr 6", v: 1980 }, { d: "Apr 7", v: 2160 }, { d: "Apr 8", v: 2380 },
+        { d: "Apr 9", v: 2040 }, { d: "Apr 10", v: 2540 }, { d: "Apr 11", v: 2720 },
+        { d: "Apr 12", v: 0 }, { d: "Apr 13", v: 0 }, { d: "Apr 14", v: 2480 },
+        { d: "Apr 15", v: 2620 }, { d: "Apr 16", v: 2580 }, { d: "Apr 17", v: 2760 },
+        { d: "Apr 18", v: 2540 }, { d: "Apr 19", v: 2840 },
+      ] as SparkPoint[],
+      hourly: [
+        { h: "8a", v: 320 }, { h: "9a", v: 420 }, { h: "10a", v: 380 },
+        { h: "11a", v: 410 }, { h: "12p", v: 180 }, { h: "1p", v: 90 },
+        { h: "2p", v: 360 }, { h: "3p", v: 320 }, { h: "4p", v: 280 },
+        { h: "5p", v: 80 },
+      ],
+      topOrders: [
+        { id: "APT-3341", customer: "Janelle Thomas", service: "Annual physical", total: 240, time: "9:00 AM" },
+        { id: "APT-3342", customer: "Marcus Charles (peds)", service: "Vaccination", total: 180, time: "9:30 AM" },
+        { id: "APT-3343", customer: "Sarah Mitchell", service: "Follow-up consult", total: 120, time: "10:15 AM" },
+        { id: "APT-3344", customer: "Kareem Louis", service: "Lab review", total: 90, time: "11:00 AM" },
+        { id: "APT-3345", customer: "Devon Greene", service: "Telehealth consult", total: 80, time: "2:30 PM" },
+      ],
+    },
+    // CARD 2 — No-show rate (today's at-risk slots)
+    noShows: {
+      tableCount: 4, // at-risk slots today
+      total: 480, // potential revenue at risk EC$
+      seatedOver45: 2, // unconfirmed within 4h of slot
+      oldest: { table: "APT-3360", minutes: 185, total: 240, server: "Dr. Alvarez" },
+      tabs: [
+        { table: "APT-3360 (3:30 PM)", minutes: 185, total: 240, server: "Dr. Alvarez · annual physical" },
+        { table: "APT-3358 (2:45 PM)", minutes: 120, total: 120, server: "Dr. Phillip · follow-up" },
+        { table: "APT-3355 (2:00 PM)", minutes: 75, total: 80, server: "Dr. Alvarez · telehealth" },
+        { table: "APT-3354 (1:30 PM)", minutes: 45, total: 40, server: "Nurse Karine · vitals only" },
+      ],
+    },
+    // CARD 3 — Outstanding co-pays & insurance claims
+    outstandingInvoices: {
+      total: 5240,
+      count: 14,
+      overdue: 4,
+      buckets: { d0_30: 2400, d30_60: 1840, d60p: 1000 },
+      invoices: [
+        { id: "INV/PT/0042", customer: "BlueCross claim · Marcus Charles", amount: 1240, daysOverdue: 52, lastReminder: "7d ago", status: "overdue" },
+        { id: "INV/PT/0048", customer: "Sagicor claim · Janelle Thomas", amount: 860, daysOverdue: 28, lastReminder: "3d ago", status: "overdue" },
+        { id: "INV/PT/0051", customer: "Co-pay · Sarah Mitchell", amount: 280, daysOverdue: 14, lastReminder: "2d ago", status: "overdue" },
+        { id: "INV/PT/0054", customer: "Co-pay · Kareem Louis", amount: 180, daysOverdue: 8, lastReminder: "1d ago", status: "overdue" },
+        { id: "INV/PT/0058", customer: "Co-pay · Tania Bellot", amount: 240, daysOverdue: 0, lastReminder: "—", status: "due" },
+        { id: "INV/PT/0061", customer: "Co-pay · Devon Greene", amount: 180, daysOverdue: 0, lastReminder: "—", status: "due" },
+        { id: "INV/PT/0063", customer: "BlueCross claim · Dr. Alvarez fam", amount: 540, daysOverdue: 0, lastReminder: "—", status: "due" },
+        { id: "INV/PT/0064", customer: "Co-pay · Anders Family", amount: 120, daysOverdue: 0, lastReminder: "—", status: "due" },
+      ],
+    },
+    // CARD 4 — Top patients (last 30 days)
+    topCustomers: [
+      { name: "Janelle Thomas", spent: 1240, visits: 6, segment: "Chronic care" },
+      { name: "Marcus Charles fam", spent: 980, visits: 5, segment: "Family plan" },
+      { name: "Sarah Mitchell", spent: 720, visits: 4, segment: "Regular" },
+      { name: "Anders Family", spent: 680, visits: 4, segment: "Family plan" },
+      { name: "Kareem Louis", spent: 540, visits: 3, segment: "Regular" },
+      { name: "Tania Bellot", spent: 420, visits: 3, segment: "Regular" },
+      { name: "Devon Greene", spent: 320, visits: 2, segment: "New" },
+      { name: "Maria Joseph", spent: 280, visits: 2, segment: "New" },
+    ],
+    // CARD 5 — Service performance (best & worst-billed services)
+    menuPerformance: {
+      best: [
+        { name: "Annual physical", orders: 42, revenue: 10080 },
+        { name: "Vaccination panel", orders: 36, revenue: 6480 },
+        { name: "Telehealth consult", orders: 31, revenue: 2480 },
+      ],
+      worst: [
+        { name: "Allergy panel", orders: 2, revenue: 360 },
+        { name: "Sports physical", orders: 3, revenue: 540 },
+        { name: "Dietitian consult", orders: 4, revenue: 480 },
+      ],
+    },
+    // CARD 6 — Low supplies (vaccines, PPE, lab)
+    lowStock: [
+      { name: "MMR vaccine doses", qty: 4, unit: "dose", reorderAt: 20, severity: "red", supplier: "Caribbean MedSupply" },
+      { name: "Nitrile gloves (M)", qty: 1, unit: "box", reorderAt: 8, severity: "red", supplier: "Roseau Medical" },
+      { name: "Lab vacutainers", qty: 18, unit: "ea", reorderAt: 50, severity: "amber", supplier: "Caribbean MedSupply" },
+      { name: "Saline IV bags", qty: 6, unit: "bag", reorderAt: 15, severity: "amber", supplier: "Roseau Medical" },
+    ],
+    // CARD 7 — Staff payroll (provider + nurse hours)
+    staffTips: {
+      pool: 1840, // today's billable provider hours $
+      diffVsLastWeek: 220,
+      servers: [
+        { name: "Dr. Alvarez", share: 720, shifts: 1 },
+        { name: "Dr. Phillip", share: 540, shifts: 1 },
+        { name: "Nurse Karine", share: 280, shifts: 1 },
+        { name: "Nurse Tyrell", share: 180, shifts: 1 },
+        { name: "Reception · Anika", share: 120, shifts: 1 },
+      ],
+      avg30d: 1620,
+    },
+    // CARD 8 — Cash + bank
+    cashBalance: {
+      total: 42800,
+      cashOnHand: 1820,
+      bank: 40980,
+      payrollDueDays: 4,
+      payrollAmount: 18600,
+      supplierDue: 4200,
+      sparkline: [
+        { d: "M", v: 38400 }, { d: "T", v: 39200 }, { d: "W", v: 40100 },
+        { d: "T", v: 40850 }, { d: "F", v: 41600 }, { d: "S", v: 42200 }, { d: "S", v: 42800 },
+      ] as SparkPoint[],
+      transactions: [
+        { kind: "deposit", label: "BlueCross claim batch settled", amount: 3840, time: "Today 7:14 AM" },
+        { kind: "expense", label: "Caribbean MedSupply", amount: -1180, time: "Yesterday" },
+        { kind: "deposit", label: "Patient co-pays — Friday", amount: 1240, time: "2d ago" },
+        { kind: "expense", label: "Roseau Medical (PPE)", amount: -640, time: "3d ago" },
+        { kind: "deposit", label: "Sagicor claim batch settled", amount: 2820, time: "3d ago" },
+      ],
+    },
+  },
+};
+
+// Vertical → dataset map. Page reads from this based on dropdown.
+export const insightsByVertical = {
+  restaurants: insightsMockData,
+  hotels: hotelInsightsMockData,
+  clinics: clinicInsightsMockData,
+} as const;
+
+export type InsightsVertical = keyof typeof insightsByVertical;
+
 // ----- Global alert tray -----------------------------------------------------
 
 export type AlertCategory = "critical" | "escalation" | "system" | "ema" | "snoozed";

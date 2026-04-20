@@ -22,6 +22,10 @@ import {
   CheckCircle2,
   PauseCircle,
   Copy,
+  CalendarCheck,
+  MessageSquare,
+  ArrowUpRight,
+  Activity as ActivityIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../../layout";
@@ -53,7 +57,9 @@ import {
 import {
   agents as seedAgents,
   defaultHours,
+  getAgentActivity,
   type Agent,
+  type AgentActivityOutcome,
   type AgentChannel,
   type AgentRoutingRule,
 } from "@/lib/mock-data";
@@ -74,11 +80,37 @@ const ruleTypeMeta: Record<AgentRoutingRule["type"], { label: string; icon: type
   fallback: { label: "Fallback", icon: Workflow, color: "border-ema/30 bg-ema/10 text-ema" },
 };
 
+const outcomeMeta: Record<AgentActivityOutcome, { label: string; icon: typeof Tag; className: string }> = {
+  booked: {
+    label: "Booked",
+    icon: CalendarCheck,
+    className: "border-success/30 bg-success/10 text-success",
+  },
+  answered: {
+    label: "Answered",
+    icon: MessageSquare,
+    className: "border-border/60 bg-muted/40 text-muted-foreground",
+  },
+  escalated: {
+    label: "Escalated",
+    icon: AlertTriangle,
+    className: "border-warning/30 bg-warning/10 text-warning",
+  },
+};
+
+const activityChannelIcon: Record<AgentChannel, typeof Phone> = {
+  whatsapp: Phone,
+  voice: PhoneCall,
+  instagram: Instagram,
+  messenger: MessageCircle,
+};
+
 export default function AgentDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams({ from: "/dashboard/agents/$id" });
 
   const original = useMemo(() => seedAgents.find((a) => a.id === id) ?? seedAgents[0], [id]);
+  const activity = useMemo(() => getAgentActivity(original.id), [original.id]);
 
   const [agent, setAgent] = useState<Agent>(original);
   const [keywordDraft, setKeywordDraft] = useState("");
@@ -199,6 +231,7 @@ export default function AgentDetailPage() {
             <TabsTrigger value="channels">Channels</TabsTrigger>
             <TabsTrigger value="hours">Hours</TabsTrigger>
             <TabsTrigger value="routing">Routing</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
           </TabsList>
 
           <TabsContent value="persona" className="mt-6 space-y-6">
@@ -536,6 +569,74 @@ export default function AgentDetailPage() {
                   })}
                 </div>
               )}
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="activity" className="mt-6 space-y-4">
+            <Card className="border-border/40 bg-card/40 p-6">
+              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <ActivityIcon className="h-4 w-4 text-primary" />
+                    <h3 className="font-display text-base font-semibold">Recent activity</h3>
+                  </div>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Last 50 conversations {agent.name} handled — across every channel.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
+                  <Badge variant="outline" className="gap-1 border-success/30 bg-success/10 text-success">
+                    <CalendarCheck className="h-2.5 w-2.5" />
+                    {activity.filter((a) => a.outcome === "booked").length} booked
+                  </Badge>
+                  <Badge variant="outline" className="gap-1 border-border/60 bg-muted/40 text-muted-foreground">
+                    <MessageSquare className="h-2.5 w-2.5" />
+                    {activity.filter((a) => a.outcome === "answered").length} answered
+                  </Badge>
+                  <Badge variant="outline" className="gap-1 border-warning/30 bg-warning/10 text-warning">
+                    <AlertTriangle className="h-2.5 w-2.5" />
+                    {activity.filter((a) => a.outcome === "escalated").length} escalated
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="overflow-hidden rounded-lg border border-border/40">
+                <ul className="divide-y divide-border/40">
+                  {activity.map((entry) => {
+                    const ChannelIcon = activityChannelIcon[entry.channel];
+                    const Outcome = outcomeMeta[entry.outcome];
+                    const OutcomeIcon = Outcome.icon;
+                    return (
+                      <li key={entry.id}>
+                        <Link
+                          to="/dashboard/inbox"
+                          className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-3 px-4 py-3 transition-colors hover:bg-accent/30"
+                        >
+                          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-accent/40 text-muted-foreground">
+                            <ChannelIcon className="h-3.5 w-3.5" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-medium">{entry.customer}</div>
+                            <div className="truncate text-xs text-muted-foreground">{entry.preview}</div>
+                          </div>
+                          <Badge variant="outline" className={cn("hidden gap-1 sm:inline-flex", Outcome.className)}>
+                            <OutcomeIcon className="h-2.5 w-2.5" />
+                            {Outcome.label}
+                          </Badge>
+                          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                            <span className="hidden sm:inline">{entry.time}</span>
+                            <ArrowUpRight className="h-3.5 w-3.5 opacity-60 transition-opacity group-hover:opacity-100" />
+                          </div>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              <p className="mt-3 text-[11px] text-muted-foreground">
+                Tap any row to open the full thread in your inbox.
+              </p>
             </Card>
           </TabsContent>
         </Tabs>

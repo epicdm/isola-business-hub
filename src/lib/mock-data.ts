@@ -471,6 +471,7 @@ export const contacts = [
   { id: "p8", name: "Wesley F.", phone: "+1 767 488 0011", channel: "voice" as Channel, visits: 9, lastSeen: "1d ago", spend: 1620, tags: ["regular", "vip"], notes: "Requests window table. Tips well." },
   { id: "p9", name: "Antoinette R.", phone: "+1 767 622 9087", channel: "whatsapp" as Channel, visits: 14, lastSeen: "2d ago", spend: 3150, tags: ["vip"], notes: "Hosts annual anniversary dinner — table of 8." },
   { id: "p10", name: "Tania B.", phone: "@taniab", channel: "messenger" as Channel, visits: 1, lastSeen: "31m ago", spend: 0, tags: ["new"], notes: "Walked in after asking for directions." },
+  { id: "p11", name: "Marcus Charles", phone: "+1 767 123 4567", channel: "whatsapp" as Channel, visits: 6, lastSeen: "5m ago", spend: 1480, tags: ["vip", "regular"], notes: "Anniversary regular. Price-insensitive — always pre-orders the tasting menu." },
 ];
 
 // ---------- Catalog ----------

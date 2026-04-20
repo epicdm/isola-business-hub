@@ -705,6 +705,92 @@ export const agentTemplates: Array<{
   { key: "custom", emoji: "✨", label: "Custom", desc: "Start from scratch with a blank agent." },
 ];
 
+export type AgentActivityOutcome = "booked" | "answered" | "escalated";
+
+export type AgentActivityEntry = {
+  id: string;
+  conversationId: string; // links into /dashboard/inbox
+  channel: AgentChannel;
+  customer: string;
+  outcome: AgentActivityOutcome;
+  preview: string;
+  time: string; // relative
+};
+
+const activityCustomers = [
+  "Aaliyah George", "Marcus Phillip", "Cherise Joseph", "Kareem L.", "Solange P.",
+  "Tania B.", "Joelle M.", "Wesley F.", "Antoinette R.", "Devon R.",
+  "Mireille A.", "Janelle Rose", "Dr. Alvarez", "@island_eats_dom", "@dominica_eats",
+  "Naomi C.", "Ravi P.", "Sabine D.", "Theo K.", "Yannick B.",
+  "Imani O.", "Leon V.", "Priya N.", "Estella M.", "Quincy R.",
+];
+
+const activityChannels: AgentChannel[] = ["whatsapp", "voice", "instagram", "messenger"];
+const activityOutcomes: AgentActivityOutcome[] = ["booked", "answered", "answered", "answered", "escalated"];
+const activityPreviews: Record<AgentActivityOutcome, string[]> = {
+  booked: [
+    "Booked table for 4, Friday 7pm",
+    "Reservation confirmed — Sat 6:30 PM",
+    "Locked in birthday dinner for 8",
+    "Brunch booked for Sunday, party of 3",
+    "Tour group of 6 scheduled",
+  ],
+  answered: [
+    "Answered question about closing time",
+    "Shared menu and pricing",
+    "Confirmed location + parking",
+    "Explained dietary options",
+    "Replied with directions",
+    "Sent today's specials",
+  ],
+  escalated: [
+    "Escalated — private dinner request",
+    "Escalated — refund inquiry",
+    "Handed off — manager requested",
+    "Escalated — bulk order pricing",
+  ],
+};
+
+// Deterministic per-agent activity feed (50 entries). Pure UI mock.
+export function getAgentActivity(agentId: string): AgentActivityEntry[] {
+  // Tiny seeded PRNG so results are stable per agent across renders.
+  let seed = 0;
+  for (let i = 0; i < agentId.length; i++) seed = (seed * 31 + agentId.charCodeAt(i)) >>> 0;
+  const rand = () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 0xffffffff;
+  };
+  const pick = <T,>(arr: T[]) => arr[Math.floor(rand() * arr.length)];
+  const realConvIds = ["c1", "c2", "c3", "c4", "c5", "c6"];
+
+  const entries: AgentActivityEntry[] = [];
+  for (let i = 0; i < 50; i++) {
+    const channel = pick(activityChannels);
+    const outcome = pick(activityOutcomes);
+    const customer = pick(activityCustomers);
+    const preview = pick(activityPreviews[outcome]);
+    // First 6 link to real inbox conversations; the rest reuse them round-robin.
+    const conversationId = i < realConvIds.length ? realConvIds[i] : realConvIds[i % realConvIds.length];
+    const minutesAgo = Math.floor(2 + i * 17 + rand() * 12);
+    const time =
+      minutesAgo < 60
+        ? `${minutesAgo}m ago`
+        : minutesAgo < 60 * 24
+          ? `${Math.floor(minutesAgo / 60)}h ago`
+          : `${Math.floor(minutesAgo / (60 * 24))}d ago`;
+    entries.push({
+      id: `${agentId}-act-${i}`,
+      conversationId,
+      channel,
+      customer,
+      outcome,
+      preview,
+      time,
+    });
+  }
+  return entries;
+}
+
 export const agents: Agent[] = [
   {
     id: "ag-receptionist",

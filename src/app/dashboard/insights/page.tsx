@@ -388,6 +388,13 @@ export default function InsightsPage() {
   const [synced, setSynced] = useState(insightsMockData.lastSyncedMinutesAgo);
   const [refreshing, setRefreshing] = useState(false);
   const [vertical, setVertical] = useState("Restaurants");
+  const [odooConnected, setOdooConnected] = useState<boolean | null>(null);
+
+  // Hydrate Odoo-connected flag from localStorage (SSR-safe)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setOdooConnected(window.localStorage.getItem("odooConnected") === "true");
+  }, []);
 
   // Tick the "synced X min ago" pill
   useEffect(() => {
@@ -405,6 +412,7 @@ export default function InsightsPage() {
   };
 
   const c = data;
+  const locked = odooConnected === false;
 
   return (
     <DashboardLayout currentPath="/dashboard/insights">

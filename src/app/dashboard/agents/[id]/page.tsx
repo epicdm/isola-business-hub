@@ -22,6 +22,10 @@ import {
   CheckCircle2,
   PauseCircle,
   Copy,
+  CalendarCheck,
+  MessageSquare,
+  ArrowUpRight,
+  Activity as ActivityIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../../layout";

@@ -171,6 +171,20 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<OnboardingData>;
         setData((d) => ({ ...d, ...parsed }));
+        // Only nudge the user if there's something meaningful to resume.
+        const hasMeaningfulDraft = Object.entries(parsed).some(([key, value]) => {
+          if (typeof value !== "string") return false;
+          if (key === "openTime" || key === "closeTime" || key === "greeting" || key === "language") {
+            return false; // these have non-empty defaults; ignore
+          }
+          return value.trim().length > 0;
+        });
+        if (hasMeaningfulDraft) {
+          toast("Resumed your draft", {
+            description: "We restored your previous answers.",
+            duration: 3000,
+          });
+        }
       }
     } catch {
       // ignore corrupt draft

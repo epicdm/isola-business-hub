@@ -265,7 +265,11 @@ export const emaReports = [
   },
 ];
 
-export type Channel = "whatsapp" | "voice" | "instagram" | "messenger";
+export type Channel = "whatsapp" | "voice" | "instagram" | "messenger" | "facebook";
+
+/** Sub-type for channels that can carry both private DMs and public comments. */
+export type ChannelSubType = "dm" | "comment" | "page_comment" | "story";
+
 
 // ---------- Inbox ----------
 

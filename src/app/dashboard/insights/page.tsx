@@ -391,7 +391,7 @@ export default function InsightsPage() {
   const [synced, setSynced] = useState(insightsMockData.lastSyncedMinutesAgo);
   const [refreshing, setRefreshing] = useState(false);
   const [vertical, setVertical] = useState("Restaurants");
-  const { connected: odooConnected, setConnected } = useOdooConnection();
+  const { connected: odooConnected } = useOdooConnection();
   const [paywallDismissed, setPaywallDismissed] = useState(false);
 
   // Tick the "synced X min ago" pill

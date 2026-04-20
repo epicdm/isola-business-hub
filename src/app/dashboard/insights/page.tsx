@@ -783,18 +783,22 @@ export default function InsightsPage() {
                 </p>
                 <div className="mt-5 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
                   <Button asChild className="gap-1.5">
-                    <Link to="/onboarding" search={{ step: 6 }}>
+                    <Link to="/onboarding" search={{ step: 6, resume: 1, returnTo: "/dashboard/insights" }}>
                       <Database className="h-4 w-4" />
-                      Connect Odoo
+                      Connect Odoo now
                     </Link>
                   </Button>
-                  <Button variant="ghost" asChild>
-                    <Link to="/dashboard/integrations">View integrations</Link>
+                  <Button variant="ghost" onClick={dismissPaywall}>
+                    Maybe later
                   </Button>
                 </div>
-                <p className="mt-3 text-[11px] text-muted-foreground">
-                  ~2 min · We only read what's needed.
-                </p>
+                <button
+                  type="button"
+                  onClick={tryReconnect}
+                  className="mt-3 text-[11px] text-muted-foreground hover:text-foreground"
+                >
+                  Already connected? Refresh →
+                </button>
               </div>
             </div>
           )}

@@ -368,15 +368,75 @@ export const conversations = [
   {
     id: "c6",
     channel: "whatsapp" as Channel,
-    customer: "Cherise Joseph",
-    preview: "Confirmed for tomorrow at 6:30",
-    time: "22m ago",
+    customer: "Marcus Charles",
+    preview: "🙌",
+    time: "5m ago",
     unread: 0,
     status: "ai" as const,
     messages: [
-      { id: 1, from: "ai" as const, text: "Hi Cherise — friendly reminder for your reservation tomorrow at 6:30 PM, table for 2. Reply YES to confirm or RESCHEDULE if needed.", time: "8:17 PM" },
-      { id: 2, from: "customer" as const, text: "YES", time: "8:17 PM" },
-      { id: 3, from: "ai" as const, text: "Confirmed for tomorrow at 6:30 ✓ See you then!", time: "8:17 PM" },
+      { id: 1, from: "customer" as const, text: "Hey I want to book a table for 4 tonight at 8pm", time: "7:02 PM" },
+      { id: 2, from: "ai" as const, text: "Hi Marcus! Let me check. 🎉 Yes, 8pm for 4 is available. Would you like to pre-order from tonight's tasting menu? It's been really popular.", time: "7:02 PM" },
+      { id: 3, from: "customer" as const, text: "what's on it", time: "7:03 PM" },
+      {
+        id: "card-catalog-c6",
+        from: "ai" as const,
+        text: "",
+        time: "7:03 PM",
+        card: {
+          kind: "catalog" as const,
+          itemId: "tasting-menu",
+          name: "Tasting Menu (7 courses)",
+          price: 180,
+          desc: "Chef's Caribbean tasting — lobster, jerk lamb, rum cake finale.",
+          emoji: "🍽️",
+          tapped: true,
+        },
+      },
+      { id: 4, from: "customer" as const, text: "lets do it for all 4 of us", time: "7:05 PM" },
+      { id: 5, from: "ai" as const, text: "Perfect — EC$720 for 4 guests. I'll send a payment link to hold the reservation.", time: "7:05 PM" },
+      {
+        id: "card-payment-c6-pending",
+        from: "ai" as const,
+        text: "",
+        time: "7:05 PM",
+        card: {
+          kind: "payment" as const,
+          amount: 720,
+          description: "Tasting menu — 4 guests, Saturday 8pm",
+          status: "pending" as const,
+          provider: "Stripe",
+        },
+      },
+      { id: 6, from: "customer" as const, text: "paid", time: "7:14 PM" },
+      {
+        id: "card-payment-c6-paid",
+        from: "ai" as const,
+        text: "",
+        time: "7:14 PM",
+        card: {
+          kind: "payment" as const,
+          amount: 720,
+          description: "Tasting menu — 4 guests, Saturday 8pm",
+          status: "paid" as const,
+          paidAt: "7:14 PM",
+          provider: "Stripe",
+        },
+      },
+      {
+        id: "card-booking-c6",
+        from: "ai" as const,
+        text: "",
+        time: "7:14 PM",
+        card: {
+          kind: "booking" as const,
+          service: "Tasting menu pre-ordered",
+          date: "Saturday",
+          time: "8:00 PM",
+          party: 4,
+          notes: "7-course tasting · paid in full",
+        },
+      },
+      { id: 7, from: "customer" as const, text: "🙌", time: "7:15 PM" },
     ],
   },
 ];
@@ -411,6 +471,7 @@ export const contacts = [
   { id: "p8", name: "Wesley F.", phone: "+1 767 488 0011", channel: "voice" as Channel, visits: 9, lastSeen: "1d ago", spend: 1620, tags: ["regular", "vip"], notes: "Requests window table. Tips well." },
   { id: "p9", name: "Antoinette R.", phone: "+1 767 622 9087", channel: "whatsapp" as Channel, visits: 14, lastSeen: "2d ago", spend: 3150, tags: ["vip"], notes: "Hosts annual anniversary dinner — table of 8." },
   { id: "p10", name: "Tania B.", phone: "@taniab", channel: "messenger" as Channel, visits: 1, lastSeen: "31m ago", spend: 0, tags: ["new"], notes: "Walked in after asking for directions." },
+  { id: "p11", name: "Marcus Charles", phone: "+1 767 123 4567", channel: "whatsapp" as Channel, visits: 6, lastSeen: "5m ago", spend: 1480, tags: ["vip", "regular"], notes: "Anniversary regular. Price-insensitive — always pre-orders the tasting menu." },
 ];
 
 // ---------- Catalog ----------
@@ -992,9 +1053,9 @@ export const suggestionSeeds: Record<string, string[][]> = {
   ],
   c6: [
     [
-      "Confirmed ✓ See you tomorrow at 6:30!",
-      "All set — table for 2, tomorrow 6:30 PM. Anything special I should note?",
-      "Lovely. Want me to set aside our window table tomorrow?",
+      "Glad it went through! See you Saturday at 8 — ask for Marcus at the door.",
+      "Payment received ✓ Anything special I should flag for the kitchen?",
+      "Locked in. Want me to add a wine pairing to the tasting menu?",
     ],
   ],
 };
@@ -1189,7 +1250,7 @@ export const conversationMeta: Record<string, ConversationMeta> = {
   // Marcus Phillip (voice) — last customer reply was 26 hours ago. Triggers template-only banner.
   c4: { status: "open", labels: ["lb-support"], hoursSinceLastInbound: 26 },
   c5: { status: "open", labels: ["lb-lead"], hoursSinceLastInbound: 0.5 },
-  c6: { status: "resolved", labels: ["lb-booking"], hoursSinceLastInbound: 0.4 },
+  c6: { status: "open", labels: ["lb-vip", "lb-booking"], hoursSinceLastInbound: 0.08 },
 };
 
 export const statusMeta: Record<

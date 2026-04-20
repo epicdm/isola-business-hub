@@ -13,6 +13,7 @@ import {
   CreditCard,
   ShoppingBag,
 } from "lucide-react";
+import logoEpic from "@/assets/logo-epic.png";
 
 const sections = [
   {
@@ -91,7 +92,7 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
             </div>
           ))}
         </nav>
-        <div className="border-t border-sidebar-border p-4">
+        <div className="space-y-3 border-t border-sidebar-border p-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-sm font-semibold">
               MJ
@@ -101,6 +102,17 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
               <div className="truncate text-xs text-muted-foreground">Coalpot Restaurant</div>
             </div>
           </div>
+          <a
+            href="https://epic.communications"
+            className="flex items-center gap-2 rounded-md border border-sidebar-border/60 bg-sidebar-accent/30 px-2.5 py-2 text-[10px] uppercase tracking-wider text-muted-foreground transition-colors hover:bg-sidebar-accent/60"
+          >
+            <img src={logoEpic} alt="Epic Communications" className="h-6 w-6 rounded bg-white p-0.5" />
+            <span className="leading-tight">
+              Built by
+              <br />
+              <span className="text-sidebar-foreground">Epic Communications</span>
+            </span>
+          </a>
         </div>
       </div>
     </aside>

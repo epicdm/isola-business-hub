@@ -41,8 +41,13 @@ export default function MarketingFooter() {
           </ul>
         </div>
       </div>
-      <div className="border-t border-border/40 px-6 py-5 text-center text-xs text-muted-foreground">
-        © 2026 Isola. Made in the Caribbean. 🌴
+      <div className="flex flex-col items-center justify-center gap-3 border-t border-border/40 px-6 py-5 text-center text-xs text-muted-foreground sm:flex-row">
+        <span>© 2026 Isola. Made in the Caribbean. 🌴</span>
+        <span className="hidden h-3 w-px bg-border sm:block" />
+        <a href="https://epic.communications" className="flex items-center gap-2 transition-colors hover:text-foreground">
+          <img src="/logo-epic.png" alt="Epic Communications" className="h-5 w-5 rounded bg-white p-0.5" />
+          <span>Built by Epic Communications</span>
+        </a>
       </div>
     </footer>
   );

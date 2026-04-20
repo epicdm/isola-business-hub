@@ -8,20 +8,28 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { pricingTiers, faqs } from "@/lib/mock-data";
+import { pricingTiers } from "@/lib/mock-data";
 
-const compareRows = [
-  { feature: "WhatsApp numbers", starter: "1", pro: "1", business: "3" },
-  { feature: "Voice minutes / month", starter: "100", pro: "500", business: "Unlimited" },
-  { feature: "WhatsApp answering", starter: true, pro: true, business: true },
-  { feature: "Voice via WhatsApp Calling", starter: true, pro: true, business: true },
-  { feature: "Instagram DMs & comments", starter: false, pro: true, business: true },
-  { feature: "Facebook Messenger", starter: false, pro: true, business: true },
-  { feature: "Ema chief-of-staff", starter: true, pro: true, business: true },
-  { feature: "Stripe payments", starter: false, pro: true, business: true },
-  { feature: "Custom integrations", starter: false, pro: false, business: true },
-  { feature: "Dedicated success manager", starter: false, pro: false, business: true },
-  { feature: "Support", starter: "Email", pro: "Priority", business: "Dedicated" },
+const compareRows: Array<{
+  feature: string;
+  starter: boolean | string;
+  pro: boolean | string;
+  business: boolean | string;
+}> = [
+  { feature: "AI on WhatsApp text", starter: true, pro: true, business: true },
+  { feature: "AI on Instagram (DMs, comments, stories)", starter: false, pro: true, business: true },
+  { feature: "AI on Facebook Messenger + page comments", starter: false, pro: true, business: true },
+  { feature: "AI voice — inbound", starter: true, pro: true, business: true },
+  { feature: "AI voice — outbound (confirmation, no-show recovery)", starter: false, pro: true, business: true },
+  { feature: "Odoo ERP integration (invoices, inventory, customers)", starter: false, pro: true, business: true },
+  { feature: "Fiserv payments (XCD native)", starter: true, pro: true, business: true },
+  { feature: "Reloadly airtime + bill pay", starter: false, pro: true, business: true },
+  { feature: "Ema — your AI chief of staff", starter: true, pro: true, business: true },
+  { feature: "Unified inbox (Chatwoot-powered)", starter: true, pro: true, business: true },
+  { feature: "Per-agent custom tone + tools", starter: false, pro: true, business: true },
+  { feature: "Voice minutes included", starter: "100", pro: "500", business: "Unlimited" },
+  { feature: "Customer-facing numbers", starter: "1", pro: "1", business: "3" },
+  { feature: "Support tier", starter: "Email", pro: "Priority email", business: "Dedicated line + WhatsApp" },
 ];
 
 export default function PricingPage() {
@@ -38,10 +46,10 @@ export default function PricingPage() {
             <Sparkles className="mr-1.5 h-3 w-3" /> Pricing
           </Badge>
           <h1 className="font-display text-5xl font-bold leading-[1.05] md:text-6xl">
-            Pricing that <span className="text-gradient-primary">pays for itself</span> in week one.
+            One stack. <span className="text-gradient-primary">One bill.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-            Built for Caribbean small businesses. No setup fees. Cancel anytime. 14-day free trial.
+            All prices in EC$. No reseller margin. No middleman markup. Built and billed by EPIC Communications.
           </p>
 
           <div className="mt-10 inline-flex items-center gap-3 rounded-full border border-border/60 bg-card/50 px-5 py-2.5">
@@ -90,7 +98,7 @@ export default function PricingPage() {
                 variant={t.badge ? "default" : "outline"}
                 asChild
               >
-                <a href="/auth/sign-up">
+                <a href={t.name === "Business" ? "mailto:hello@isola.app?subject=Business%20demo" : "/auth/sign-up"}>
                   {t.cta} <ArrowRight className="ml-1.5 h-4 w-4" />
                 </a>
               </Button>
@@ -100,7 +108,7 @@ export default function PricingPage() {
       </section>
 
       {/* COMPARE */}
-      <section className="mx-auto max-w-6xl px-6 pb-20">
+      <section className="mx-auto max-w-6xl px-6 pb-12">
         <h2 className="mb-10 text-center font-display text-3xl font-bold md:text-4xl">Compare every feature</h2>
         <Card className="overflow-hidden border-border/60 bg-card/30">
           <div className="overflow-x-auto">
@@ -132,28 +140,35 @@ export default function PricingPage() {
                     ))}
                   </tr>
                 ))}
+                <tr className="border-t border-border/40 bg-card/40">
+                  <td className="p-4 font-medium">Setup fee</td>
+                  <td className="p-4 text-center text-muted-foreground">EC$200 (waived on annual)</td>
+                  <td className="p-4 text-center text-muted-foreground">EC$200 (waived on annual)</td>
+                  <td className="p-4 text-center text-muted-foreground">EC$200 (waived on annual)</td>
+                </tr>
               </tbody>
             </table>
           </div>
         </Card>
       </section>
 
-      {/* FAQ */}
-      <section className="mx-auto max-w-3xl px-6 pb-24">
-        <h2 className="mb-10 text-center font-display text-3xl font-bold md:text-4xl">Questions, answered</h2>
-        <div className="space-y-3">
-          {faqs.map((f) => (
-            <details key={f.q} className="group rounded-xl border border-border/60 bg-card/50 p-5 transition-colors hover:bg-card/70">
-              <summary className="cursor-pointer list-none font-display font-semibold marker:hidden">
-                <span className="flex items-center justify-between">
-                  {f.q}
-                  <span className="text-muted-foreground transition-transform group-open:rotate-45">+</span>
-                </span>
-              </summary>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{f.a}</p>
-            </details>
-          ))}
-        </div>
+      {/* WHY CHEAPER */}
+      <section className="mx-auto max-w-3xl px-6 pb-20">
+        <Card className="border-primary/30 bg-gradient-to-br from-primary/10 to-card p-7">
+          <h3 className="font-display text-xl font-bold">Why are we cheaper than Wati?</h3>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            Wati charges US$50–300+/mo on top of WhatsApp's own fees, plus Twilio minutes on top of
+            that. We own the telecom — no reseller margin. We own the gateway — no Stripe margin.
+            We're the vendor, not a middleman.
+          </p>
+        </Card>
+      </section>
+
+      {/* BUSINESS CTA */}
+      <section className="mx-auto max-w-3xl px-6 pb-24 text-center">
+        <Button size="lg" className="bg-gradient-primary text-primary-foreground shadow-glow" asChild>
+          <a href="mailto:hello@isola.app?subject=Business%20demo">Book a demo — we'll call you <ArrowRight className="ml-2 h-4 w-4" /></a>
+        </Button>
       </section>
 
       <MarketingFooter />

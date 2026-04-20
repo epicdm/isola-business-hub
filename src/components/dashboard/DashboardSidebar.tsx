@@ -15,7 +15,10 @@ import {
   LogOut,
 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { clearProfile, getInitials, readProfile } from "@/lib/profile";
+import { accountDefaults } from "@/lib/mock-data";
 import logoEpic from "@/assets/logo-epic.png";
 
 const sections = [
@@ -58,10 +61,21 @@ const sections = [
 export default function DashboardSidebar({ currentPath = "/dashboard" }: { currentPath?: string }) {
   const navigate = useNavigate();
 
+  const [profile, setProfile] = useState<{ contactName?: string; businessName?: string }>({});
+
+  useEffect(() => {
+    setProfile(readProfile());
+  }, []);
+
+  const contactName = profile.contactName?.trim() || accountDefaults.ownerName;
+  const businessName = profile.businessName?.trim() || accountDefaults.businessName;
+  const initials = getInitials(contactName);
+
   const handleSignOut = () => {
     if (typeof window !== "undefined") {
       window.localStorage.removeItem("mockLoggedIn");
     }
+    clearProfile();
     toast.success("Signed out");
     navigate({ to: "/" });
   };
@@ -108,11 +122,11 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
         <div className="space-y-3 border-t border-sidebar-border p-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-sm font-semibold">
-              MJ
+              {initials}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-medium">Marcus Joseph</div>
-              <div className="truncate text-xs text-muted-foreground">Coalpot Restaurant</div>
+              <div className="truncate text-sm font-medium">{contactName}</div>
+              <div className="truncate text-xs text-muted-foreground">{businessName}</div>
             </div>
             <button
               type="button"

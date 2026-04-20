@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
+import { saveProfile } from "@/lib/profile";
 import { toast } from "sonner";
 
 type AuthVariant = "sign-in" | "sign-up" | "forgot-password" | "magic-link";
@@ -288,6 +289,7 @@ function SignUpForm() {
       } catch {
         // ignore quota / parse errors — onboarding will still load with defaults
       }
+      saveProfile({ contactName: name.trim(), businessName: business.trim() });
     }
     toast.success("Account created — let's set up Isola");
     mockLogin(navigate, "/onboarding");

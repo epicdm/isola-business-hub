@@ -43,6 +43,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { saveProfile } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
 const TOTAL_STEPS = 5;
@@ -285,6 +286,7 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
     await new Promise((r) => setTimeout(r, 1100));
     window.localStorage.setItem("mockLoggedIn", "true");
     window.localStorage.setItem("mockOnboarded", "true");
+    saveProfile({ contactName: data.contactName, businessName: data.businessName });
     window.localStorage.removeItem(STORAGE_KEY);
     toast.success("You're all set! Welcome to Ema 👋");
     setSubmitting(false);

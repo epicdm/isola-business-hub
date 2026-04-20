@@ -1094,8 +1094,8 @@ export default function InboxPage() {
               })}
             </div>
 
-            {/* Suggested replies (Feature 2) — only when AI is handling */}
-            {isAi && (
+            {/* Suggested replies (Feature 2) — only when AI is handling and conversation is fresh */}
+            {isAi === true && !isStale24h && (
               <div className="border-t border-border/40 bg-violet/5 px-4 py-2.5">
                 <div className="flex items-center gap-2">
                   <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-violet">
@@ -1802,7 +1802,15 @@ export default function InboxPage() {
                       size="sm"
                       variant="outline"
                       className="h-7 border-amber-500/40 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20"
-                      onClick={() => { setRejectingDraft(d); setRejectNote(""); }}
+                      onClick={() => {
+                        setActiveId(d.conversationId);
+                        setComposerMode("whisper");
+                        setTeachAi(true);
+                        setDraft("");
+                        setRejectingDraft(d);
+                        setLeftPane("conversations");
+                        toast.info("Tell Ema why this reply was wrong");
+                      }}
                     >
                       <X className="h-3 w-3" /> Reject + teach
                     </Button>

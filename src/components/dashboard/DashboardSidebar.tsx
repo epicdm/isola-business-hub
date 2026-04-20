@@ -1,0 +1,108 @@
+import {
+  LayoutDashboard,
+  Inbox,
+  Calendar,
+  Users,
+  Sparkles,
+  FileText,
+  Settings as SettingsIcon,
+  BookOpen,
+  Clock,
+  Phone,
+  Plug,
+  CreditCard,
+  ShoppingBag,
+} from "lucide-react";
+
+const sections = [
+  {
+    label: "Overview",
+    items: [
+      { href: "/dashboard", icon: LayoutDashboard, label: "Home" },
+      { href: "/dashboard/inbox", icon: Inbox, label: "Inbox" },
+      { href: "/dashboard/bookings", icon: Calendar, label: "Bookings" },
+      { href: "/dashboard/contacts", icon: Users, label: "Contacts" },
+    ],
+  },
+  {
+    label: "Ema",
+    items: [
+      { href: "/dashboard/ema", icon: Sparkles, label: "Chat with Ema" },
+      { href: "/dashboard/ema/reports", icon: FileText, label: "Reports" },
+      { href: "/dashboard/ema/settings", icon: SettingsIcon, label: "Configure" },
+    ],
+  },
+  {
+    label: "Business",
+    items: [
+      { href: "/dashboard/catalog", icon: ShoppingBag, label: "Catalog" },
+      { href: "/dashboard/hours", icon: Clock, label: "Hours" },
+      { href: "/dashboard/knowledge", icon: BookOpen, label: "Knowledge" },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      { href: "/dashboard/whatsapp", icon: Phone, label: "WhatsApp" },
+      { href: "/dashboard/integrations", icon: Plug, label: "Integrations" },
+      { href: "/dashboard/billing", icon: CreditCard, label: "Billing" },
+      { href: "/dashboard/settings", icon: SettingsIcon, label: "Settings" },
+    ],
+  },
+];
+
+export default function DashboardSidebar({ currentPath = "/dashboard" }: { currentPath?: string }) {
+  return (
+    <aside className="hidden w-64 shrink-0 border-r border-sidebar-border bg-sidebar lg:block">
+      <div className="sticky top-0 flex h-screen flex-col">
+        <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary shadow-glow">
+            <Sparkles className="h-4 w-4 text-primary-foreground" />
+          </div>
+          <span className="font-display text-lg font-bold">Isola</span>
+        </div>
+        <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-6">
+          {sections.map((section) => (
+            <div key={section.label}>
+              <div className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+                {section.label}
+              </div>
+              <ul className="space-y-0.5">
+                {section.items.map((item) => {
+                  const active = currentPath === item.href;
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.href}>
+                      <a
+                        href={item.href}
+                        className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
+                          active
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {item.label}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </nav>
+        <div className="border-t border-sidebar-border p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-sm font-semibold">
+              MJ
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-medium">Marcus Joseph</div>
+              <div className="truncate text-xs text-muted-foreground">Coalpot Restaurant</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}

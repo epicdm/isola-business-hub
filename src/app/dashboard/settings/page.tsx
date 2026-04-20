@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Settings as SettingsIcon,
   User,
@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { accountDefaults, teamMembers } from "@/lib/mock-data";
+import { readProfile } from "@/lib/profile";
 
 const tones = ["Warm & friendly", "Professional", "Playful", "Direct"];
 const timezones = [
@@ -45,6 +46,14 @@ export default function SettingsPage() {
   const [currency, setCurrency] = useState(accountDefaults.currency);
   const [tone, setTone] = useState(accountDefaults.toneOfVoice);
   const [brandVoice, setBrandVoice] = useState(accountDefaults.brandVoice);
+
+  // Hydrate Business + Account fields from the profile saved at signup/onboarding.
+  useEffect(() => {
+    const p = readProfile();
+    if (p.businessName) setBusinessName(p.businessName);
+    if (p.contactName) setOwnerName(p.contactName);
+    if (p.email) setEmail(p.email);
+  }, []);
 
   return (
     <DashboardLayout currentPath="/dashboard/settings">

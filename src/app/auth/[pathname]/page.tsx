@@ -289,7 +289,7 @@ function SignUpForm() {
       } catch {
         // ignore quota / parse errors — onboarding will still load with defaults
       }
-      saveProfile({ contactName: name.trim(), businessName: business.trim() });
+      saveProfile({ contactName: name.trim(), businessName: business.trim(), email: email.trim() });
     }
     toast.success("Account created — let's set up Isola");
     mockLogin(navigate, "/onboarding");

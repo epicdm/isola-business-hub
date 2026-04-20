@@ -7,6 +7,7 @@ export const PROFILE_STORAGE_KEY = "ema:profile";
 export interface StoredProfile {
   contactName?: string;
   businessName?: string;
+  email?: string;
 }
 
 export function readProfile(): StoredProfile {
@@ -18,6 +19,7 @@ export function readProfile(): StoredProfile {
     return {
       contactName: typeof parsed.contactName === "string" ? parsed.contactName : undefined,
       businessName: typeof parsed.businessName === "string" ? parsed.businessName : undefined,
+      email: typeof parsed.email === "string" ? parsed.email : undefined,
     };
   } catch {
     return {};
@@ -34,6 +36,9 @@ export function saveProfile(patch: StoredProfile) {
     }
     if (typeof patch.businessName === "string" && patch.businessName.trim()) {
       merged.businessName = patch.businessName.trim();
+    }
+    if (typeof patch.email === "string" && patch.email.trim()) {
+      merged.email = patch.email.trim();
     }
     window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(merged));
   } catch {

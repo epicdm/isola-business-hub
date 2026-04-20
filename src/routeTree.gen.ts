@@ -20,6 +20,7 @@ import { Route as ForHotelsRouteImport } from './routes/for.hotels'
 import { Route as ForClinicsRouteImport } from './routes/for.clinics'
 import { Route as DashboardWhatsappRouteImport } from './routes/dashboard.whatsapp'
 import { Route as DashboardKnowledgeRouteImport } from './routes/dashboard.knowledge'
+import { Route as DashboardIntegrationsRouteImport } from './routes/dashboard.integrations'
 import { Route as DashboardInboxRouteImport } from './routes/dashboard.inbox'
 import { Route as DashboardHoursRouteImport } from './routes/dashboard.hours'
 import { Route as DashboardEmaRouteImport } from './routes/dashboard.ema'
@@ -85,6 +86,11 @@ const DashboardKnowledgeRoute = DashboardKnowledgeRouteImport.update({
   path: '/dashboard/knowledge',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIntegrationsRoute = DashboardIntegrationsRouteImport.update({
+  id: '/dashboard/integrations',
+  path: '/dashboard/integrations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardInboxRoute = DashboardInboxRouteImport.update({
   id: '/dashboard/inbox',
   path: '/dashboard/inbox',
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/ema': typeof DashboardEmaRouteWithChildren
   '/dashboard/hours': typeof DashboardHoursRoute
   '/dashboard/inbox': typeof DashboardInboxRoute
+  '/dashboard/integrations': typeof DashboardIntegrationsRoute
   '/dashboard/knowledge': typeof DashboardKnowledgeRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/for/clinics': typeof ForClinicsRoute
@@ -164,6 +171,7 @@ export interface FileRoutesByTo {
   '/dashboard/contacts': typeof DashboardContactsRoute
   '/dashboard/hours': typeof DashboardHoursRoute
   '/dashboard/inbox': typeof DashboardInboxRoute
+  '/dashboard/integrations': typeof DashboardIntegrationsRoute
   '/dashboard/knowledge': typeof DashboardKnowledgeRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/for/clinics': typeof ForClinicsRoute
@@ -187,6 +195,7 @@ export interface FileRoutesById {
   '/dashboard/ema': typeof DashboardEmaRouteWithChildren
   '/dashboard/hours': typeof DashboardHoursRoute
   '/dashboard/inbox': typeof DashboardInboxRoute
+  '/dashboard/integrations': typeof DashboardIntegrationsRoute
   '/dashboard/knowledge': typeof DashboardKnowledgeRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/for/clinics': typeof ForClinicsRoute
@@ -211,6 +220,7 @@ export interface FileRouteTypes {
     | '/dashboard/ema'
     | '/dashboard/hours'
     | '/dashboard/inbox'
+    | '/dashboard/integrations'
     | '/dashboard/knowledge'
     | '/dashboard/whatsapp'
     | '/for/clinics'
@@ -232,6 +242,7 @@ export interface FileRouteTypes {
     | '/dashboard/contacts'
     | '/dashboard/hours'
     | '/dashboard/inbox'
+    | '/dashboard/integrations'
     | '/dashboard/knowledge'
     | '/dashboard/whatsapp'
     | '/for/clinics'
@@ -254,6 +265,7 @@ export interface FileRouteTypes {
     | '/dashboard/ema'
     | '/dashboard/hours'
     | '/dashboard/inbox'
+    | '/dashboard/integrations'
     | '/dashboard/knowledge'
     | '/dashboard/whatsapp'
     | '/for/clinics'
@@ -277,6 +289,7 @@ export interface RootRouteChildren {
   DashboardEmaRoute: typeof DashboardEmaRouteWithChildren
   DashboardHoursRoute: typeof DashboardHoursRoute
   DashboardInboxRoute: typeof DashboardInboxRoute
+  DashboardIntegrationsRoute: typeof DashboardIntegrationsRoute
   DashboardKnowledgeRoute: typeof DashboardKnowledgeRoute
   DashboardWhatsappRoute: typeof DashboardWhatsappRoute
   ForClinicsRoute: typeof ForClinicsRoute
@@ -362,6 +375,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard/knowledge'
       fullPath: '/dashboard/knowledge'
       preLoaderRoute: typeof DashboardKnowledgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/integrations': {
+      id: '/dashboard/integrations'
+      path: '/dashboard/integrations'
+      fullPath: '/dashboard/integrations'
+      preLoaderRoute: typeof DashboardIntegrationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/inbox': {
@@ -458,6 +478,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardEmaRoute: DashboardEmaRouteWithChildren,
   DashboardHoursRoute: DashboardHoursRoute,
   DashboardInboxRoute: DashboardInboxRoute,
+  DashboardIntegrationsRoute: DashboardIntegrationsRoute,
   DashboardKnowledgeRoute: DashboardKnowledgeRoute,
   DashboardWhatsappRoute: DashboardWhatsappRoute,
   ForClinicsRoute: ForClinicsRoute,

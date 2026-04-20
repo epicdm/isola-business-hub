@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import EmaChatWidget from "@/components/dashboard/EmaChatWidget";
 
 export default function DashboardLayout({
@@ -32,7 +33,10 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen bg-background">
       <DashboardSidebar currentPath={currentPath} />
-      <main className="flex-1 overflow-x-hidden">{children}</main>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <DashboardHeader />
+        <main className="flex-1 overflow-x-hidden">{children}</main>
+      </div>
       <EmaChatWidget />
     </div>
   );

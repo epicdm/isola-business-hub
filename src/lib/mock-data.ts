@@ -1659,3 +1659,270 @@ export const pendingDrafts: PendingDraft[] = [
     draftTime: "just now",
   },
 ];
+
+// ============================================================================
+// Turn 11 — Insights super-dashboard (restaurant vertical) + global alerts
+// ============================================================================
+
+export type SparkPoint = { d: string; v: number };
+
+export const insightsMockData = {
+  vertical: "restaurants" as const,
+  lastSyncedMinutesAgo: 2,
+  cards: {
+    todaysSales: {
+      amount: 3240,
+      currency: "EC$",
+      trendPct: 18,
+      compare: "vs yesterday",
+      orders: 47,
+      avgTicket: 68,
+      sparkline: [
+        { d: "Apr 6", v: 2100 }, { d: "Apr 7", v: 2380 }, { d: "Apr 8", v: 2640 },
+        { d: "Apr 9", v: 2210 }, { d: "Apr 10", v: 2890 }, { d: "Apr 11", v: 3110 },
+        { d: "Apr 12", v: 3520 }, { d: "Apr 13", v: 2740 }, { d: "Apr 14", v: 2580 },
+        { d: "Apr 15", v: 2950 }, { d: "Apr 16", v: 2820 }, { d: "Apr 17", v: 3060 },
+        { d: "Apr 18", v: 2740 }, { d: "Apr 19", v: 3240 },
+      ] as SparkPoint[],
+      hourly: [
+        { h: "11a", v: 180 }, { h: "12p", v: 420 }, { h: "1p", v: 510 },
+        { h: "2p", v: 290 }, { h: "3p", v: 110 }, { h: "4p", v: 90 },
+        { h: "5p", v: 180 }, { h: "6p", v: 360 }, { h: "7p", v: 540 },
+        { h: "8p", v: 460 }, { h: "9p", v: 100 },
+      ],
+      topOrders: [
+        { id: "O-2241", customer: "Janelle Thomas", service: "dine-in", total: 312, time: "8:14 PM" },
+        { id: "O-2240", customer: "Marcus Charles", service: "dine-in", total: 248, time: "8:02 PM" },
+        { id: "O-2239", customer: "Tania Bellot", service: "delivery", total: 184, time: "7:47 PM" },
+        { id: "O-2238", customer: "Walk-in T.4", service: "dine-in", total: 156, time: "7:30 PM" },
+        { id: "O-2237", customer: "Kareem Louis", service: "takeout", total: 92, time: "7:18 PM" },
+      ],
+    },
+    openTabs: {
+      tableCount: 6,
+      total: 890,
+      seatedOver45: 4,
+      oldest: { table: "T.7", minutes: 83, total: 210, server: "Maria" },
+      tabs: [
+        { table: "T.7", minutes: 83, total: 210, server: "Maria" },
+        { table: "T.3", minutes: 62, total: 178, server: "Devon" },
+        { table: "T.12", minutes: 54, total: 148, server: "Maria" },
+        { table: "T.5", minutes: 48, total: 132, server: "Karine" },
+        { table: "T.9", minutes: 31, total: 124, server: "Devon" },
+        { table: "T.2", minutes: 18, total: 98, server: "Karine" },
+      ],
+    },
+    outstandingInvoices: {
+      total: 4320,
+      count: 8,
+      overdue: 2,
+      buckets: { d0_30: 2100, d30_60: 1440, d60p: 780 },
+      invoices: [
+        { id: "INV/2026/0047", customer: "Marcus Charles", amount: 1240, daysOverdue: 42, lastReminder: "5d ago", status: "overdue" },
+        { id: "INV/2026/0051", customer: "Bayside Catering Co.", amount: 860, daysOverdue: 18, lastReminder: "2d ago", status: "overdue" },
+        { id: "INV/2026/0058", customer: "Roseau Tours Ltd.", amount: 720, daysOverdue: 0, lastReminder: "—", status: "due" },
+        { id: "INV/2026/0061", customer: "Dr. Alvarez Clinic", amount: 480, daysOverdue: 0, lastReminder: "—", status: "due" },
+        { id: "INV/2026/0063", customer: "Janelle Thomas", amount: 420, daysOverdue: 0, lastReminder: "—", status: "due" },
+        { id: "INV/2026/0064", customer: "Sarah Mitchell", amount: 280, daysOverdue: 0, lastReminder: "—", status: "due" },
+        { id: "INV/2026/0066", customer: "Kareem Louis", amount: 180, daysOverdue: 0, lastReminder: "—", status: "due" },
+        { id: "INV/2026/0067", customer: "Walk-in event", amount: 140, daysOverdue: 0, lastReminder: "—", status: "due" },
+      ],
+    },
+    topCustomers: [
+      { name: "Janelle Thomas", spent: 1240, visits: 9, segment: "VIP" },
+      { name: "Marcus Charles", spent: 890, visits: 6, segment: "VIP" },
+      { name: "Dr. Alvarez", spent: 720, visits: 4, segment: "Regular" },
+      { name: "Sarah Mitchell", spent: 680, visits: 3, segment: "Regular" },
+      { name: "Kareem Louis", spent: 540, visits: 7, segment: "Regular" },
+      { name: "Tania Bellot", spent: 460, visits: 5, segment: "Regular" },
+      { name: "Devon Greene", spent: 380, visits: 3, segment: "Regular" },
+      { name: "Maria Joseph", spent: 320, visits: 4, segment: "Regular" },
+    ],
+    menuPerformance: {
+      best: [
+        { name: "Tasting Menu", orders: 42, revenue: 7560 },
+        { name: "Lobster Thermidor", orders: 38, revenue: 5320 },
+        { name: "Jerk Lamb", orders: 31, revenue: 3410 },
+      ],
+      worst: [
+        { name: "Caesar Salad", orders: 2, revenue: 60 },
+        { name: "Grilled Vegetables", orders: 3, revenue: 84 },
+        { name: "Quinoa Bowl", orders: 4, revenue: 132 },
+      ],
+    },
+    lowStock: [
+      { name: "Rum punch mix", qty: 3, unit: "btl", reorderAt: 10, severity: "red", supplier: "Caribbean Spirits Ltd." },
+      { name: "Bread flour", qty: 2, unit: "kg", reorderAt: 20, severity: "red", supplier: "Roseau Wholesale" },
+      { name: "Lobster tails", qty: 8, unit: "ea", reorderAt: 15, severity: "amber", supplier: "Bayside Seafood" },
+      { name: "Goat cheese", qty: 0.4, unit: "kg", reorderAt: 1, severity: "amber", supplier: "Mountain Dairy Co." },
+    ],
+    staffTips: {
+      pool: 486,
+      diffVsLastWeek: 62,
+      servers: [
+        { name: "Maria J.", share: 124, shifts: 1 },
+        { name: "Devon G.", share: 108, shifts: 1 },
+        { name: "Karine S.", share: 96, shifts: 1 },
+        { name: "Tyrell B.", share: 84, shifts: 1 },
+        { name: "Anika R.", share: 74, shifts: 1 },
+      ],
+      avg30d: 412,
+    },
+    cashBalance: {
+      total: 28490,
+      cashOnHand: 1240,
+      bank: 27250,
+      payrollDueDays: 3,
+      payrollAmount: 12400,
+      supplierDue: 3200,
+      sparkline: [
+        { d: "M", v: 24800 }, { d: "T", v: 25300 }, { d: "W", v: 26100 },
+        { d: "T", v: 26450 }, { d: "F", v: 27800 }, { d: "S", v: 28200 }, { d: "S", v: 28490 },
+      ] as SparkPoint[],
+      transactions: [
+        { kind: "deposit", label: "Fiserv batch clear", amount: 2840, time: "Today 6:02 AM" },
+        { kind: "expense", label: "Bayside Seafood", amount: -780, time: "Yesterday" },
+        { kind: "deposit", label: "Cash drop — Friday", amount: 1480, time: "2d ago" },
+        { kind: "expense", label: "Caribbean Spirits PO #441", amount: -540, time: "3d ago" },
+        { kind: "deposit", label: "Fiserv batch clear", amount: 3120, time: "3d ago" },
+      ],
+    },
+  },
+};
+
+// ----- Global alert tray -----------------------------------------------------
+
+export type AlertCategory = "critical" | "escalation" | "system" | "ema" | "snoozed";
+export type AlertItem = {
+  id: string;
+  category: AlertCategory;
+  icon: string;
+  title: string;
+  body?: string;
+  createdAt: string; // relative label
+  read: boolean;
+  actions: Array<"review" | "dismiss" | "snooze" | "ask-ema" | "takeover" | "call">;
+};
+
+export const globalAlerts: AlertItem[] = [
+  {
+    id: "al-1",
+    category: "critical",
+    icon: "🚨",
+    title: "Meta quality dropped to AMBER on +1 (767) 818-1234 (Maxine)",
+    body: "4 customer blocks in 24h. Review conversations to recover quality score.",
+    createdAt: "12 min ago",
+    read: false,
+    actions: ["review", "ask-ema", "snooze"],
+  },
+  {
+    id: "al-2",
+    category: "critical",
+    icon: "🚨",
+    title: "Voice overage in 3 days — 78% of 500 min used",
+    body: "At current pace you'll exceed your plan minutes by Saturday. Top up now to avoid throttling.",
+    createdAt: "34 min ago",
+    read: false,
+    actions: ["review", "dismiss", "snooze"],
+  },
+  {
+    id: "al-3",
+    category: "escalation",
+    icon: "⚠️",
+    title: "Marcus Charles flagged 'frustrated' in WhatsApp thread",
+    body: "3h since last reply. Sentiment trending negative across last 4 turns.",
+    createdAt: "1h ago",
+    read: false,
+    actions: ["takeover", "ask-ema", "snooze"],
+  },
+  {
+    id: "al-4",
+    category: "escalation",
+    icon: "⚠️",
+    title: "Booking 8pm tonight (party of 6) unconfirmed",
+    body: "Outbound voice attempted 2x — no answer. Manual call recommended.",
+    createdAt: "2h ago",
+    read: false,
+    actions: ["call", "dismiss", "snooze"],
+  },
+  {
+    id: "al-5",
+    category: "escalation",
+    icon: "⚠️",
+    title: "Odoo invoice INV/2026/0047 overdue 42 days",
+    body: "Marcus Charles · EC$1,240 · last reminder sent 5 days ago.",
+    createdAt: "3h ago",
+    read: false,
+    actions: ["review", "ask-ema", "snooze"],
+  },
+  {
+    id: "al-6",
+    category: "system",
+    icon: "ℹ️",
+    title: "New tenant sign-up: Bayside Café",
+    body: "Provisioning 80% complete (awaiting Meta verification).",
+    createdAt: "4h ago",
+    read: true,
+    actions: ["review", "dismiss"],
+  },
+  {
+    id: "al-7",
+    category: "system",
+    icon: "ℹ️",
+    title: "DID +1 (767) 818-1239 allocated from Magnus pool",
+    body: "Assigned to Bayside Café. Voice routing active.",
+    createdAt: "4h ago",
+    read: true,
+    actions: ["dismiss"],
+  },
+  {
+    id: "al-8",
+    category: "system",
+    icon: "ℹ️",
+    title: "Odoo poll completed",
+    body: "12 new invoices synced · 3 products updated · 0 conflicts.",
+    createdAt: "6h ago",
+    read: true,
+    actions: ["dismiss"],
+  },
+  {
+    id: "al-9",
+    category: "system",
+    icon: "ℹ️",
+    title: "Fiserv gateway health: 180ms",
+    body: "All clearing channels green. No declined-card spikes detected.",
+    createdAt: "7h ago",
+    read: true,
+    actions: ["dismiss"],
+  },
+  {
+    id: "al-10",
+    category: "ema",
+    icon: "✨",
+    title: "Your regulars haven't been in for 2+ weeks",
+    body: "Janelle, Marcus, Dr. Alvarez. Want a win-back WhatsApp campaign?",
+    createdAt: "8h ago",
+    read: false,
+    actions: ["ask-ema", "dismiss", "snooze"],
+  },
+  {
+    id: "al-11",
+    category: "ema",
+    icon: "✨",
+    title: "Sunday dinner orders up 34% vs last Sunday",
+    body: "Consider adding Sunday specials to your WhatsApp template library.",
+    createdAt: "yesterday",
+    read: false,
+    actions: ["ask-ema", "dismiss"],
+  },
+  {
+    id: "al-12",
+    category: "snoozed",
+    icon: "😴",
+    title: "Low stock: Rum punch mix",
+    body: "Snoozed until Monday 9:00 AM.",
+    createdAt: "yesterday",
+    read: true,
+    actions: ["review", "dismiss"],
+  },
+];

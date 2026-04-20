@@ -133,7 +133,7 @@
   --sidebar-primary-foreground: oklch(0.18 0.05 160);
   --sidebar-accent: oklch(0.24 0.02 165);
   --sidebar-accent-foreground: oklch(0.97 0.01 150);
-  --sidebar-border: oklch(0.26 0.015 165);
+  --sidebar-border: oklch(0.36 0.018 165 / 70%);
   --sidebar-ring: oklch(0.78 0.17 152);
 
   /* Gradients & effects */

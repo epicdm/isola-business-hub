@@ -291,7 +291,7 @@ export default function InboxPage() {
   const [pendingFilter, setPendingFilter] = useState<string>("all");
   const [pendingQueue, setPendingQueue] = useState<PendingDraft[]>(seedPendingDrafts);
   const [rejectingDraft, setRejectingDraft] = useState<PendingDraft | null>(null);
-  const [rejectNote, setRejectNote] = useState("");
+  
 
   // ---- Turn 8 · Feature 1: Status + labels ----
   const [convMeta, setConvMeta] = useState<Record<string, ConversationMeta>>(() => {
@@ -1094,8 +1094,8 @@ export default function InboxPage() {
               })}
             </div>
 
-            {/* Suggested replies (Feature 2) — only when AI is handling */}
-            {isAi && (
+            {/* Suggested replies (Feature 2) — only when AI is handling and conversation is fresh */}
+            {isAi === true && !isStale24h && (
               <div className="border-t border-border/40 bg-violet/5 px-4 py-2.5">
                 <div className="flex items-center gap-2">
                   <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-violet">
@@ -1306,7 +1306,7 @@ export default function InboxPage() {
                       <Input
                         value={draft}
                         onChange={(e) => setDraft(e.target.value)}
-                        placeholder="Private note — customer won't see this"
+                        placeholder={rejectingDraft ? "Tell Ema why this reply was wrong" : "Private note — customer won't see this"}
                         className="border-0 bg-transparent text-amber-50 placeholder:text-amber-200/50 focus-visible:ring-0"
                       />
                       <Button
@@ -1336,6 +1336,10 @@ export default function InboxPage() {
                             toast.success(
                               res.teachAi ? "Note saved · AI will remember" : "Private note saved",
                             );
+                            if (rejectingDraft) {
+                              setPendingQueue((p) => p.filter((x) => x.id !== rejectingDraft.id));
+                              setRejectingDraft(null);
+                            }
                             setDraft("");
                           } catch {
                             toast.error("Couldn't save note");
@@ -1802,7 +1806,15 @@ export default function InboxPage() {
                       size="sm"
                       variant="outline"
                       className="h-7 border-amber-500/40 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20"
-                      onClick={() => { setRejectingDraft(d); setRejectNote(""); }}
+                      onClick={() => {
+                        setActiveId(d.conversationId);
+                        setComposerMode("whisper");
+                        setTeachAi(true);
+                        setDraft("");
+                        setRejectingDraft(d);
+                        setLeftPane("conversations");
+                        toast.info("Tell Ema why this reply was wrong");
+                      }}
                     >
                       <X className="h-3 w-3" /> Reject + teach
                     </Button>
@@ -1814,38 +1826,6 @@ export default function InboxPage() {
         </SheetContent>
       </Sheet>
 
-      {/* Reject + teach Ema dialog */}
-      <Dialog open={!!rejectingDraft} onOpenChange={(o) => !o && setRejectingDraft(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><BookOpen className="h-4 w-4 text-amber-400" /> Teach Ema</DialogTitle>
-            <DialogDescription>
-              Tell Ema what was wrong with this draft so future replies improve.
-            </DialogDescription>
-          </DialogHeader>
-          <Textarea
-            rows={4}
-            value={rejectNote}
-            onChange={(e) => setRejectNote(e.target.value)}
-            placeholder="E.g., 'Don't quote prices for private dinners — escalate to Marcus instead.'"
-          />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRejectingDraft(null)}>Cancel</Button>
-            <Button
-              className="bg-amber-500 text-amber-950 hover:bg-amber-400"
-              onClick={() => {
-                if (rejectingDraft) {
-                  setPendingQueue((p) => p.filter((x) => x.id !== rejectingDraft.id));
-                }
-                setRejectingDraft(null);
-                toast.success("Got it — Ema will remember this");
-              }}
-            >
-              <BookOpen className="h-3.5 w-3.5" /> Save & reject
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </DashboardLayout>
   );
 }

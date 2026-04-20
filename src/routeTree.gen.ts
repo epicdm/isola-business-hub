@@ -19,6 +19,7 @@ import { Route as ForRestaurantsRouteImport } from './routes/for.restaurants'
 import { Route as ForHotelsRouteImport } from './routes/for.hotels'
 import { Route as ForClinicsRouteImport } from './routes/for.clinics'
 import { Route as DashboardInboxRouteImport } from './routes/dashboard.inbox'
+import { Route as DashboardHoursRouteImport } from './routes/dashboard.hours'
 import { Route as DashboardEmaRouteImport } from './routes/dashboard.ema'
 import { Route as DashboardContactsRouteImport } from './routes/dashboard.contacts'
 import { Route as DashboardCatalogRouteImport } from './routes/dashboard.catalog'
@@ -77,6 +78,11 @@ const DashboardInboxRoute = DashboardInboxRouteImport.update({
   path: '/dashboard/inbox',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardHoursRoute = DashboardHoursRouteImport.update({
+  id: '/dashboard/hours',
+  path: '/dashboard/hours',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardEmaRoute = DashboardEmaRouteImport.update({
   id: '/dashboard/ema',
   path: '/dashboard/ema',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/catalog': typeof DashboardCatalogRoute
   '/dashboard/contacts': typeof DashboardContactsRoute
   '/dashboard/ema': typeof DashboardEmaRouteWithChildren
+  '/dashboard/hours': typeof DashboardHoursRoute
   '/dashboard/inbox': typeof DashboardInboxRoute
   '/for/clinics': typeof ForClinicsRoute
   '/for/hotels': typeof ForHotelsRoute
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/dashboard/bookings': typeof DashboardBookingsRoute
   '/dashboard/catalog': typeof DashboardCatalogRoute
   '/dashboard/contacts': typeof DashboardContactsRoute
+  '/dashboard/hours': typeof DashboardHoursRoute
   '/dashboard/inbox': typeof DashboardInboxRoute
   '/for/clinics': typeof ForClinicsRoute
   '/for/hotels': typeof ForHotelsRoute
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/dashboard/catalog': typeof DashboardCatalogRoute
   '/dashboard/contacts': typeof DashboardContactsRoute
   '/dashboard/ema': typeof DashboardEmaRouteWithChildren
+  '/dashboard/hours': typeof DashboardHoursRoute
   '/dashboard/inbox': typeof DashboardInboxRoute
   '/for/clinics': typeof ForClinicsRoute
   '/for/hotels': typeof ForHotelsRoute
@@ -182,6 +191,7 @@ export interface FileRouteTypes {
     | '/dashboard/catalog'
     | '/dashboard/contacts'
     | '/dashboard/ema'
+    | '/dashboard/hours'
     | '/dashboard/inbox'
     | '/for/clinics'
     | '/for/hotels'
@@ -200,6 +210,7 @@ export interface FileRouteTypes {
     | '/dashboard/bookings'
     | '/dashboard/catalog'
     | '/dashboard/contacts'
+    | '/dashboard/hours'
     | '/dashboard/inbox'
     | '/for/clinics'
     | '/for/hotels'
@@ -219,6 +230,7 @@ export interface FileRouteTypes {
     | '/dashboard/catalog'
     | '/dashboard/contacts'
     | '/dashboard/ema'
+    | '/dashboard/hours'
     | '/dashboard/inbox'
     | '/for/clinics'
     | '/for/hotels'
@@ -239,6 +251,7 @@ export interface RootRouteChildren {
   DashboardCatalogRoute: typeof DashboardCatalogRoute
   DashboardContactsRoute: typeof DashboardContactsRoute
   DashboardEmaRoute: typeof DashboardEmaRouteWithChildren
+  DashboardHoursRoute: typeof DashboardHoursRoute
   DashboardInboxRoute: typeof DashboardInboxRoute
   ForClinicsRoute: typeof ForClinicsRoute
   ForHotelsRoute: typeof ForHotelsRoute
@@ -316,6 +329,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard/inbox'
       fullPath: '/dashboard/inbox'
       preLoaderRoute: typeof DashboardInboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/hours': {
+      id: '/dashboard/hours'
+      path: '/dashboard/hours'
+      fullPath: '/dashboard/hours'
+      preLoaderRoute: typeof DashboardHoursRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/ema': {
@@ -396,6 +416,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardCatalogRoute: DashboardCatalogRoute,
   DashboardContactsRoute: DashboardContactsRoute,
   DashboardEmaRoute: DashboardEmaRouteWithChildren,
+  DashboardHoursRoute: DashboardHoursRoute,
   DashboardInboxRoute: DashboardInboxRoute,
   ForClinicsRoute: ForClinicsRoute,
   ForHotelsRoute: ForHotelsRoute,

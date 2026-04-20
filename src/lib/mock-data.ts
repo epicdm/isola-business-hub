@@ -439,18 +439,20 @@ export const catalogItems: CatalogItem[] = [
 export const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 export const defaultHours = [
-  { day: "Monday", closed: false, open: "11:30", close: "22:00" },
-  { day: "Tuesday", closed: false, open: "11:30", close: "22:00" },
-  { day: "Wednesday", closed: false, open: "11:30", close: "22:00" },
-  { day: "Thursday", closed: false, open: "11:30", close: "22:30" },
-  { day: "Friday", closed: false, open: "11:30", close: "23:30" },
-  { day: "Saturday", closed: false, open: "12:00", close: "23:30" },
-  { day: "Sunday", closed: false, open: "11:00", close: "21:00" },
+  { day: "Monday", closed: false, open: "11:00", close: "22:00" },
+  { day: "Tuesday", closed: false, open: "11:00", close: "22:00" },
+  { day: "Wednesday", closed: false, open: "11:00", close: "22:00" },
+  { day: "Thursday", closed: false, open: "11:00", close: "22:00" },
+  { day: "Friday", closed: false, open: "11:00", close: "00:00" },
+  { day: "Saturday", closed: false, open: "11:00", close: "00:00" },
+  { day: "Sunday", closed: false, open: "12:00", close: "21:00" },
 ];
 
 export const holidays = [
-  { id: "h1", date: "2026-05-04", label: "Carnival Monday", closed: true },
-  { id: "h2", date: "2026-11-03", label: "Independence Day", closed: false, open: "16:00", close: "23:00" },
+  { id: "h1", date: "2026-12-25", label: "Christmas Day", closed: true },
+  { id: "h2", date: "2026-01-01", label: "New Year's Day", closed: false, open: "14:00", close: "20:00" },
+  { id: "h3", date: "2026-05-04", label: "Carnival Monday", closed: true },
+  { id: "h4", date: "2026-11-03", label: "Independence Day", closed: false, open: "16:00", close: "23:00" },
 ];
 
 // ---------- Knowledge ----------

@@ -74,8 +74,9 @@ export default function HomePage() {
       <section className="relative overflow-hidden bg-hero">
         <div className="absolute inset-0 grid-bg opacity-40" />
         <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-6 py-20 lg:grid-cols-[1.1fr_1fr] lg:py-28">
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+          <motion.div initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <Badge variant="outline" className="mb-6 border-primary/30 bg-primary/10 text-primary">
+
               <Sparkles className="mr-1.5 h-3 w-3" />
               One stack. One bill. One vendor.
             </Badge>
@@ -101,7 +102,7 @@ export default function HomePage() {
             </div>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15 }} className="relative mx-auto">
+          <motion.div initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15 }} className="relative mx-auto">
             <DeviceStack />
           </motion.div>
         </div>
@@ -339,7 +340,7 @@ function DeviceStack() {
     <div className="relative mx-auto h-[520px] w-[300px]">
       {/* Phone */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={false}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.6 }}
         className="absolute inset-0 rounded-[3rem] border-[10px] border-foreground/80 bg-background shadow-glow"
@@ -367,7 +368,7 @@ function DeviceStack() {
 
       {/* Floating Ema digest */}
       <motion.div
-        initial={{ opacity: 0, x: 40 }}
+        initial={false}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.6, duration: 0.6 }}
         className="absolute -right-16 top-12 hidden w-52 rounded-2xl border border-ema/30 bg-card/95 p-3 shadow-ema backdrop-blur md:block"
@@ -383,7 +384,7 @@ function DeviceStack() {
 
       {/* Floating call card */}
       <motion.div
-        initial={{ opacity: 0, x: -40 }}
+        initial={false}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.8, duration: 0.6 }}
         className="absolute -left-12 bottom-16 hidden w-48 rounded-2xl border border-primary/30 bg-card/95 p-3 shadow-glow backdrop-blur md:block"

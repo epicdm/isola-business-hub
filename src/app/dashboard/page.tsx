@@ -1,7 +1,8 @@
 "use client";
 
-import { Sparkles, ArrowRight, Phone, PhoneCall, Instagram, MessageCircle, Facebook, TrendingUp } from "lucide-react";
+import { Sparkles, ArrowRight, Phone, PhoneCall, Instagram, MessageCircle, Facebook, TrendingUp, Database, X } from "lucide-react";
 import { motion } from "framer-motion";
+import { Link } from "@tanstack/react-router";
 import DashboardLayout from "./layout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,8 @@ const channelColor: Record<Channel, string> = {
 
 export default function DashboardHomePage() {
   const [today, setToday] = useState("");
+  const [odooConnected, setOdooConnected] = useState<boolean | null>(null);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   useEffect(() => {
     setToday(
       new Date().toLocaleDateString(undefined, {
@@ -36,11 +39,55 @@ export default function DashboardHomePage() {
         day: "numeric",
       })
     );
+    if (typeof window !== "undefined") {
+      setOdooConnected(window.localStorage.getItem("odooConnected") === "true");
+      setBannerDismissed(window.localStorage.getItem("odooBannerDismissed") === "true");
+    }
   }, []);
+
+  const dismissBanner = () => {
+    setBannerDismissed(true);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("odooBannerDismissed", "true");
+    }
+  };
+
+  const showOdooBanner = odooConnected === false && !bannerDismissed;
 
   return (
     <DashboardLayout currentPath="/dashboard">
       <div className="mx-auto max-w-7xl space-y-8 p-6 lg:p-10">
+        {/* Odoo paywall banner — appears when onboarding skipped Odoo */}
+        {showOdooBanner && (
+          <div className="flex items-start gap-3 rounded-xl border border-warning/40 bg-warning/10 p-4 text-sm">
+            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning/20 text-warning">
+              <Database className="h-4 w-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-foreground">Connect Odoo to unlock the full Isola</p>
+              <p className="mt-0.5 text-muted-foreground">
+                Insights, AI-assisted invoicing, and inventory-aware agents are
+                waiting on your Odoo connection. Takes about 2 minutes.
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Button size="sm" asChild>
+                <Link to="/onboarding" search={{ step: 6 }}>
+                  Connect Odoo
+                </Link>
+              </Button>
+              <button
+                type="button"
+                onClick={dismissBanner}
+                className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-warning/20 hover:text-foreground"
+                aria-label="Dismiss"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Greeting */}
         <div>
           <p className="text-sm text-muted-foreground">{today}</p>

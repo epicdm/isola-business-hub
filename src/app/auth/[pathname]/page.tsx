@@ -85,11 +85,14 @@ function FormForVariant({ variant }: { variant: AuthVariant }) {
 /* Shared helpers                                                             */
 /* -------------------------------------------------------------------------- */
 
-function mockLogin(navigate: ReturnType<typeof useNavigate>) {
+function mockLogin(
+  navigate: ReturnType<typeof useNavigate>,
+  destination: "/dashboard" | "/onboarding" = "/dashboard",
+) {
   if (typeof window !== "undefined") {
     window.localStorage.setItem("mockLoggedIn", "true");
   }
-  navigate({ to: "/dashboard" });
+  navigate({ to: destination });
 }
 
 function FormCard({
@@ -271,7 +274,7 @@ function SignUpForm() {
     setLoading(true);
     await new Promise((r) => setTimeout(r, 950));
     toast.success("Account created — let's set up Isola");
-    mockLogin(navigate);
+    mockLogin(navigate, "/onboarding");
   };
 
   return (

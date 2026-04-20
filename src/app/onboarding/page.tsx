@@ -161,7 +161,7 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
-  const hydrated = useRef(false);
+  const [hydrated, setHydrated] = useState(false);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Hydrate from localStorage after mount (SSR-safe)
@@ -175,12 +175,12 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
     } catch {
       // ignore corrupt draft
     }
-    hydrated.current = true;
+    setHydrated(true);
   }, []);
 
   // Autosave whenever data changes (after hydration)
   useEffect(() => {
-    if (!hydrated.current) return;
+    if (!hydrated) return;
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       setSavedFlash(true);
@@ -189,7 +189,7 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
     } catch {
       // ignore quota errors
     }
-  }, [data]);
+  }, [data, hydrated]);
 
   useEffect(() => {
     return () => {

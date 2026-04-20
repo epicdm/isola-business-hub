@@ -19,9 +19,9 @@ import { Route as ForRestaurantsRouteImport } from './routes/for.restaurants'
 import { Route as ForHotelsRouteImport } from './routes/for.hotels'
 import { Route as ForClinicsRouteImport } from './routes/for.clinics'
 import { Route as DashboardInboxRouteImport } from './routes/dashboard.inbox'
-import { Route as DashboardEmaRouteImport } from './routes/dashboard.ema'
 import { Route as DashboardContactsRouteImport } from './routes/dashboard.contacts'
 import { Route as DashboardBookingsRouteImport } from './routes/dashboard.bookings'
+import { Route as DashboardEmaIndexRouteImport } from './routes/dashboard.ema.index'
 import { Route as DashboardEmaSettingsRouteImport } from './routes/dashboard.ema.settings'
 import { Route as DashboardEmaReportsRouteImport } from './routes/dashboard.ema.reports'
 
@@ -75,11 +75,6 @@ const DashboardInboxRoute = DashboardInboxRouteImport.update({
   path: '/dashboard/inbox',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardEmaRoute = DashboardEmaRouteImport.update({
-  id: '/dashboard/ema',
-  path: '/dashboard/ema',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DashboardContactsRoute = DashboardContactsRouteImport.update({
   id: '/dashboard/contacts',
   path: '/dashboard/contacts',
@@ -90,15 +85,20 @@ const DashboardBookingsRoute = DashboardBookingsRouteImport.update({
   path: '/dashboard/bookings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardEmaIndexRoute = DashboardEmaIndexRouteImport.update({
+  id: '/dashboard/ema/',
+  path: '/dashboard/ema/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardEmaSettingsRoute = DashboardEmaSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => DashboardEmaRoute,
+  id: '/dashboard/ema/settings',
+  path: '/dashboard/ema/settings',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardEmaReportsRoute = DashboardEmaReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => DashboardEmaRoute,
+  id: '/dashboard/ema/reports',
+  path: '/dashboard/ema/reports',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -109,7 +109,6 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
   '/dashboard/contacts': typeof DashboardContactsRoute
-  '/dashboard/ema': typeof DashboardEmaRouteWithChildren
   '/dashboard/inbox': typeof DashboardInboxRoute
   '/for/clinics': typeof ForClinicsRoute
   '/for/hotels': typeof ForHotelsRoute
@@ -117,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/ema/reports': typeof DashboardEmaReportsRoute
   '/dashboard/ema/settings': typeof DashboardEmaSettingsRoute
+  '/dashboard/ema/': typeof DashboardEmaIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -126,7 +126,6 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
   '/dashboard/contacts': typeof DashboardContactsRoute
-  '/dashboard/ema': typeof DashboardEmaRouteWithChildren
   '/dashboard/inbox': typeof DashboardInboxRoute
   '/for/clinics': typeof ForClinicsRoute
   '/for/hotels': typeof ForHotelsRoute
@@ -134,6 +133,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/ema/reports': typeof DashboardEmaReportsRoute
   '/dashboard/ema/settings': typeof DashboardEmaSettingsRoute
+  '/dashboard/ema': typeof DashboardEmaIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -144,7 +144,6 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
   '/dashboard/contacts': typeof DashboardContactsRoute
-  '/dashboard/ema': typeof DashboardEmaRouteWithChildren
   '/dashboard/inbox': typeof DashboardInboxRoute
   '/for/clinics': typeof ForClinicsRoute
   '/for/hotels': typeof ForHotelsRoute
@@ -152,6 +151,7 @@ export interface FileRoutesById {
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/ema/reports': typeof DashboardEmaReportsRoute
   '/dashboard/ema/settings': typeof DashboardEmaSettingsRoute
+  '/dashboard/ema/': typeof DashboardEmaIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -163,7 +163,6 @@ export interface FileRouteTypes {
     | '/terms'
     | '/dashboard/bookings'
     | '/dashboard/contacts'
-    | '/dashboard/ema'
     | '/dashboard/inbox'
     | '/for/clinics'
     | '/for/hotels'
@@ -171,6 +170,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/dashboard/ema/reports'
     | '/dashboard/ema/settings'
+    | '/dashboard/ema/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -180,7 +180,6 @@ export interface FileRouteTypes {
     | '/terms'
     | '/dashboard/bookings'
     | '/dashboard/contacts'
-    | '/dashboard/ema'
     | '/dashboard/inbox'
     | '/for/clinics'
     | '/for/hotels'
@@ -188,6 +187,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/dashboard/ema/reports'
     | '/dashboard/ema/settings'
+    | '/dashboard/ema'
   id:
     | '__root__'
     | '/'
@@ -197,7 +197,6 @@ export interface FileRouteTypes {
     | '/terms'
     | '/dashboard/bookings'
     | '/dashboard/contacts'
-    | '/dashboard/ema'
     | '/dashboard/inbox'
     | '/for/clinics'
     | '/for/hotels'
@@ -205,6 +204,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/dashboard/ema/reports'
     | '/dashboard/ema/settings'
+    | '/dashboard/ema/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -215,12 +215,14 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   DashboardBookingsRoute: typeof DashboardBookingsRoute
   DashboardContactsRoute: typeof DashboardContactsRoute
-  DashboardEmaRoute: typeof DashboardEmaRouteWithChildren
   DashboardInboxRoute: typeof DashboardInboxRoute
   ForClinicsRoute: typeof ForClinicsRoute
   ForHotelsRoute: typeof ForHotelsRoute
   ForRestaurantsRoute: typeof ForRestaurantsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardEmaReportsRoute: typeof DashboardEmaReportsRoute
+  DashboardEmaSettingsRoute: typeof DashboardEmaSettingsRoute
+  DashboardEmaIndexRoute: typeof DashboardEmaIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -295,13 +297,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardInboxRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/ema': {
-      id: '/dashboard/ema'
-      path: '/dashboard/ema'
-      fullPath: '/dashboard/ema'
-      preLoaderRoute: typeof DashboardEmaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/dashboard/contacts': {
       id: '/dashboard/contacts'
       path: '/dashboard/contacts'
@@ -316,36 +311,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardBookingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/ema/': {
+      id: '/dashboard/ema/'
+      path: '/dashboard/ema'
+      fullPath: '/dashboard/ema/'
+      preLoaderRoute: typeof DashboardEmaIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/ema/settings': {
       id: '/dashboard/ema/settings'
-      path: '/settings'
+      path: '/dashboard/ema/settings'
       fullPath: '/dashboard/ema/settings'
       preLoaderRoute: typeof DashboardEmaSettingsRouteImport
-      parentRoute: typeof DashboardEmaRoute
+      parentRoute: typeof rootRouteImport
     }
     '/dashboard/ema/reports': {
       id: '/dashboard/ema/reports'
-      path: '/reports'
+      path: '/dashboard/ema/reports'
       fullPath: '/dashboard/ema/reports'
       preLoaderRoute: typeof DashboardEmaReportsRouteImport
-      parentRoute: typeof DashboardEmaRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
-
-interface DashboardEmaRouteChildren {
-  DashboardEmaReportsRoute: typeof DashboardEmaReportsRoute
-  DashboardEmaSettingsRoute: typeof DashboardEmaSettingsRoute
-}
-
-const DashboardEmaRouteChildren: DashboardEmaRouteChildren = {
-  DashboardEmaReportsRoute: DashboardEmaReportsRoute,
-  DashboardEmaSettingsRoute: DashboardEmaSettingsRoute,
-}
-
-const DashboardEmaRouteWithChildren = DashboardEmaRoute._addFileChildren(
-  DashboardEmaRouteChildren,
-)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -355,12 +343,14 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   DashboardBookingsRoute: DashboardBookingsRoute,
   DashboardContactsRoute: DashboardContactsRoute,
-  DashboardEmaRoute: DashboardEmaRouteWithChildren,
   DashboardInboxRoute: DashboardInboxRoute,
   ForClinicsRoute: ForClinicsRoute,
   ForHotelsRoute: ForHotelsRoute,
   ForRestaurantsRoute: ForRestaurantsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardEmaReportsRoute: DashboardEmaReportsRoute,
+  DashboardEmaSettingsRoute: DashboardEmaSettingsRoute,
+  DashboardEmaIndexRoute: DashboardEmaIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

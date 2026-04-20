@@ -482,8 +482,28 @@ export default function InsightsPage() {
           </div>
         </div>
 
+        {/* Persistent dismissed-paywall banner */}
+        {odooConnected === false && paywallDismissed && (
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-2.5 text-xs">
+            <span className="text-foreground">
+              Insights show mock data until Odoo is connected.
+            </span>
+            <Button size="sm" variant="outline" asChild>
+              <Link to="/onboarding" search={{ step: 6, resume: 1, returnTo: "/dashboard/insights" }}>
+                Connect now
+              </Link>
+            </Button>
+          </div>
+        )}
+
         {/* 8-card grid (locked behind Odoo connection) */}
         <div className="relative">
+          <div
+            className={`grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 transition-all duration-300 ${
+              blurred ? "pointer-events-none select-none blur-sm grayscale" : ""
+            }`}
+            aria-hidden={blurred}
+          >
           <div
             className={`grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 transition-all duration-300 ${
               locked ? "pointer-events-none select-none blur-sm grayscale" : ""

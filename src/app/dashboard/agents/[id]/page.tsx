@@ -121,10 +121,35 @@ export default function AgentDetailPage() {
   // Instagram sub-channels (UI-only — not part of AgentChannel union)
   const [igComments, setIgComments] = useState(false);
   const [igStories, setIgStories] = useState(true);
+  // Review mode (Safety) — persisted to localStorage so /dashboard/inbox can read it
+  const [reviewMode, setReviewMode] = useState<boolean>(false);
 
   useEffect(() => {
     setAgent(original);
+    if (typeof window !== "undefined") {
+      try {
+        const raw = window.localStorage.getItem("isola.reviewMode");
+        const map = raw ? (JSON.parse(raw) as Record<string, boolean>) : {};
+        setReviewMode(Boolean(map[original.id]));
+      } catch {
+        setReviewMode(false);
+      }
+    }
   }, [original]);
+
+  const persistReviewMode = (next: boolean) => {
+    setReviewMode(next);
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem("isola.reviewMode");
+      const map = raw ? (JSON.parse(raw) as Record<string, boolean>) : {};
+      map[original.id] = next;
+      window.localStorage.setItem("isola.reviewMode", JSON.stringify(map));
+    } catch {
+      /* ignore quota / private-mode errors */
+    }
+    toast.success(next ? "Review mode on — drafts will queue for your approval" : "Review mode off — AI sends instantly");
+  };
 
   const update = <K extends keyof Agent>(key: K, value: Agent[K]) =>
     setAgent((prev) => ({ ...prev, [key]: value }));

@@ -85,6 +85,9 @@ export default function AgentDetailPage() {
   const [useBusinessHours, setUseBusinessHours] = useState(true);
   const [agentHours, setAgentHours] = useState(defaultHours);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  // Instagram sub-channels (UI-only — not part of AgentChannel union)
+  const [igComments, setIgComments] = useState(false);
+  const [igStories, setIgStories] = useState(true);
 
   useEffect(() => {
     setAgent(original);

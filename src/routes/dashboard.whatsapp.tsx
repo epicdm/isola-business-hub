@@ -1,4 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import Page from "../app/dashboard/whatsapp/page";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/dashboard/whatsapp")({ component: Page });
+export const Route = createFileRoute("/dashboard/whatsapp")({
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard/channels" });
+  },
+});

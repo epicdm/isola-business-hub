@@ -370,21 +370,68 @@ export const contacts = [
 
 // ---------- Catalog ----------
 
-export type CatalogCategory = "Starters" | "Mains" | "Sides" | "Desserts" | "Drinks";
+export type CatalogCategory = "Food" | "Drinks" | "Services" | "Rooms" | "Other";
 
-export const catalogCategories: CatalogCategory[] = ["Starters", "Mains", "Sides", "Desserts", "Drinks"];
+export const catalogCategories: CatalogCategory[] = ["Food", "Drinks", "Services", "Rooms", "Other"];
 
-export const catalogItems = [
-  { id: "m1", name: "Callaloo soup", category: "Starters" as CatalogCategory, price: 18, available: true, desc: "Velvety dasheen-leaf soup, coconut, scotch bonnet whisper.", tags: ["vegetarian"] },
-  { id: "m2", name: "Saltfish accras", category: "Starters" as CatalogCategory, price: 22, available: true, desc: "Crisp salt-cod fritters, tamarind dip.", tags: [] },
-  { id: "m3", name: "Pan-seared snapper", category: "Mains" as CatalogCategory, price: 64, available: true, desc: "Whole snapper, creole sauce, breadfruit mash.", tags: ["signature"] },
-  { id: "m4", name: "Mountain chicken", category: "Mains" as CatalogCategory, price: 78, available: false, desc: "Seasonal — currently unavailable.", tags: ["seasonal"] },
-  { id: "m5", name: "Coalpot oxtail", category: "Mains" as CatalogCategory, price: 58, available: true, desc: "Slow-braised, butter beans, dumpling.", tags: ["signature"] },
-  { id: "m6", name: "Provision plate", category: "Sides" as CatalogCategory, price: 16, available: true, desc: "Yam, dasheen, breadfruit, plantain.", tags: ["vegetarian", "vegan"] },
-  { id: "m7", name: "Coconut rice", category: "Sides" as CatalogCategory, price: 12, available: true, desc: "Steamed jasmine, coconut milk, thyme.", tags: ["vegetarian"] },
-  { id: "m8", name: "Cassava pone", category: "Desserts" as CatalogCategory, price: 14, available: true, desc: "Spiced coconut-cassava cake, rum cream.", tags: [] },
-  { id: "m9", name: "Sea moss punch", category: "Drinks" as CatalogCategory, price: 10, available: true, desc: "House blend, vanilla, nutmeg.", tags: ["non-alcoholic"] },
-  { id: "m10", name: "Dominica rum flight", category: "Drinks" as CatalogCategory, price: 32, available: true, desc: "Macoucherie, Bois Bandé, Soca.", tags: [] },
+export type CatalogItem = {
+  id: string;
+  name: string;
+  category: CatalogCategory;
+  price: number;
+  available: boolean;
+  desc: string;
+  tags: string[];
+  /** Emoji thumbnail used as a no-image placeholder. */
+  emoji: string;
+};
+
+export const catalogItems: CatalogItem[] = [
+  // Food — restaurant
+  { id: "m1", name: "Grilled callaloo stack", category: "Food", price: 45, available: true, desc: "Charred callaloo, dasheen rosti, coconut cream, scotch bonnet drizzle.", tags: ["vegetarian", "signature"], emoji: "🥬" },
+  { id: "m2", name: "Breadfruit salad", category: "Food", price: 35, available: true, desc: "Roasted breadfruit, citrus vinaigrette, pickled onion, herbs.", tags: ["vegan"], emoji: "🥗" },
+  { id: "m3", name: "Dasheen curry", category: "Food", price: 55, available: true, desc: "Slow-braised dasheen leaf, coconut milk, garam masala, basmati.", tags: ["vegetarian"], emoji: "🍛" },
+  { id: "m4", name: "Pan-seared snapper", category: "Food", price: 64, available: true, desc: "Whole snapper, creole sauce, breadfruit mash.", tags: ["signature"], emoji: "🐟" },
+  { id: "m5", name: "Coalpot oxtail", category: "Food", price: 58, available: true, desc: "Slow-braised, butter beans, dumpling.", tags: ["signature"], emoji: "🍲" },
+  { id: "m6", name: "Saltfish accras", category: "Food", price: 22, available: true, desc: "Crisp salt-cod fritters, tamarind dip.", tags: [], emoji: "🥟" },
+  { id: "m7", name: "Mountain chicken", category: "Food", price: 78, available: false, desc: "Seasonal — currently unavailable.", tags: ["seasonal"], emoji: "🍗" },
+  { id: "m8", name: "Provision plate", category: "Food", price: 16, available: true, desc: "Yam, dasheen, breadfruit, plantain.", tags: ["vegetarian", "vegan"], emoji: "🍠" },
+  { id: "m9", name: "Cassava pone", category: "Food", price: 14, available: true, desc: "Spiced coconut-cassava cake, rum cream.", tags: ["dessert"], emoji: "🍰" },
+
+  // Drinks
+  { id: "m10", name: "Sea moss punch", category: "Drinks", price: 10, available: true, desc: "House blend, vanilla, nutmeg.", tags: ["non-alcoholic"], emoji: "🥛" },
+  { id: "m11", name: "Dominica rum flight", category: "Drinks", price: 32, available: true, desc: "Macoucherie, Bois Bandé, Soca.", tags: ["alcoholic"], emoji: "🥃" },
+  { id: "m12", name: "Sorrel cooler", category: "Drinks", price: 12, available: true, desc: "Hibiscus, ginger, lime, cane syrup.", tags: ["non-alcoholic"], emoji: "🍹" },
+  { id: "m13", name: "Coconut espresso", category: "Drinks", price: 14, available: true, desc: "Double espresso, fresh coconut cream.", tags: ["non-alcoholic"], emoji: "☕" },
+  { id: "m14", name: "House Riesling (glass)", category: "Drinks", price: 28, available: true, desc: "Crisp, off-dry — pairs with snapper.", tags: ["alcoholic"], emoji: "🍷" },
+
+  // Rooms — hotel
+  { id: "r1", name: "Garden View Standard", category: "Rooms", price: 250, available: true, desc: "Queen bed, garden view, AC, free wifi. /night.", tags: ["1-2 guests"], emoji: "🛏️" },
+  { id: "r2", name: "Ocean View Deluxe", category: "Rooms", price: 320, available: true, desc: "King bed, balcony, ocean view. /night.", tags: ["2 guests", "popular"], emoji: "🌊" },
+  { id: "r3", name: "Family Suite", category: "Rooms", price: 395, available: true, desc: "2 bedrooms, kitchenette, sofa bed. /night.", tags: ["up to 5 guests"], emoji: "👨‍👩‍👧" },
+  { id: "r4", name: "Honeymoon Suite", category: "Rooms", price: 450, available: true, desc: "Plunge pool, ocean view, complimentary champagne. /night.", tags: ["2 guests", "premium"], emoji: "💕" },
+  { id: "r5", name: "Day Use Room", category: "Rooms", price: 120, available: true, desc: "9am–6pm, ideal for cruise day guests. /day.", tags: [], emoji: "🛎️" },
+
+  // Services — clinic
+  { id: "s1", name: "General consultation", category: "Services", price: 150, available: true, desc: "30-minute visit with attending physician.", tags: ["walk-in ok"], emoji: "🩺" },
+  { id: "s2", name: "Pediatric visit", category: "Services", price: 175, available: true, desc: "0–17 years. Includes growth check.", tags: ["pediatric"], emoji: "👶" },
+  { id: "s3", name: "Annual physical", category: "Services", price: 300, available: true, desc: "Full screening, bloodwork add-on available.", tags: ["preventive"], emoji: "📋" },
+  { id: "s4", name: "Telehealth follow-up", category: "Services", price: 90, available: true, desc: "20-minute video consult, prescription refills.", tags: ["virtual"], emoji: "💻" },
+  { id: "s5", name: "Vaccination", category: "Services", price: 75, available: true, desc: "Routine vaccines, travel vaccines extra.", tags: ["walk-in ok"], emoji: "💉" },
+  { id: "s6", name: "Lab — basic panel", category: "Services", price: 220, available: true, desc: "CBC, lipid, glucose. Results next-day.", tags: ["lab"], emoji: "🧪" },
+
+  // Services — hospitality / tours
+  { id: "s7", name: "Airport transfer", category: "Services", price: 85, available: true, desc: "Roseau ↔ Douglas-Charles, AC vehicle.", tags: ["transport"], emoji: "🚐" },
+  { id: "s8", name: "Champagne breakfast", category: "Services", price: 95, available: true, desc: "In-room, 2 guests. 24h notice.", tags: ["add-on"], emoji: "🥂" },
+  { id: "s9", name: "Boiling Lake hike (guided)", category: "Services", price: 220, available: true, desc: "Full day, lunch + transport included.", tags: ["popular"], emoji: "🥾" },
+  { id: "s10", name: "Whale watching tour", category: "Services", price: 180, available: true, desc: "3-hour boat tour, snacks included.", tags: ["seasonal"], emoji: "🐋" },
+
+  // Other
+  { id: "o1", name: "Private dining buyout", category: "Other", price: 3500, available: true, desc: "Full restaurant buyout, 6pm–11pm. Menu by chef.", tags: ["events"], emoji: "🎉" },
+  { id: "o2", name: "Birthday cake plating", category: "Other", price: 0, available: true, desc: "Bring your own cake — no fee, candles included.", tags: ["complimentary"], emoji: "🎂" },
+  { id: "o3", name: "Corkage fee", category: "Other", price: 50, available: true, desc: "EC$50/bottle. Max 2 bottles per table.", tags: [], emoji: "🍾" },
+  { id: "o4", name: "Late checkout", category: "Other", price: 60, available: true, desc: "Until 4pm, subject to availability.", tags: ["add-on"], emoji: "⏰" },
+  { id: "o5", name: "Pet fee", category: "Other", price: 40, available: true, desc: "Per night. Up to 2 small pets per room.", tags: [], emoji: "🐶" },
 ];
 
 // ---------- Hours ----------
@@ -408,19 +455,68 @@ export const holidays = [
 
 // ---------- Knowledge ----------
 
-export type KnowledgeCategory = "Menu" | "Reservations" | "Location" | "Policies" | "Events";
+export type KnowledgeCategory =
+  | "Hours"
+  | "Reservations"
+  | "Location"
+  | "Payments"
+  | "Policies"
+  | "Menu"
+  | "Events";
 
-export const knowledgeCategories: KnowledgeCategory[] = ["Menu", "Reservations", "Location", "Policies", "Events"];
+export const knowledgeCategories: KnowledgeCategory[] = [
+  "Hours",
+  "Reservations",
+  "Location",
+  "Payments",
+  "Policies",
+  "Menu",
+  "Events",
+];
 
-export const knowledgeEntries = [
-  { id: "k1", category: "Reservations" as KnowledgeCategory, q: "What's your largest party size?", a: "We seat parties up to 10 in the main room. Anything larger is a private dinner — flag for chef.", uses: 142, lastUpdated: "Apr 12" },
-  { id: "k2", category: "Reservations" as KnowledgeCategory, q: "Do you take walk-ins?", a: "Yes, but Friday and Saturday after 7pm we strongly recommend a reservation.", uses: 98, lastUpdated: "Apr 8" },
-  { id: "k3", category: "Menu" as KnowledgeCategory, q: "Do you have vegetarian / vegan options?", a: "Yes — callaloo soup, provision plate, coconut rice, and we'll happily adapt most mains. Vegan options are marked on the menu.", uses: 76, lastUpdated: "Apr 14" },
-  { id: "k4", category: "Menu" as KnowledgeCategory, q: "Do you bake birthday cakes?", a: "We don't bake cakes in-house, but you're welcome to bring one — no plating fee.", uses: 54, lastUpdated: "Apr 2" },
-  { id: "k5", category: "Location" as KnowledgeCategory, q: "Where are you exactly?", a: "23 Castle St, Roseau — by the bay, opposite the cruise terminal. Parking on Bath Rd.", uses: 211, lastUpdated: "Mar 28" },
-  { id: "k6", category: "Policies" as KnowledgeCategory, q: "What's your cancellation policy?", a: "Free up to 4 hours before your reservation. Parties of 6+ require a deposit.", uses: 67, lastUpdated: "Apr 10" },
-  { id: "k7", category: "Policies" as KnowledgeCategory, q: "Is there a corkage fee?", a: "EC$50 per bottle, max 2 bottles per table.", uses: 23, lastUpdated: "Apr 1" },
-  { id: "k8", category: "Events" as KnowledgeCategory, q: "Do you do private events?", a: "Yes — full buyout from EC$3,500. Half-room from EC$1,800. Chef approves all menus.", uses: 41, lastUpdated: "Apr 6" },
+export type KnowledgeFaq = {
+  id: string;
+  category: KnowledgeCategory;
+  q: string;
+  a: string;
+  uses: number;
+  lastUpdated: string;
+};
+
+export const knowledgeEntries: KnowledgeFaq[] = [
+  { id: "k1", category: "Hours", q: "What are your hours?", a: "Monday–Thursday 11am–10pm, Friday–Saturday 11am–midnight, Sunday 12pm–9pm. Closed Christmas Day; New Year's Day 2pm–8pm.", uses: 311, lastUpdated: "Apr 14" },
+  { id: "k2", category: "Reservations", q: "Do you take reservations?", a: "Yes — for tables of 4 or more we strongly recommend booking. Walk-ins are welcome any other time.", uses: 198, lastUpdated: "Apr 12" },
+  { id: "k3", category: "Reservations", q: "What's your largest party size?", a: "We seat parties up to 10 in the main room. Anything larger is a private dinner — flag for chef.", uses: 142, lastUpdated: "Apr 12" },
+  { id: "k4", category: "Location", q: "Is parking available?", a: "Yes — free street parking on Bath Rd and a paid lot directly opposite (EC$5 flat).", uses: 167, lastUpdated: "Apr 11" },
+  { id: "k5", category: "Location", q: "Where are you exactly?", a: "23 Castle St, Roseau — by the bay, opposite the cruise terminal.", uses: 211, lastUpdated: "Mar 28" },
+  { id: "k6", category: "Payments", q: "Do you accept cash?", a: "Yes — cash (XCD or USD), all major cards, Stripe links over WhatsApp, and Apple Pay.", uses: 134, lastUpdated: "Apr 9" },
+  { id: "k7", category: "Policies", q: "What's your cancellation policy?", a: "Free up to 4 hours before your reservation. Parties of 6+ require a deposit, refundable up to 24h before.", uses: 89, lastUpdated: "Apr 10" },
+  { id: "k8", category: "Menu", q: "Do you have vegetarian / vegan options?", a: "Yes — grilled callaloo stack, breadfruit salad, dasheen curry, provision plate. Vegan items are marked.", uses: 76, lastUpdated: "Apr 14" },
+  { id: "k9", category: "Menu", q: "Do you accommodate allergies?", a: "Yes — please tell us when booking. We can adapt most dishes (gluten-free, nut-free, dairy-free).", uses: 64, lastUpdated: "Apr 7" },
+  { id: "k10", category: "Menu", q: "Do you bake birthday cakes?", a: "We don't bake cakes in-house, but you're welcome to bring one — no plating fee.", uses: 54, lastUpdated: "Apr 2" },
+  { id: "k11", category: "Policies", q: "Do you have a dress code?", a: "Smart casual. No beachwear after 6pm.", uses: 47, lastUpdated: "Apr 3" },
+  { id: "k12", category: "Events", q: "Do you do private events?", a: "Yes — full buyout from EC$3,500, half-room from EC$1,800. Chef approves all menus.", uses: 41, lastUpdated: "Apr 6" },
+  { id: "k13", category: "Hours", q: "Are you open on holidays?", a: "Open most public holidays. Closed Christmas Day. New Year's Day reduced hours (2pm–8pm).", uses: 38, lastUpdated: "Apr 5" },
+  { id: "k14", category: "Location", q: "Is the venue wheelchair accessible?", a: "Yes — ground floor, ramp at main entrance, accessible restroom.", uses: 29, lastUpdated: "Mar 30" },
+  { id: "k15", category: "Policies", q: "Is there a corkage fee?", a: "EC$50 per bottle, max 2 bottles per table.", uses: 23, lastUpdated: "Apr 1" },
+  { id: "k16", category: "Reservations", q: "Can I book over WhatsApp?", a: "Yes! Message us anytime — Ema confirms in seconds, or we'll text you back if it needs a human eye.", uses: 86, lastUpdated: "Apr 13" },
+];
+
+export type KnowledgeDocument = {
+  id: string;
+  filename: string;
+  ext: "pdf" | "docx" | "xlsx" | "txt" | "image";
+  sizeKb: number;
+  uploadedAt: string;
+};
+
+export const knowledgeDocuments: KnowledgeDocument[] = [
+  { id: "d1", filename: "menu.pdf", ext: "pdf", sizeKb: 842, uploadedAt: "Apr 14" },
+  { id: "d2", filename: "allergens.pdf", ext: "pdf", sizeKb: 214, uploadedAt: "Apr 11" },
+  { id: "d3", filename: "terms.pdf", ext: "pdf", sizeKb: 318, uploadedAt: "Apr 6" },
+  { id: "d4", filename: "cancellation-policy.pdf", ext: "pdf", sizeKb: 96, uploadedAt: "Apr 4" },
+  { id: "d5", filename: "wifi-password.txt", ext: "txt", sizeKb: 1, uploadedAt: "Mar 28" },
+  { id: "d6", filename: "wine-list.pdf", ext: "pdf", sizeKb: 488, uploadedAt: "Mar 22" },
 ];
 
 // ---------- WhatsApp ----------

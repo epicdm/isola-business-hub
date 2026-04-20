@@ -16,6 +16,13 @@ import DashboardLayout from "../../layout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { emaReports } from "@/lib/mock-data";
 
 type Filter = "all" | "daily" | "weekly" | "campaign";
@@ -35,8 +42,12 @@ const typeMeta = {
 
 export default function EmaReportsPage() {
   const [filter, setFilter] = useState<Filter>("all");
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const visible = emaReports.filter((r) => filter === "all" || r.type === filter);
+  const active = emaReports.find((r) => r.id === openId);
+  const activeMeta = active ? typeMeta[active.type] : null;
+  const ActiveIcon = activeMeta?.icon ?? FileText;
 
   return (
     <DashboardLayout currentPath="/dashboard/ema/reports">

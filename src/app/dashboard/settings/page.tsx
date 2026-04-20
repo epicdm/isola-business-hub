@@ -12,6 +12,9 @@ import {
   LogOut,
   Trash2,
   ShieldAlert,
+  Tag,
+  Pencil,
+  Plus,
 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";

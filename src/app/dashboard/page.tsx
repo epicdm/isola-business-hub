@@ -41,7 +41,7 @@ export default function DashboardHomePage() {
         </div>
 
         {/* Ema greeting card */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+        <motion.div initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <Card className="overflow-hidden border-ema/30 bg-gradient-to-br from-card to-ema/5 shadow-ema">
             <div className="flex flex-col gap-5 p-6 md:flex-row md:items-center">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-ema shadow-ema">
@@ -75,7 +75,7 @@ export default function DashboardHomePage() {
           {kpis.map((k, i) => (
             <motion.div
               key={k.label}
-              initial={{ opacity: 0, y: 8 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
             >

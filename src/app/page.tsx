@@ -49,7 +49,7 @@ export default function HomePage() {
         <div className="absolute inset-0 grid-bg opacity-40" />
         <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-6 py-20 lg:grid-cols-2 lg:py-28">
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
@@ -89,7 +89,7 @@ export default function HomePage() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.15 }}
             className="relative mx-auto"
@@ -195,7 +195,7 @@ export default function HomePage() {
             return (
               <motion.div
                 key={f.title}
-                initial={{ opacity: 0, y: 16 }}
+                initial={false}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.05 }}
@@ -388,7 +388,7 @@ function PhoneMockup() {
       </div>
       {/* Floating Ema badge */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
+        initial={false}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.6 }}
         className="absolute -right-12 top-20 hidden rounded-2xl border border-ema/30 bg-card/95 p-3 shadow-ema backdrop-blur md:block"

@@ -29,6 +29,7 @@ import { Route as DashboardContactsRouteImport } from './routes/dashboard.contac
 import { Route as DashboardCatalogRouteImport } from './routes/dashboard.catalog'
 import { Route as DashboardBookingsRouteImport } from './routes/dashboard.bookings'
 import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
+import { Route as AuthPathnameRouteImport } from './routes/auth.$pathname'
 import { Route as DashboardEmaIndexRouteImport } from './routes/dashboard.ema.index'
 import { Route as DashboardEmaSettingsRouteImport } from './routes/dashboard.ema.settings'
 import { Route as DashboardEmaReportsRouteImport } from './routes/dashboard.ema.reports'
@@ -133,6 +134,11 @@ const DashboardBillingRoute = DashboardBillingRouteImport.update({
   path: '/dashboard/billing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthPathnameRoute = AuthPathnameRouteImport.update({
+  id: '/auth/$pathname',
+  path: '/auth/$pathname',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardEmaIndexRoute = DashboardEmaIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/auth/$pathname': typeof AuthPathnameRoute
   '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
   '/dashboard/catalog': typeof DashboardCatalogRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/auth/$pathname': typeof AuthPathnameRoute
   '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
   '/dashboard/catalog': typeof DashboardCatalogRoute
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/auth/$pathname': typeof AuthPathnameRoute
   '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
   '/dashboard/catalog': typeof DashboardCatalogRoute
@@ -232,6 +241,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/terms'
+    | '/auth/$pathname'
     | '/dashboard/billing'
     | '/dashboard/bookings'
     | '/dashboard/catalog'
@@ -257,6 +267,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/terms'
+    | '/auth/$pathname'
     | '/dashboard/billing'
     | '/dashboard/bookings'
     | '/dashboard/catalog'
@@ -281,6 +292,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/terms'
+    | '/auth/$pathname'
     | '/dashboard/billing'
     | '/dashboard/bookings'
     | '/dashboard/catalog'
@@ -307,6 +319,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
+  AuthPathnameRoute: typeof AuthPathnameRoute
   DashboardBillingRoute: typeof DashboardBillingRoute
   DashboardBookingsRoute: typeof DashboardBookingsRoute
   DashboardCatalogRoute: typeof DashboardCatalogRoute
@@ -466,6 +479,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardBillingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/$pathname': {
+      id: '/auth/$pathname'
+      path: '/auth/$pathname'
+      fullPath: '/auth/$pathname'
+      preLoaderRoute: typeof AuthPathnameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/ema/': {
       id: '/dashboard/ema/'
       path: '/'
@@ -512,6 +532,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
+  AuthPathnameRoute: AuthPathnameRoute,
   DashboardBillingRoute: DashboardBillingRoute,
   DashboardBookingsRoute: DashboardBookingsRoute,
   DashboardCatalogRoute: DashboardCatalogRoute,
@@ -531,3 +552,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

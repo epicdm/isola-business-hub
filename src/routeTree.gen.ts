@@ -37,6 +37,7 @@ import { Route as DashboardEmaSettingsRouteImport } from './routes/dashboard.ema
 import { Route as DashboardEmaReportsRouteImport } from './routes/dashboard.ema.reports'
 import { Route as DashboardAgentsNewRouteImport } from './routes/dashboard.agents.new'
 import { Route as DashboardAgentsIdRouteImport } from './routes/dashboard.agents.$id'
+import { Route as ApiInboxConversationsIdWhisperRouteImport } from './routes/api.inbox.conversations.$id.whisper'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -178,6 +179,12 @@ const DashboardAgentsIdRoute = DashboardAgentsIdRouteImport.update({
   path: '/dashboard/agents/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiInboxConversationsIdWhisperRoute =
+  ApiInboxConversationsIdWhisperRouteImport.update({
+    id: '/api/inbox/conversations/$id/whisper',
+    path: '/api/inbox/conversations/$id/whisper',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -208,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/ema/settings': typeof DashboardEmaSettingsRoute
   '/dashboard/agents/': typeof DashboardAgentsIndexRoute
   '/dashboard/ema/': typeof DashboardEmaIndexRoute
+  '/api/inbox/conversations/$id/whisper': typeof ApiInboxConversationsIdWhisperRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -237,6 +245,7 @@ export interface FileRoutesByTo {
   '/dashboard/ema/settings': typeof DashboardEmaSettingsRoute
   '/dashboard/agents': typeof DashboardAgentsIndexRoute
   '/dashboard/ema': typeof DashboardEmaIndexRoute
+  '/api/inbox/conversations/$id/whisper': typeof ApiInboxConversationsIdWhisperRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -268,6 +277,7 @@ export interface FileRoutesById {
   '/dashboard/ema/settings': typeof DashboardEmaSettingsRoute
   '/dashboard/agents/': typeof DashboardAgentsIndexRoute
   '/dashboard/ema/': typeof DashboardEmaIndexRoute
+  '/api/inbox/conversations/$id/whisper': typeof ApiInboxConversationsIdWhisperRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -300,6 +310,7 @@ export interface FileRouteTypes {
     | '/dashboard/ema/settings'
     | '/dashboard/agents/'
     | '/dashboard/ema/'
+    | '/api/inbox/conversations/$id/whisper'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -329,6 +340,7 @@ export interface FileRouteTypes {
     | '/dashboard/ema/settings'
     | '/dashboard/agents'
     | '/dashboard/ema'
+    | '/api/inbox/conversations/$id/whisper'
   id:
     | '__root__'
     | '/'
@@ -359,6 +371,7 @@ export interface FileRouteTypes {
     | '/dashboard/ema/settings'
     | '/dashboard/agents/'
     | '/dashboard/ema/'
+    | '/api/inbox/conversations/$id/whisper'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -387,6 +400,7 @@ export interface RootRouteChildren {
   DashboardAgentsIdRoute: typeof DashboardAgentsIdRoute
   DashboardAgentsNewRoute: typeof DashboardAgentsNewRoute
   DashboardAgentsIndexRoute: typeof DashboardAgentsIndexRoute
+  ApiInboxConversationsIdWhisperRoute: typeof ApiInboxConversationsIdWhisperRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -587,6 +601,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAgentsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/inbox/conversations/$id/whisper': {
+      id: '/api/inbox/conversations/$id/whisper'
+      path: '/api/inbox/conversations/$id/whisper'
+      fullPath: '/api/inbox/conversations/$id/whisper'
+      preLoaderRoute: typeof ApiInboxConversationsIdWhisperRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -632,6 +653,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardAgentsIdRoute: DashboardAgentsIdRoute,
   DashboardAgentsNewRoute: DashboardAgentsNewRoute,
   DashboardAgentsIndexRoute: DashboardAgentsIndexRoute,
+  ApiInboxConversationsIdWhisperRoute: ApiInboxConversationsIdWhisperRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

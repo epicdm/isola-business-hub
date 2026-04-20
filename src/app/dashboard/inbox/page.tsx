@@ -533,15 +533,22 @@ export default function InboxPage() {
                           <Sparkles className="h-2.5 w-2.5 text-primary" /> AI replied
                         </div>
                       )}
-                      <Card
-                        className={`px-4 py-2.5 text-sm ${
-                          m.from === "customer"
-                            ? "rounded-2xl rounded-tl-sm border-transparent bg-bubble-in text-bubble-in-foreground"
-                            : "rounded-2xl rounded-tr-sm border-transparent bg-bubble-out text-bubble-out-foreground"
-                        }`}
-                      >
-                        {m.text}
-                      </Card>
+                      {m.card ? (
+                        <RichCard card={m.card} fromCustomer={m.from === "customer"} />
+                      ) : (
+                        <Card
+                          className={`px-4 py-2.5 text-sm ${
+                            m.from === "customer"
+                              ? "rounded-2xl rounded-tl-sm border-transparent bg-bubble-in text-bubble-in-foreground"
+                              : "rounded-2xl rounded-tr-sm border-transparent bg-bubble-out text-bubble-out-foreground"
+                          }`}
+                        >
+                          {m.text}
+                        </Card>
+                      )}
+                      {m.text && m.card && (
+                        <div className="mt-1 text-xs text-muted-foreground">{m.text}</div>
+                      )}
                       <div className={`mt-1 text-[10px] text-muted-foreground ${m.from === "customer" ? "text-left" : "text-right"}`}>
                         {m.time}
                       </div>
@@ -550,6 +557,53 @@ export default function InboxPage() {
                 );
               })}
             </div>
+
+            {/* Suggested replies (Feature 2) — only when AI is handling */}
+            {isAi && (
+              <div className="border-t border-border/40 bg-violet/5 px-4 py-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-violet">
+                    <Wand2 className="h-3 w-3" /> Suggested
+                  </span>
+                  <div className="flex flex-1 flex-wrap items-center gap-1.5">
+                    <TooltipProvider delayDuration={150}>
+                      {(suggestionsByConv[activeId] ?? []).map((s, i) => (
+                        <Tooltip key={i}>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => {
+                                setDraft(s);
+                                setComposerMode("reply");
+                                setAiHandled((p) => ({ ...p, [activeId]: false }));
+                                toast.success("AI paused — edit and send when ready");
+                              }}
+                              className="rounded-full border border-violet/40 bg-violet/10 px-3 py-1 text-[11px] text-foreground transition-colors hover:border-violet/60 hover:bg-violet/20"
+                            >
+                              {s.length > 60 ? s.slice(0, 60) + "…" : s}
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">{s}</TooltipContent>
+                        </Tooltip>
+                      ))}
+                      {suggestionsLoading && (suggestionsByConv[activeId] ?? []).length === 0 && (
+                        <span className="text-[11px] text-muted-foreground">Generating…</span>
+                      )}
+                    </TooltipProvider>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const next = (suggestionRotation[activeId] ?? 0) + 1;
+                      setSuggestionRotation((p) => ({ ...p, [activeId]: next }));
+                      void loadSuggestions(activeId, next);
+                    }}
+                    className="rounded-md p-1.5 text-violet transition-colors hover:bg-violet/15"
+                    aria-label="Regenerate suggestions"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${suggestionsLoading ? "animate-spin" : ""}`} />
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Composer */}
             <div className="border-t border-border/40 bg-card/30 p-4">

@@ -209,11 +209,13 @@ function evaluateOdooConnection(d: { odooUrl: string; odooDb: string; odooApiKey
 interface OnboardingPageProps {
   step: number;
   setStep: (n: number) => void;
+  resumeMode?: boolean;
+  returnTo?: string;
 }
 
 const STORAGE_KEY = "ema:onboarding:draft";
 
-export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
+export default function OnboardingPage({ step, setStep, resumeMode = false, returnTo = "/dashboard" }: OnboardingPageProps) {
   const navigate = useNavigate();
   const [data, setData] = useState<OnboardingData>(defaultData);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -271,6 +273,12 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
       if (flashTimer.current) clearTimeout(flashTimer.current);
     };
   }, []);
+
+  // Force step 6 in resume mode
+  useEffect(() => {
+    if (resumeMode && step !== 6) setStep(6);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeMode]);
 
   const current = useMemo(
     () => STEPS.find((s) => s.id === step) ?? STEPS[0],
@@ -353,7 +361,24 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
     await new Promise((r) => setTimeout(r, 700));
     window.localStorage.setItem("mockLoggedIn", "true");
     window.localStorage.setItem("mockOnboarded", "true");
-    window.localStorage.setItem("odooConnected", odooConnected ? "true" : "false");
+    if (odooConnected && connection.state === "ok") {
+      const meta = {
+        url: data.odooUrl,
+        database: data.odooDb,
+        version: connection.version,
+        customers: connection.customers,
+        products: connection.products,
+        openInvoices: 89,
+        lastSync: new Date().toISOString(),
+      };
+      window.localStorage.setItem("odooConnected", "true");
+      window.localStorage.setItem("isola.odoo.meta", JSON.stringify(meta));
+      window.dispatchEvent(new CustomEvent("isola:odoo-changed"));
+    } else {
+      window.localStorage.setItem("odooConnected", "false");
+      window.localStorage.removeItem("isola.odoo.meta");
+      window.dispatchEvent(new CustomEvent("isola:odoo-changed"));
+    }
     saveProfile({ contactName: data.contactName, businessName: data.businessName });
     window.localStorage.removeItem(STORAGE_KEY);
     if (odooConnected) {
@@ -364,7 +389,9 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
       toast("ℹ Onboarding complete. Connect Odoo to unlock Insights.", { duration: 5000 });
     }
     setSubmitting(false);
-    navigate({ to: "/dashboard" });
+    // Honor returnTo if provided (resume flow from /dashboard or /dashboard/integrations)
+    const dest = (resumeMode && returnTo) ? returnTo : "/dashboard";
+    navigate({ to: dest });
   };
 
   const handleFinish = async () => {
@@ -436,45 +463,55 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
       </header>
 
       <main className="container mx-auto max-w-3xl px-4 py-10">
-        {/* Progress */}
-        <div className="mb-8">
-          <div className="mb-2 flex items-center justify-between text-sm">
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-foreground">
-                Step {step} of {TOTAL_STEPS}
-              </span>
-              <span
-                aria-live="polite"
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary transition-opacity duration-300",
-                  savedFlash ? "animate-fade-in opacity-100" : "pointer-events-none opacity-0",
-                )}
-              >
-                <Check className="h-3 w-3" />
-                Saved
-              </span>
+        {resumeMode ? (
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h1 className="font-display text-2xl font-bold tracking-tight">Complete your setup</h1>
+              <p className="text-sm text-muted-foreground">One quick step to unlock Insights and AI invoicing.</p>
             </div>
-            <span className="text-muted-foreground">{Math.round(progress)}% complete</span>
+            <Link to={returnTo as "/dashboard"} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="h-4 w-4" /> Back
+            </Link>
           </div>
-          <Progress value={progress} className="h-2" />
-          <div className="mt-6 hidden items-center justify-between md:flex">
-            {STEPS.map((s) => {
-              const done = s.id < step;
-              const active = s.id === step;
-              const Icon = s.icon;
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => s.id < step && setStep(s.id)}
+        ) : (
+          <div className="mb-8">
+            <div className="mb-2 flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-foreground">
+                  Step {step} of {TOTAL_STEPS}
+                </span>
+                <span
+                  aria-live="polite"
                   className={cn(
-                    "flex flex-col items-center gap-1.5 transition-opacity",
-                    s.id > step && "cursor-not-allowed opacity-40",
+                    "inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary transition-opacity duration-300",
+                    savedFlash ? "animate-fade-in opacity-100" : "pointer-events-none opacity-0",
                   )}
                 >
-                  <div
+                  <Check className="h-3 w-3" />
+                  Saved
+                </span>
+              </div>
+              <span className="text-muted-foreground">{Math.round(progress)}% complete</span>
+            </div>
+            <Progress value={progress} className="h-2" />
+            <div className="mt-6 hidden items-center justify-between md:flex">
+              {STEPS.map((s) => {
+                const done = s.id < step;
+                const active = s.id === step;
+                const Icon = s.icon;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => s.id < step && setStep(s.id)}
                     className={cn(
-                      "flex h-9 w-9 items-center justify-center rounded-full border-2 transition-colors",
+                      "flex flex-col items-center gap-1.5 transition-opacity",
+                      s.id > step && "cursor-not-allowed opacity-40",
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "flex h-9 w-9 items-center justify-center rounded-full border-2 transition-colors",
                       done && "border-primary bg-primary text-primary-foreground",
                       active && "border-primary bg-background text-primary",
                       !done && !active && "border-border bg-background text-muted-foreground",
@@ -492,9 +529,10 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
                   </span>
                 </button>
               );
-            })}
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Step card */}
         <Card className="overflow-hidden border-border/60 shadow-sm">

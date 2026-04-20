@@ -4,6 +4,8 @@ import OnboardingPage from "@/app/onboarding/page";
 
 const searchSchema = z.object({
   step: z.number().int().min(1).max(6).catch(1).default(1),
+  resume: z.coerce.number().int().min(0).max(1).catch(0).default(0),
+  returnTo: z.string().catch("/dashboard").default("/dashboard"),
 });
 
 export const Route = createFileRoute("/onboarding")({
@@ -13,22 +15,19 @@ export const Route = createFileRoute("/onboarding")({
       { title: "Get started — Ema" },
       { name: "description", content: "Set up your Ema assistant in 6 quick steps." },
       { property: "og:title", content: "Get started — Ema" },
-      {
-        property: "og:description",
-        content: "Set up your Ema assistant in 6 quick steps.",
-      },
+      { property: "og:description", content: "Set up your Ema assistant in 6 quick steps." },
     ],
   }),
   component: OnboardingRoute,
 });
 
 function OnboardingRoute() {
-  const { step } = Route.useSearch();
+  const { step, resume, returnTo } = Route.useSearch();
   const navigate = useNavigate({ from: "/onboarding" });
 
   const setStep = (n: number) => {
-    navigate({ search: { step: n } });
+    navigate({ search: (prev: { step: number; resume: number; returnTo: string }) => ({ ...prev, step: n }) });
   };
 
-  return <OnboardingPage step={step} setStep={setStep} />;
+  return <OnboardingPage step={step} setStep={setStep} resumeMode={resume === 1} returnTo={returnTo} />;
 }

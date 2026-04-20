@@ -49,6 +49,7 @@ import InsightCardMenu, {
 } from "@/components/dashboard/InsightCardMenu";
 import Sparkline from "@/components/dashboard/Sparkline";
 import { insightsMockData } from "@/lib/mock-data";
+import { useOdooConnection } from "@/hooks/use-odoo-connection";
 
 const data = insightsMockData.cards;
 
@@ -390,18 +391,19 @@ export default function InsightsPage() {
   const [synced, setSynced] = useState(insightsMockData.lastSyncedMinutesAgo);
   const [refreshing, setRefreshing] = useState(false);
   const [vertical, setVertical] = useState("Restaurants");
-  const [odooConnected, setOdooConnected] = useState<boolean | null>(null);
-
-  // Hydrate Odoo-connected flag from localStorage (SSR-safe)
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    setOdooConnected(window.localStorage.getItem("odooConnected") === "true");
-  }, []);
+  const { connected: odooConnected } = useOdooConnection();
+  const [paywallDismissed, setPaywallDismissed] = useState(false);
 
   // Tick the "synced X min ago" pill
   useEffect(() => {
     const t = setInterval(() => setSynced((s) => s + 1), 60_000);
     return () => clearInterval(t);
+  }, []);
+
+  // Read session-only paywall dismissal
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setPaywallDismissed(window.sessionStorage.getItem("isola.insights.paywallDismissed") === "1");
   }, []);
 
   const refresh = () => {
@@ -413,8 +415,25 @@ export default function InsightsPage() {
     }, 1200);
   };
 
+  const dismissPaywall = () => {
+    setPaywallDismissed(true);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem("isola.insights.paywallDismissed", "1");
+    }
+  };
+
+  const tryReconnect = () => {
+    // Mock optimistic re-check
+    toast("Re-testing Odoo connection…");
+    setTimeout(() => {
+      // Just confirm it's still disconnected unless they actually configured it elsewhere
+      toast("Still disconnected — connect from setup.");
+    }, 900);
+  };
+
   const c = data;
-  const locked = odooConnected === false;
+  const locked = odooConnected === false && !paywallDismissed;
+  const blurred = odooConnected === false;
 
   return (
     <DashboardLayout currentPath="/dashboard/insights">
@@ -463,13 +482,27 @@ export default function InsightsPage() {
           </div>
         </div>
 
+        {/* Persistent dismissed-paywall banner */}
+        {odooConnected === false && paywallDismissed && (
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-2.5 text-xs">
+            <span className="text-foreground">
+              Insights show mock data until Odoo is connected.
+            </span>
+            <Button size="sm" variant="outline" asChild>
+              <Link to="/onboarding" search={{ step: 6, resume: 1, returnTo: "/dashboard/insights" }}>
+                Connect now
+              </Link>
+            </Button>
+          </div>
+        )}
+
         {/* 8-card grid (locked behind Odoo connection) */}
         <div className="relative">
           <div
             className={`grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 transition-all duration-300 ${
-              locked ? "pointer-events-none select-none blur-sm grayscale" : ""
+              blurred ? "pointer-events-none select-none blur-sm grayscale" : ""
             }`}
-            aria-hidden={locked}
+            aria-hidden={blurred}
           >
 
           {/* CARD 1 — Today's sales */}
@@ -750,18 +783,22 @@ export default function InsightsPage() {
                 </p>
                 <div className="mt-5 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
                   <Button asChild className="gap-1.5">
-                    <Link to="/onboarding" search={{ step: 6 }}>
+                    <Link to="/onboarding" search={{ step: 6, resume: 1, returnTo: "/dashboard/insights" }}>
                       <Database className="h-4 w-4" />
-                      Connect Odoo
+                      Connect Odoo now
                     </Link>
                   </Button>
-                  <Button variant="ghost" asChild>
-                    <Link to="/dashboard/integrations">View integrations</Link>
+                  <Button variant="ghost" onClick={dismissPaywall}>
+                    Maybe later
                   </Button>
                 </div>
-                <p className="mt-3 text-[11px] text-muted-foreground">
-                  ~2 min · We only read what's needed.
-                </p>
+                <button
+                  type="button"
+                  onClick={tryReconnect}
+                  className="mt-3 text-[11px] text-muted-foreground hover:text-foreground"
+                >
+                  Already connected? Refresh →
+                </button>
               </div>
             </div>
           )}

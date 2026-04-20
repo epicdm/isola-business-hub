@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, ArrowRight, Phone, PhoneCall, Instagram, MessageCircle, Facebook, TrendingUp, Database, X } from "lucide-react";
+import { Sparkles, ArrowRight, Phone, PhoneCall, Instagram, MessageCircle, Facebook, TrendingUp, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "@tanstack/react-router";
 import DashboardLayout from "./layout";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { kpis, recentActivity, type Channel } from "@/lib/mock-data";
+import { useOdooConnection } from "@/hooks/use-odoo-connection";
 
 const channelIcon: Record<Channel, typeof Phone> = {
   whatsapp: Phone,
@@ -26,11 +27,13 @@ const channelColor: Record<Channel, string> = {
   facebook: "text-chart-4 bg-chart-4/15",
 };
 
+const RESUME_DISMISS_KEY = "isola.resumeBanner.dismissedUntil";
 
 export default function DashboardHomePage() {
   const [today, setToday] = useState("");
-  const [odooConnected, setOdooConnected] = useState<boolean | null>(null);
-  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const { connected } = useOdooConnection();
+  const [bannerDismissed, setBannerDismissed] = useState<boolean | null>(null);
+
   useEffect(() => {
     setToday(
       new Date().toLocaleDateString(undefined, {
@@ -40,52 +43,61 @@ export default function DashboardHomePage() {
       })
     );
     if (typeof window !== "undefined") {
-      setOdooConnected(window.localStorage.getItem("odooConnected") === "true");
-      setBannerDismissed(window.localStorage.getItem("odooBannerDismissed") === "true");
+      const until = window.localStorage.getItem(RESUME_DISMISS_KEY);
+      const dismissed = !!(until && Number(until) > Date.now());
+      setBannerDismissed(dismissed);
     }
   }, []);
 
   const dismissBanner = () => {
     setBannerDismissed(true);
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("odooBannerDismissed", "true");
+      // 7 days
+      const until = Date.now() + 7 * 24 * 60 * 60 * 1000;
+      window.localStorage.setItem(RESUME_DISMISS_KEY, String(until));
     }
   };
 
-  const showOdooBanner = odooConnected === false && !bannerDismissed;
+  const showOdooBanner =
+    connected === false && bannerDismissed === false;
 
   return (
     <DashboardLayout currentPath="/dashboard">
       <div className="mx-auto max-w-7xl space-y-8 p-6 lg:p-10">
-        {/* Odoo paywall banner — appears when onboarding skipped Odoo */}
+        {/* Resume banner — appears when onboarding skipped Odoo */}
         {showOdooBanner && (
-          <div className="flex items-start gap-3 rounded-xl border border-warning/40 bg-warning/10 p-4 text-sm">
-            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning/20 text-warning">
-              <Database className="h-4 w-4" />
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-start gap-3 rounded-xl border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-4 text-sm shadow-sm"
+          >
+            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+              <Sparkles className="h-4 w-4" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-foreground">Connect Odoo to unlock the full Isola</p>
+              <p className="font-semibold text-foreground">
+                One more step — connect Odoo to unlock Insights and let Ema handle invoicing + inventory.
+              </p>
               <p className="mt-0.5 text-muted-foreground">
-                Insights, AI-assisted invoicing, and inventory-aware agents are
-                waiting on your Odoo connection. Takes about 2 minutes.
+                Takes about 2 minutes. We pick up exactly where you left off.
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <Button size="sm" asChild>
-                <Link to="/onboarding" search={{ step: 6 }}>
-                  Connect Odoo
+                <Link to="/onboarding" search={{ step: 6, resume: 1, returnTo: "/dashboard" }}>
+                  Finish setup
                 </Link>
               </Button>
               <button
                 type="button"
                 onClick={dismissBanner}
-                className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-warning/20 hover:text-foreground"
-                aria-label="Dismiss"
+                className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-foreground"
+                aria-label="Dismiss for 7 days"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Greeting */}

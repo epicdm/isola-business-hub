@@ -219,6 +219,9 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
   const [submitting, setSubmitting] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [connection, setConnection] = useState<ConnectionResult>({ state: "idle" });
+  const [skipDialogOpen, setSkipDialogOpen] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Hydrate from localStorage after mount (SSR-safe)
@@ -292,6 +295,7 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
       3: step3Schema,
       4: step4Schema,
       5: step5Schema,
+      6: step6Schema,
     };
     const result = schemas[step].safeParse(data);
     if (result.success) {
@@ -333,20 +337,54 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
     toast.success("Wizard reset — starting fresh");
   };
 
-  const handleFinish = async () => {
+  const handleTestConnection = async () => {
     if (!validateCurrent()) {
       toast.error("Please fix the highlighted fields");
       return;
     }
+    setConnection({ state: "testing" });
+    await new Promise((r) => setTimeout(r, 1800));
+    setConnection(evaluateOdooConnection(data));
+  };
+
+  const finalizeOnboarding = async (odooConnected: boolean) => {
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1100));
+    await new Promise((r) => setTimeout(r, 700));
     window.localStorage.setItem("mockLoggedIn", "true");
     window.localStorage.setItem("mockOnboarded", "true");
+    window.localStorage.setItem("odooConnected", odooConnected ? "true" : "false");
     saveProfile({ contactName: data.contactName, businessName: data.businessName });
     window.localStorage.removeItem(STORAGE_KEY);
-    toast.success("You're all set! Welcome to Ema 👋");
+    if (odooConnected) {
+      setShowConfetti(true);
+      toast.success("✓ Odoo connected. Welcome to Isola.");
+      await new Promise((r) => setTimeout(r, 900));
+    } else {
+      toast("ℹ Onboarding complete. Connect Odoo to unlock Insights.", { duration: 5000 });
+    }
     setSubmitting(false);
     navigate({ to: "/dashboard" });
+  };
+
+  const handleFinish = async () => {
+    if (step === 6) {
+      if (connection.state !== "ok") {
+        toast.error("Test the connection before finishing.");
+        return;
+      }
+      await finalizeOnboarding(true);
+      return;
+    }
+    if (!validateCurrent()) {
+      toast.error("Please fix the highlighted fields");
+      return;
+    }
+    await finalizeOnboarding(false);
+  };
+
+  const handleSkipOdoo = async () => {
+    setSkipDialogOpen(false);
+    await finalizeOnboarding(false);
   };
 
   return (

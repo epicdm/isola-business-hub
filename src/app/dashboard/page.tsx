@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { kpis, recentActivity, type Channel } from "@/lib/mock-data";
 import { useOdooConnection } from "@/hooks/use-odoo-connection";
+import FirstWinOverlay, { pickIndustry } from "@/components/dashboard/FirstWinOverlay";
 
 const channelIcon: Record<Channel, typeof Phone> = {
   whatsapp: Phone,
@@ -33,6 +34,8 @@ export default function DashboardHomePage() {
   const [today, setToday] = useState("");
   const { connected } = useOdooConnection();
   const [bannerDismissed, setBannerDismissed] = useState<boolean | null>(null);
+  const [firstWinOpen, setFirstWinOpen] = useState(false);
+  const [firstWinIndustry, setFirstWinIndustry] = useState<ReturnType<typeof pickIndustry>>("default");
 
   useEffect(() => {
     setToday(
@@ -46,8 +49,24 @@ export default function DashboardHomePage() {
       const until = window.localStorage.getItem(RESUME_DISMISS_KEY);
       const dismissed = !!(until && Number(until) > Date.now());
       setBannerDismissed(dismissed);
+      // First-win activation: triggered once after onboarding finishes
+      if (window.localStorage.getItem("isola.firstWinPending") === "true") {
+        const ind = window.localStorage.getItem("isola.firstWinIndustry");
+        setFirstWinIndustry(pickIndustry(ind));
+        // Small delay so the dashboard paints first
+        const t = setTimeout(() => setFirstWinOpen(true), 350);
+        return () => clearTimeout(t);
+      }
     }
   }, []);
+
+  const closeFirstWin = () => {
+    setFirstWinOpen(false);
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem("isola.firstWinPending");
+      window.localStorage.removeItem("isola.firstWinIndustry");
+    }
+  };
 
   const dismissBanner = () => {
     setBannerDismissed(true);

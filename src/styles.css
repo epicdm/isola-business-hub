@@ -48,6 +48,9 @@
   --color-ema: var(--ema);
   --color-ema-foreground: var(--ema-foreground);
   --color-ema-glow: var(--ema-glow);
+  --color-violet: var(--violet);
+  --color-violet-foreground: var(--violet-foreground);
+  --color-violet-glow: var(--violet-glow);
   --color-success: var(--success);
   --color-warning: var(--warning);
 
@@ -112,6 +115,12 @@
   --ema-foreground: oklch(0.18 0.02 165);
   --ema-glow: oklch(0.7 0.18 25 / 0.45);
 
+  /* Violet — Ema's "AI thinking" accent (Ask Ema drawer, suggestions, review queue).
+     Distinct from primary green (app surface) and ema coral (chief-of-staff brand). */
+  --violet: oklch(0.7 0.22 295);
+  --violet-foreground: oklch(0.98 0.005 295);
+  --violet-glow: oklch(0.7 0.22 295 / 0.5);
+
   --success: oklch(0.78 0.17 152);
   --warning: oklch(0.82 0.17 80);
 
@@ -146,8 +155,10 @@
     linear-gradient(180deg, oklch(0.18 0.02 165), oklch(0.16 0.02 165));
   --gradient-primary: linear-gradient(135deg, oklch(0.78 0.17 152), oklch(0.85 0.18 150));
   --gradient-ema: linear-gradient(135deg, oklch(0.7 0.18 25), oklch(0.78 0.16 50));
+  --gradient-violet: linear-gradient(135deg, oklch(0.62 0.24 295), oklch(0.72 0.22 320));
   --shadow-glow: 0 0 40px -10px oklch(0.78 0.17 152 / 0.5);
   --shadow-ema: 0 0 40px -10px oklch(0.7 0.18 25 / 0.5);
+  --shadow-violet: 0 0 40px -10px oklch(0.7 0.22 295 / 0.55);
   --shadow-card: 0 8px 32px -12px oklch(0 0 0 / 0.4);
 }
 
@@ -201,11 +212,17 @@
   .bg-gradient-ema {
     background: var(--gradient-ema);
   }
+  .bg-gradient-violet {
+    background: var(--gradient-violet);
+  }
   .shadow-glow {
     box-shadow: var(--shadow-glow);
   }
   .shadow-ema {
     box-shadow: var(--shadow-ema);
+  }
+  .shadow-violet {
+    box-shadow: var(--shadow-violet);
   }
   .shadow-card {
     box-shadow: var(--shadow-card);

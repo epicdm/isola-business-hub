@@ -26,6 +26,7 @@ import {
   MessageSquare,
   ArrowUpRight,
   Activity as ActivityIcon,
+  ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../../layout";
@@ -120,10 +121,35 @@ export default function AgentDetailPage() {
   // Instagram sub-channels (UI-only — not part of AgentChannel union)
   const [igComments, setIgComments] = useState(false);
   const [igStories, setIgStories] = useState(true);
+  // Review mode (Safety) — persisted to localStorage so /dashboard/inbox can read it
+  const [reviewMode, setReviewMode] = useState<boolean>(false);
 
   useEffect(() => {
     setAgent(original);
+    if (typeof window !== "undefined") {
+      try {
+        const raw = window.localStorage.getItem("isola.reviewMode");
+        const map = raw ? (JSON.parse(raw) as Record<string, boolean>) : {};
+        setReviewMode(Boolean(map[original.id]));
+      } catch {
+        setReviewMode(false);
+      }
+    }
   }, [original]);
+
+  const persistReviewMode = (next: boolean) => {
+    setReviewMode(next);
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem("isola.reviewMode");
+      const map = raw ? (JSON.parse(raw) as Record<string, boolean>) : {};
+      map[original.id] = next;
+      window.localStorage.setItem("isola.reviewMode", JSON.stringify(map));
+    } catch {
+      /* ignore quota / private-mode errors */
+    }
+    toast.success(next ? "Review mode on — drafts will queue for your approval" : "Review mode off — AI sends instantly");
+  };
 
   const update = <K extends keyof Agent>(key: K, value: Agent[K]) =>
     setAgent((prev) => ({ ...prev, [key]: value }));
@@ -224,6 +250,66 @@ export default function AgentDetailPage() {
             <Switch checked={agent.status === "active"} onCheckedChange={toggleStatus} />
           </div>
         </div>
+
+        {/* Safety — Review mode (Turn 7) */}
+        <Card
+          className={cn(
+            "mb-6 border p-5 transition-colors",
+            reviewMode
+              ? "border-violet/40 bg-violet/8 shadow-violet"
+              : "border-border/40 bg-card/40",
+          )}
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div
+                className={cn(
+                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
+                  reviewMode ? "bg-violet/20 text-violet" : "bg-accent/40 text-muted-foreground",
+                )}
+              >
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-display text-base font-semibold">Safety</h3>
+                  {reviewMode && (
+                    <Badge variant="outline" className="border-violet/40 bg-violet/15 text-[10px] uppercase tracking-wider text-violet">
+                      Review mode on
+                    </Badge>
+                  )}
+                </div>
+                <p className="mt-0.5 text-sm font-medium">
+                  Review mode — I approve all AI replies before they send
+                </p>
+                <p className="mt-1 max-w-md text-xs text-muted-foreground">
+                  When on, AI drafts stay in a pending queue until you approve. Best for your first week — turn it off once you trust how {agent.name} is replying.
+                </p>
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2 self-start sm:self-center">
+              <Switch
+                checked={reviewMode}
+                onCheckedChange={persistReviewMode}
+                aria-label="Toggle review mode"
+              />
+            </div>
+          </div>
+          {reviewMode && (
+            <div className="mt-4 flex items-center justify-between gap-3 rounded-md border border-violet/30 bg-violet/8 px-3 py-2 text-xs text-violet-foreground">
+              <span className="text-muted-foreground">
+                Drafts from {agent.name} now appear in your inbox under{" "}
+                <span className="font-medium text-foreground">Pending approval</span>.
+              </span>
+              <Link
+                to="/dashboard/inbox"
+                className="inline-flex items-center gap-1 font-medium text-violet underline-offset-2 hover:underline"
+              >
+                Open inbox <ArrowUpRight className="h-3 w-3" />
+              </Link>
+            </div>
+          )}
+        </Card>
 
         <Tabs defaultValue="persona">
           <TabsList>

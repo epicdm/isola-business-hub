@@ -261,8 +261,51 @@ export const conversations = [
       { id: 2, from: "ai" as const, text: "Hi Aaliyah! 🌴 Yes, we have a table for 4 available at 7:00 PM Friday. Any dietary preferences I should note?", time: "7:42 PM" },
       { id: 3, from: "customer" as const, text: "One of us is vegetarian. Also, do you do birthday cakes?", time: "7:43 PM" },
       { id: 4, from: "ai" as const, text: "Noted — 1 vegetarian. We don't bake cakes in-house, but we'll happily plate any cake you bring (no fee). Want me to lock in the reservation?", time: "7:43 PM" },
+      {
+        id: "card-catalog-1",
+        from: "ai" as const,
+        text: "Here's our most-loved Friday-night dish, in case you'd like to pre-order:",
+        time: "7:43 PM",
+        card: {
+          kind: "catalog" as const,
+          itemId: "m4",
+          name: "Pan-seared snapper",
+          price: 64,
+          desc: "Whole snapper, creole sauce, breadfruit mash. Our signature.",
+          emoji: "🐟",
+          tapped: true,
+        },
+      },
       { id: 5, from: "customer" as const, text: "Yes please, under Aaliyah George.", time: "7:44 PM" },
       { id: 6, from: "ai" as const, text: "Booked ✓ Table for 4, Friday 7:00 PM, under Aaliyah George. We'll send a reminder Friday morning. See you then!", time: "7:44 PM" },
+      {
+        id: "card-booking-1",
+        from: "ai" as const,
+        text: "",
+        time: "7:44 PM",
+        card: {
+          kind: "booking" as const,
+          service: "Dinner reservation",
+          date: "Friday, Apr 24",
+          time: "7:00 PM",
+          party: 4,
+          notes: "1 vegetarian · cake plating arranged",
+        },
+      },
+      {
+        id: "card-payment-1",
+        from: "ai" as const,
+        text: "Securing the table with a small deposit — refundable up to 4 hours before:",
+        time: "7:44 PM",
+        card: {
+          kind: "payment" as const,
+          amount: 50,
+          description: "Friday 7pm · party of 4 · refundable deposit",
+          status: "paid" as const,
+          paidAt: "7:45 PM",
+          provider: "Stripe",
+        },
+      },
       { id: 7, from: "customer" as const, text: "Perfect, see you Friday at 7!", time: "7:45 PM" },
       { id: 8, from: "whisper" as const, text: "FYI — Aaliyah usually orders the snapper. Pre-stage a vegetarian alternative for her plus-one.", time: "7:46 PM", ownerName: "Marcus", teachAi: false },
       { id: 9, from: "whisper" as const, text: "If anyone in her party asks for cake plating, no fee — confirmed by chef. AI should remember this for VIPs.", time: "7:47 PM", ownerName: "Marcus", teachAi: true },
@@ -861,5 +904,252 @@ export const agents: Agent[] = [
       { id: "r2", type: "tag", label: "Anything tagged #booking comes here" },
     ],
     messagesThisWeek: 134,
+  },
+];
+
+// ---------- Rich message cards (Turn 7 · Feature 4) ----------
+
+export type CatalogMessageCard = {
+  kind: "catalog";
+  itemId: string;
+  name: string;
+  price: number; // EC$
+  desc: string;
+  emoji: string;
+  tapped?: boolean;
+};
+
+export type PaymentStatus = "pending" | "paid" | "expired";
+
+export type PaymentMessageCard = {
+  kind: "payment";
+  amount: number; // EC$
+  description: string;
+  status: PaymentStatus;
+  paidAt?: string;
+  provider: "Stripe" | "Fiserv";
+};
+
+export type BookingMessageCard = {
+  kind: "booking";
+  service: string;
+  date: string;
+  time: string;
+  party: number;
+  notes?: string;
+};
+
+export type MessageCard = CatalogMessageCard | PaymentMessageCard | BookingMessageCard;
+
+// ---------- AI suggested replies (Turn 7 · Feature 2) ----------
+// Mock POST /api/inbox/conversations/[id]/suggestions.
+// Returns 3 short reply suggestions tailored to the last customer message.
+export const suggestionSeeds: Record<string, string[][]> = {
+  c1: [
+    [
+      "Wonderful — see you Friday! I'll have the vegetarian options ready.",
+      "Looking forward to it. Anything else I can prep for the table?",
+      "Perfect ✓ I've added a note for the chef about your guest.",
+    ],
+    [
+      "🌴 Can't wait to host you. Our snapper is fresh in this morning.",
+      "All set! I'll text you Friday morning with a quick reminder.",
+      "See you then! Want me to reserve a window seat if one's free?",
+    ],
+  ],
+  c2: [
+    [
+      "Yes — private dinners for 12 are absolutely something we do. Let me grab you a chef's quote.",
+      "Hi Kareem — sorry for the wait. Marcus is reviewing dates now and will reply within the hour.",
+      "Happy to help with this. A few quick questions: any dietary needs and a preferred wine budget?",
+    ],
+    [
+      "Confirmed availability for next Saturday. Sending you a chef's menu draft + EC$1,800 deposit link.",
+      "Yes — chef Marcus will design a 5-course tasting. Want it plated or family-style?",
+      "We've held next Saturday for you provisionally. Replying within 30 min with full pricing.",
+    ],
+  ],
+  c3: [
+    [
+      "So happy you loved it 🐟 Tag us next time and we'll feature your photo!",
+      "Thank you! That snapper is our chef's pride. See you again soon?",
+      "🌊 Means the world. We're running a Mother's Day prix fixe — want details?",
+    ],
+  ],
+  c4: [
+    [
+      "Glad I could help — see you soon!",
+      "Walk-ins welcome anytime before 9:45. We'll save a seat at the bar.",
+      "Anytime! Tonight's special is the oxtail if you'd like to know.",
+    ],
+  ],
+  c5: [
+    [
+      "We're at 23 Castle St — the bay-side patio. Want me to send a pin?",
+      "Easy to find — opposite the cruise terminal. Free parking on Bath Rd.",
+      "Right on the bay — here's a Maps pin: maps.google.com/coalpot 📍",
+    ],
+  ],
+  c6: [
+    [
+      "Confirmed ✓ See you tomorrow at 6:30!",
+      "All set — table for 2, tomorrow 6:30 PM. Anything special I should note?",
+      "Lovely. Want me to set aside our window table tomorrow?",
+    ],
+  ],
+};
+
+export function getSuggestions(conversationId: string, rotation = 0): string[] {
+  const sets = suggestionSeeds[conversationId] ?? [
+    [
+      "Thanks for reaching out — I'll get back to you right away.",
+      "Happy to help! Could you share a bit more detail?",
+      "On it — give me one moment.",
+    ],
+  ];
+  return sets[rotation % sets.length];
+}
+
+// ---------- Ema conversation chat (Turn 7 · Feature 1) ----------
+// Mock POST /api/ema/conversation-chat — Ema gives advice about a specific inbox conversation.
+
+export type EmaConvChatMsg = {
+  id: string;
+  from: "ema" | "owner";
+  text: string;
+  time: string;
+  /** When Ema returns a draft reply, this is the suggested text the owner can insert into the composer. */
+  draftReply?: string;
+};
+
+export const emaConvQuickActions = [
+  "Summarize this",
+  "What does the customer want?",
+  "Draft a reply",
+  "Should I escalate?",
+] as const;
+
+export type EmaConvQuickAction = (typeof emaConvQuickActions)[number];
+
+// Per-conversation canned answers. If a key is missing we fall back to generic templates.
+const emaConvAnswers: Record<string, Partial<Record<EmaConvQuickAction, { text: string; draftReply?: string }>>> = {
+  c1: {
+    "Summarize this": {
+      text: "Aaliyah George booked a table for 4 on Friday at 7pm. One vegetarian guest, and she asked about birthday cake plating — confirmed no fee. Deposit of EC$50 paid via Stripe. She's a regular (7 visits, EC$1,240 lifetime).",
+    },
+    "What does the customer want?": {
+      text: "A confirmed Friday 7pm reservation with a vegetarian option and the option to bring her own cake. She's already paid the deposit — she's locked in.",
+    },
+    "Draft a reply": {
+      text: "Here's a warm follow-up that nudges her toward pre-ordering:",
+      draftReply:
+        "Hi Aaliyah! Quick heads up — chef has the snapper coming in fresh Friday morning. Want me to pre-stage a portion for you and a vegetarian dasheen curry for your guest?",
+    },
+    "Should I escalate?": {
+      text: "No — the agent handled this beautifully. She's confirmed, paid, and a known regular. I'll flag you only if she changes party size or cancels.",
+    },
+  },
+  c2: {
+    "Summarize this": {
+      text: "Kareem L. is asking about a private dinner for 12 next Saturday. The agent flagged it for Marcus but no follow-up has gone out yet — Kareem nudged again 2 minutes later. He's tagged 'new' (2 visits, EC$480 spend) but his note says 'big spender potential'.",
+    },
+    "What does the customer want?": {
+      text: "A private dinner for 12 next Saturday. He needs pricing and confirmation that it's possible — quickly. The 'can you do' phrasing suggests he's comparing options.",
+    },
+    "Draft a reply": {
+      text: "Here's a fast holding reply that buys time without losing the lead:",
+      draftReply:
+        "Hi Kareem — yes, private dinners for 12 are absolutely something we do. Chef Marcus is putting together a quick menu + price for next Saturday and will reply within 30 minutes. Any dietary needs I should pass along?",
+    },
+    "Should I escalate?": {
+      text: "Yes — Marcus should reply personally within the hour. Kareem already nudged once; another 30 min of silence and he'll book elsewhere. I've drafted a holding reply you can send now.",
+    },
+  },
+  c3: {
+    "Summarize this": {
+      text: "@island_eats_dom (Instagram) loved the snapper last night. Pure praise — no question to answer. The agent thanked her and asked her to tag the restaurant.",
+    },
+    "What does the customer want?": {
+      text: "Nothing transactional — she's giving a compliment. The opportunity is to convert her into a UGC source by getting her to tag your account.",
+    },
+    "Draft a reply": {
+      text: "Here's a friendly reply that doubles down on the moment:",
+      draftReply:
+        "So glad you loved it 🌊 If you snapped a photo, tag @coalpot_dom and we'll feature you on our story this week. P.S. — Mother's Day prix fixe drops Friday, want first-look access?",
+    },
+    "Should I escalate?": {
+      text: "No — pure social good news. The agent reply was on-brand. No action needed from you.",
+    },
+  },
+};
+
+const emaGenericAnswers: Record<EmaConvQuickAction, string> = {
+  "Summarize this":
+    "Customer reached out via {{channel}}. The agent has been handling the thread and is currently {{status}}. Nothing flagged so far.",
+  "What does the customer want?":
+    "From the thread, the customer wants a quick, accurate answer. The agent is on track — no clarifying question outstanding.",
+  "Draft a reply":
+    "Want me to draft something specific? Tap one of the chips above and I'll give you a ready-to-send reply.",
+  "Should I escalate?":
+    "No — the agent is handling this within normal range. I'll ping you only if something changes.",
+};
+
+export function emaConversationReply(
+  conversationId: string,
+  message: string,
+): { text: string; draftReply?: string } {
+  const trimmed = message.trim();
+  const quick = (emaConvQuickActions as readonly string[]).find((q) => q === trimmed) as
+    | EmaConvQuickAction
+    | undefined;
+  if (quick) {
+    const specific = emaConvAnswers[conversationId]?.[quick];
+    if (specific) return specific;
+    return { text: emaGenericAnswers[quick] };
+  }
+  // Free-text fallback
+  return {
+    text: `On it — looking at ${conversationId} now. (In the live build I'd answer "${trimmed}" with full context from the thread.)`,
+  };
+}
+
+// ---------- Pending approval queue (Turn 7 · Feature 3 · Review mode) ----------
+
+export type PendingDraft = {
+  id: string;
+  conversationId: string;
+  agentId: string;
+  customer: string;
+  channel: Channel;
+  customerMessage: string;
+  customerTime: string;
+  draft: string;
+  draftTime: string;
+};
+
+export const pendingDrafts: PendingDraft[] = [
+  {
+    id: "pd1",
+    conversationId: "c2",
+    agentId: "ag-receptionist",
+    customer: "Kareem L.",
+    channel: "whatsapp",
+    customerMessage: "Can you do a private dinner for 12?",
+    customerTime: "7:01 PM",
+    draft:
+      "Hi Kareem! Private dinners for 12 are absolutely something we do — chef designs a custom 5-course tasting (EC$180/pp + drinks). Want me to lock in next Saturday provisionally while we confirm the menu?",
+    draftTime: "just now",
+  },
+  {
+    id: "pd2",
+    conversationId: "c5",
+    agentId: "ag-receptionist",
+    customer: "Tania B.",
+    channel: "messenger",
+    customerMessage: "Where are you located exactly?",
+    customerTime: "8:08 PM",
+    draft:
+      "We're at 23 Castle St, Roseau — right on the bay, opposite the cruise terminal. Free street parking on Bath Rd or a paid lot directly across (EC$5 flat). Here's a pin: maps.google.com/coalpot 📍",
+    draftTime: "just now",
   },
 ];

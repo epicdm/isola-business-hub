@@ -15,6 +15,7 @@ import {
   LogOut,
   UsersRound,
   PhoneOutgoing,
+  BarChart3,
 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -30,6 +31,7 @@ const sections = [
       { href: "/dashboard", icon: Home, label: "Home" },
       { href: "/dashboard/inbox", icon: Inbox, label: "Inbox" },
       { href: "/dashboard/outbound", icon: PhoneOutgoing, label: "Outbound" },
+      { href: "/dashboard/insights", icon: BarChart3, label: "Insights" },
       { href: "/dashboard/bookings", icon: Calendar, label: "Bookings" },
       { href: "/dashboard/contacts", icon: Users, label: "Contacts" },
       { href: "/dashboard/agents", icon: UsersRound, label: "Agents" },

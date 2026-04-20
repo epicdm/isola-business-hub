@@ -652,3 +652,126 @@ export const teamMembers = [
   { id: "u2", name: "Cherise Joseph", email: "cherise@coalpot.dm", role: "Manager", avatar: "CJ" },
   { id: "u3", name: "Devon Andrew", email: "devon@coalpot.dm", role: "Staff", avatar: "DA" },
 ];
+
+// ---------- Agents (Turn 6) ----------
+
+export type AgentTemplateKey =
+  | "receptionist"
+  | "sales"
+  | "support"
+  | "concierge"
+  | "booking"
+  | "custom";
+
+export type AgentStatus = "active" | "paused" | "error";
+export type AgentChannel = "whatsapp" | "voice" | "instagram" | "messenger";
+export type AgentSchedule = "always" | "business" | "after" | "custom";
+
+export type AgentRoutingRule = {
+  id: string;
+  type: "tag" | "time" | "fallback";
+  label: string;
+};
+
+export type Agent = {
+  id: string;
+  name: string;
+  template: AgentTemplateKey;
+  templateLabel: string;
+  status: AgentStatus;
+  channels: AgentChannel[];
+  schedule: AgentSchedule;
+  scheduleLabel: string;
+  tone: number; // 0 formal, 1 friendly, 2 casual
+  welcome: string;
+  escalationKeywords: string[];
+  escalationContact: string;
+  examples: { question: string; answer: string }[];
+  routing: AgentRoutingRule[];
+  messagesThisWeek: number;
+};
+
+export const agentTemplates: Array<{
+  key: AgentTemplateKey;
+  emoji: string;
+  label: string;
+  desc: string;
+}> = [
+  { key: "receptionist", emoji: "👋", label: "Receptionist", desc: "Greets customers, answers FAQs, routes questions." },
+  { key: "sales", emoji: "💰", label: "Sales", desc: "Answers product questions, shares pricing, takes orders." },
+  { key: "support", emoji: "🛠️", label: "Support / Helpdesk", desc: "Handles complaints, tracks issues, escalates." },
+  { key: "concierge", emoji: "🎩", label: "Concierge", desc: "Hotels-focused: check-in, excursions, room service." },
+  { key: "booking", emoji: "📅", label: "Booking", desc: "Takes appointments, manages calendar, sends reminders." },
+  { key: "custom", emoji: "✨", label: "Custom", desc: "Start from scratch with a blank agent." },
+];
+
+export const agents: Agent[] = [
+  {
+    id: "ag-receptionist",
+    name: "Main Receptionist",
+    template: "receptionist",
+    templateLabel: "Receptionist",
+    status: "active",
+    channels: ["whatsapp", "voice"],
+    schedule: "always",
+    scheduleLabel: "Always on · 24/7",
+    tone: 1,
+    welcome: "Hi 🌴 Welcome to Coalpot. How can I help today?",
+    escalationKeywords: ["complaint", "manager", "refund", "urgent"],
+    escalationContact: "+1 767 245 7811",
+    examples: [
+      { question: "What time do you close tonight?", answer: "We're open until 10pm tonight, last seating at 9:15. Want me to book you a table?" },
+      { question: "Do you take reservations?", answer: "Yes — for parties of 4+ I'd recommend it. What date were you thinking?" },
+    ],
+    routing: [
+      { id: "r1", type: "tag", label: "Route VIP customers to me first" },
+      { id: "r2", type: "fallback", label: "If Booking Assistant is busy, take over" },
+    ],
+    messagesThisWeek: 412,
+  },
+  {
+    id: "ag-aftersales",
+    name: "After-hours Sales",
+    template: "sales",
+    templateLabel: "Sales",
+    status: "active",
+    channels: ["whatsapp"],
+    schedule: "after",
+    scheduleLabel: "9pm – 9am",
+    tone: 2,
+    welcome: "Hey! 👋 We're closed for the night but I can still take orders and answer questions.",
+    escalationKeywords: ["price match", "wholesale", "bulk"],
+    escalationContact: "+1 767 245 7811",
+    examples: [
+      { question: "Are you still serving?", answer: "Kitchen's closed for tonight, but I can lock in a reservation for tomorrow — want me to grab a time?" },
+      { question: "How much for the snapper?", answer: "Pan-seared snapper is EC$64. It's our signature — comes with breadfruit mash and creole sauce." },
+    ],
+    routing: [
+      { id: "r1", type: "time", label: "Only handle messages between 9pm and 9am" },
+    ],
+    messagesThisWeek: 87,
+  },
+  {
+    id: "ag-booking",
+    name: "Booking Assistant",
+    template: "booking",
+    templateLabel: "Booking",
+    status: "paused",
+    channels: ["whatsapp"],
+    schedule: "business",
+    scheduleLabel: "During business hours",
+    tone: 1,
+    welcome: "Hi! Let's get your reservation locked in. What date were you thinking?",
+    escalationKeywords: ["large group", "private dinner", "buyout"],
+    escalationContact: "+1 767 245 7811",
+    examples: [
+      { question: "Friday at 7 for 4?", answer: "Booked ✓ table for 4, Friday 7pm. We'll text you a reminder Friday morning." },
+      { question: "Can I cancel?", answer: "Of course — free up to 4 hours before. Want me to cancel now?" },
+    ],
+    routing: [
+      { id: "r1", type: "time", label: "Only during business hours" },
+      { id: "r2", type: "tag", label: "Anything tagged #booking comes here" },
+    ],
+    messagesThisWeek: 134,
+  },
+];

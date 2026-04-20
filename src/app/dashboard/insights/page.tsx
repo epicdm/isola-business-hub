@@ -49,6 +49,7 @@ import InsightCardMenu, {
 } from "@/components/dashboard/InsightCardMenu";
 import Sparkline from "@/components/dashboard/Sparkline";
 import { insightsMockData } from "@/lib/mock-data";
+import { useOdooConnection } from "@/hooks/use-odoo-connection";
 
 const data = insightsMockData.cards;
 

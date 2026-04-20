@@ -355,7 +355,24 @@ export default function OnboardingPage({ step, setStep, resumeMode = false, retu
     await new Promise((r) => setTimeout(r, 700));
     window.localStorage.setItem("mockLoggedIn", "true");
     window.localStorage.setItem("mockOnboarded", "true");
-    window.localStorage.setItem("odooConnected", odooConnected ? "true" : "false");
+    if (odooConnected && connection.state === "ok") {
+      const meta = {
+        url: data.odooUrl,
+        database: data.odooDb,
+        version: connection.version,
+        customers: connection.customers,
+        products: connection.products,
+        openInvoices: 89,
+        lastSync: new Date().toISOString(),
+      };
+      window.localStorage.setItem("odooConnected", "true");
+      window.localStorage.setItem("isola.odoo.meta", JSON.stringify(meta));
+      window.dispatchEvent(new CustomEvent("isola:odoo-changed"));
+    } else {
+      window.localStorage.setItem("odooConnected", "false");
+      window.localStorage.removeItem("isola.odoo.meta");
+      window.dispatchEvent(new CustomEvent("isola:odoo-changed"));
+    }
     saveProfile({ contactName: data.contactName, businessName: data.businessName });
     window.localStorage.removeItem(STORAGE_KEY);
     if (odooConnected) {
@@ -366,7 +383,9 @@ export default function OnboardingPage({ step, setStep, resumeMode = false, retu
       toast("ℹ Onboarding complete. Connect Odoo to unlock Insights.", { duration: 5000 });
     }
     setSubmitting(false);
-    navigate({ to: "/dashboard" });
+    // Honor returnTo if provided (resume flow from /dashboard or /dashboard/integrations)
+    const dest = (resumeMode && returnTo) ? returnTo : "/dashboard";
+    navigate({ to: dest });
   };
 
   const handleFinish = async () => {

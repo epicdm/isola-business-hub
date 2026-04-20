@@ -12,7 +12,7 @@ export default function MarketingFooter() {
             <span className="font-display text-lg font-bold">Isola</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            The complete business operating system for Caribbean small businesses.
+            Built by EPIC Communications in Dominica. An operating system for the Caribbean business.
           </p>
         </div>
         <div>

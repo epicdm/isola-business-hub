@@ -538,6 +538,16 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
                 update={update}
               />
             )}
+            {step === 6 && (
+              <Step6
+                data={data}
+                errors={errors}
+                update={update}
+                connection={connection}
+                onTest={handleTestConnection}
+                onReset={() => setConnection({ state: "idle" })}
+              />
+            )}
           </div>
 
           <div className="flex items-center justify-between border-t border-border/60 bg-muted/20 px-6 py-4">
@@ -556,22 +566,60 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             ) : (
-              <Button type="button" onClick={handleFinish} disabled={submitting}>
-                {submitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Setting up…
-                  </>
-                ) : (
-                  <>
-                    Finish setup
-                    <Rocket className="ml-2 h-4 w-4" />
-                  </>
-                )}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setSkipDialogOpen(true)}
+                  disabled={submitting}
+                >
+                  Skip for now
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleFinish}
+                  disabled={submitting || connection.state !== "ok"}
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Setting up…
+                    </>
+                  ) : (
+                    <>
+                      Connect &amp; finish
+                      <Rocket className="ml-2 h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              </div>
             )}
           </div>
         </Card>
+
+        {/* Skip-Odoo confirmation */}
+        <AlertDialog open={skipDialogOpen} onOpenChange={setSkipDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Skip Odoo setup?</AlertDialogTitle>
+              <AlertDialogDescription>
+                You can finish onboarding without it, but{" "}
+                <span className="font-semibold text-foreground">Insights</span>,{" "}
+                <span className="font-semibold text-foreground">invoicing</span>, and{" "}
+                <span className="font-semibold text-foreground">inventory-aware AI</span>{" "}
+                will be locked until you connect. You can do this anytime from
+                Settings or by completing the orange banner on your dashboard.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Go back</AlertDialogCancel>
+              <AlertDialogAction onClick={handleSkipOdoo}>Skip anyway</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Confetti burst on Odoo-connected finish */}
+        {showConfetti && <ConfettiBurst />}
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
           You can change all of this later in settings.

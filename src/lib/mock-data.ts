@@ -1127,6 +1127,302 @@ export type PendingDraft = {
   draftTime: string;
 };
 
+// ---------- Labels (Turn 8 · Feature 1) ----------
+// Tenant-global label registry. CRUD lives in /dashboard/settings → Labels tab.
+
+export type LabelColor =
+  | "rose"
+  | "amber"
+  | "emerald"
+  | "sky"
+  | "violet"
+  | "fuchsia"
+  | "slate"
+  | "orange";
+
+export type LabelDef = {
+  id: string;
+  name: string;
+  color: LabelColor;
+};
+
+/** 8-swatch palette tied to design tokens. UI only — Tailwind classes are picked from a map. */
+export const labelPalette: LabelColor[] = [
+  "rose",
+  "amber",
+  "emerald",
+  "sky",
+  "violet",
+  "fuchsia",
+  "slate",
+  "orange",
+];
+
+export const tenantLabels: LabelDef[] = [
+  { id: "lb-vip", name: "VIP", color: "violet" },
+  { id: "lb-complaint", name: "Complaint", color: "rose" },
+  { id: "lb-booking", name: "Booking", color: "emerald" },
+  { id: "lb-lead", name: "Lead", color: "sky" },
+  { id: "lb-urgent", name: "Urgent", color: "orange" },
+  { id: "lb-support", name: "Support", color: "amber" },
+];
+
+// ---------- Conversation status + per-conversation labels (Turn 8 · Feature 1) ----------
+// Mock storage for the editable status/labels/last-customer-message-age, keyed by conversation id.
+
+export type ConversationStatus = "open" | "pending" | "snoozed" | "resolved";
+
+export type ConversationMeta = {
+  status: ConversationStatus;
+  /** ISO date string. Only set when status = "snoozed". */
+  snoozeUntil?: string;
+  /** Label IDs from `tenantLabels`. */
+  labels: string[];
+  /** Hours since the customer's last inbound message — drives the 24h template-only banner. */
+  hoursSinceLastInbound: number;
+};
+
+export const conversationMeta: Record<string, ConversationMeta> = {
+  c1: { status: "open", labels: ["lb-vip", "lb-booking"], hoursSinceLastInbound: 0.05 },
+  c2: { status: "pending", labels: ["lb-lead", "lb-urgent"], hoursSinceLastInbound: 0.7 },
+  c3: { status: "resolved", labels: [], hoursSinceLastInbound: 0.25 },
+  // Marcus Phillip (voice) — last customer reply was 26 hours ago. Triggers template-only banner.
+  c4: { status: "open", labels: ["lb-support"], hoursSinceLastInbound: 26 },
+  c5: { status: "open", labels: ["lb-lead"], hoursSinceLastInbound: 0.5 },
+  c6: { status: "resolved", labels: ["lb-booking"], hoursSinceLastInbound: 0.4 },
+};
+
+export const statusMeta: Record<
+  ConversationStatus,
+  { label: string; dot: string; pill: string }
+> = {
+  open: {
+    label: "Open",
+    dot: "bg-emerald-400",
+    pill: "border-emerald-400/40 bg-emerald-500/10 text-emerald-300",
+  },
+  pending: {
+    label: "Pending",
+    dot: "bg-amber-400",
+    pill: "border-amber-400/40 bg-amber-500/10 text-amber-300",
+  },
+  snoozed: {
+    label: "Snoozed",
+    dot: "bg-violet",
+    pill: "border-violet/40 bg-violet/10 text-violet",
+  },
+  resolved: {
+    label: "Resolved",
+    dot: "bg-slate-400",
+    pill: "border-slate-400/40 bg-slate-500/10 text-slate-300",
+  },
+};
+
+/** Tailwind class bundles per palette swatch — used by chips and the picker. */
+export const labelColorClasses: Record<
+  LabelColor,
+  { chip: string; dot: string; swatch: string }
+> = {
+  rose: {
+    chip: "border-rose-400/40 bg-rose-500/10 text-rose-300",
+    dot: "bg-rose-400",
+    swatch: "bg-rose-500",
+  },
+  amber: {
+    chip: "border-amber-400/40 bg-amber-500/10 text-amber-300",
+    dot: "bg-amber-400",
+    swatch: "bg-amber-500",
+  },
+  emerald: {
+    chip: "border-emerald-400/40 bg-emerald-500/10 text-emerald-300",
+    dot: "bg-emerald-400",
+    swatch: "bg-emerald-500",
+  },
+  sky: {
+    chip: "border-sky-400/40 bg-sky-500/10 text-sky-300",
+    dot: "bg-sky-400",
+    swatch: "bg-sky-500",
+  },
+  violet: {
+    chip: "border-violet/40 bg-violet/10 text-violet",
+    dot: "bg-violet",
+    swatch: "bg-violet",
+  },
+  fuchsia: {
+    chip: "border-fuchsia-400/40 bg-fuchsia-500/10 text-fuchsia-300",
+    dot: "bg-fuchsia-400",
+    swatch: "bg-fuchsia-500",
+  },
+  slate: {
+    chip: "border-slate-400/40 bg-slate-500/10 text-slate-300",
+    dot: "bg-slate-400",
+    swatch: "bg-slate-500",
+  },
+  orange: {
+    chip: "border-orange-400/40 bg-orange-500/10 text-orange-300",
+    dot: "bg-orange-400",
+    swatch: "bg-orange-500",
+  },
+};
+
+// ---------- Media messages (Turn 8 · Feature 3) ----------
+// Inbound/outbound media beyond text + cards. Rendered inline inside chat bubbles.
+
+export type ImageMedia = {
+  kind: "image";
+  url: string;
+  alt: string;
+  caption?: string;
+  width: number;
+  height: number;
+};
+
+export type AudioMedia = {
+  kind: "audio";
+  /** Duration in seconds. */
+  duration: number;
+  /** Pseudo-waveform — array of bar heights 0..1. */
+  waveform: number[];
+};
+
+export type DocumentMedia = {
+  kind: "document";
+  filename: string;
+  ext: "pdf" | "docx" | "xlsx" | "txt";
+  sizeKb: number;
+};
+
+export type LocationMedia = {
+  kind: "location";
+  address: string;
+  /** Decimal lat/lng — used only for the "Open in Maps" link. */
+  lat: number;
+  lng: number;
+};
+
+export type MessageMedia = ImageMedia | AudioMedia | DocumentMedia | LocationMedia;
+
+/** Out-of-band media added to specific conversations as a demo seed. */
+export const conversationMedia: Record<
+  string,
+  Array<{ id: string; from: "customer" | "ai" | "owner"; time: string; media: MessageMedia; text?: string }>
+> = {
+  c2: [
+    {
+      id: "med-c2-1",
+      from: "customer",
+      time: "6:59 PM",
+      text: "Here's the venue we hosted at last year — vibe we're going for.",
+      media: {
+        kind: "image",
+        url: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=70",
+        alt: "Restaurant private-dining room",
+        caption: "Last year's anniversary dinner — 12 guests.",
+        width: 600,
+        height: 400,
+      },
+    },
+    {
+      id: "med-c2-2",
+      from: "customer",
+      time: "7:00 PM",
+      media: {
+        kind: "audio",
+        duration: 18,
+        waveform: [0.2, 0.5, 0.3, 0.7, 0.9, 0.6, 0.4, 0.8, 0.5, 0.3, 0.7, 0.6, 0.4, 0.5, 0.8, 0.6, 0.3, 0.5, 0.4, 0.7, 0.5, 0.3, 0.6, 0.4],
+      },
+    },
+    {
+      id: "med-c2-3",
+      from: "customer",
+      time: "7:00 PM",
+      text: "Dietary list attached.",
+      media: {
+        kind: "document",
+        filename: "private-dinner-dietary-2026.pdf",
+        ext: "pdf",
+        sizeKb: 124,
+      },
+    },
+    {
+      id: "med-c2-4",
+      from: "customer",
+      time: "7:01 PM",
+      media: {
+        kind: "location",
+        address: "Hilltop Estate · Mero, Dominica",
+        lat: 15.45,
+        lng: -61.36,
+      },
+    },
+  ],
+};
+
+// ---------- Message templates (Turn 8 · Feature 2) ----------
+// Mock GET /api/templates. Variables use {{1}} {{2}} placeholders + smart names.
+
+export type TemplateCategory = "Marketing" | "Utility" | "Authentication";
+
+export type MessageTemplate = {
+  id: string;
+  name: string;
+  category: TemplateCategory;
+  language: string;
+  body: string;
+  /** Smart names for each {{N}} placeholder, in order. */
+  variables: string[];
+};
+
+export const messageTemplates: MessageTemplate[] = [
+  {
+    id: "tpl-booking-reminder",
+    name: "Booking reminder",
+    category: "Utility",
+    language: "en",
+    body: "Hi {{1}}, this is a reminder about your {{2}} on {{3}}. Reply YES to confirm or RESCHEDULE if you need to change.",
+    variables: ["customer_name", "service", "date_time"],
+  },
+  {
+    id: "tpl-order-confirmation",
+    name: "Order confirmation",
+    category: "Utility",
+    language: "en",
+    body: "Hi {{1}} — your order #{{2}} is confirmed. Total: EC${{3}}. We'll message again when it's ready.",
+    variables: ["customer_name", "order_id", "total_amount"],
+  },
+  {
+    id: "tpl-welcome",
+    name: "Welcome",
+    category: "Marketing",
+    language: "en",
+    body: "Hey {{1}} 🌴 Welcome to {{2}}. We're glad to have you. Reply MENU to see what's on today.",
+    variables: ["customer_name", "business_name"],
+  },
+  {
+    id: "tpl-reengage",
+    name: "Re-engagement",
+    category: "Marketing",
+    language: "en",
+    body: "Hi {{1}}, it's been a while! Come back this {{2}} and we'll save your usual table. ✨",
+    variables: ["customer_name", "weekday"],
+  },
+  {
+    id: "tpl-payment-received",
+    name: "Payment received",
+    category: "Utility",
+    language: "en",
+    body: "Hi {{1}}, we received your payment of EC${{2}} for {{3}}. Thank you! Receipt: {{4}}",
+    variables: ["customer_name", "amount", "service", "receipt_url"],
+  },
+];
+
+export function renderTemplate(body: string, values: Record<number, string>): string {
+  return body.replace(/\{\{(\d+)\}\}/g, (_, n) => {
+    const v = values[Number(n)];
+    return v && v.trim() ? v : `{{${n}}}`;
+  });
+}
+
 export const pendingDrafts: PendingDraft[] = [
   {
     id: "pd1",

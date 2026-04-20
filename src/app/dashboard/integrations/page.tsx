@@ -1,21 +1,62 @@
 "use client";
 
-import { useState } from "react";
-import { Plug, Check, ExternalLink, Settings as SettingsIcon } from "lucide-react";
+import {
+  Plug,
+  Check,
+  ArrowUpRight,
+  Inbox,
+  Phone,
+  CreditCard,
+  Calendar,
+  Database,
+  Instagram,
+  Facebook,
+  MessageCircle,
+  type LucideIcon,
+} from "lucide-react";
+import { toast } from "sonner";
 import DashboardLayout from "../layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { integrations as initialIntegrations } from "@/lib/mock-data";
+import { integrationCards, type IntegrationStatus } from "@/lib/mock-data";
+
+const ICONS: Record<string, LucideIcon> = {
+  chatwoot: Inbox,
+  wa: Phone,
+  stripe: CreditCard,
+  gcal: Calendar,
+  odoo: Database,
+  instagram: Instagram,
+  facebook: Facebook,
+  messenger: MessageCircle,
+};
+
+function StatusPill({ status }: { status: IntegrationStatus }) {
+  if (status === "connected") {
+    return (
+      <Badge className="bg-primary/15 text-primary hover:bg-primary/20">
+        <Check className="h-3 w-3" /> Connected
+      </Badge>
+    );
+  }
+  if (status === "available") {
+    return (
+      <Badge variant="outline" className="border-border/60 text-muted-foreground">
+        <span className="h-2 w-2 rounded-full border border-muted-foreground/60" />
+        Not connected
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="border-border/60 text-muted-foreground">
+      Phase 2
+    </Badge>
+  );
+}
 
 export default function IntegrationsPage() {
-  const [items, setItems] = useState(initialIntegrations);
-
-  const toggle = (id: string) =>
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, connected: !i.connected } : i)));
-
-  const categories = Array.from(new Set(items.map((i) => i.category)));
+  const connectedCount = integrationCards.filter((i) => i.status === "connected").length;
 
   return (
     <DashboardLayout currentPath="/dashboard/integrations">
@@ -27,94 +68,87 @@ export default function IntegrationsPage() {
           <div>
             <h1 className="font-display text-2xl font-bold leading-tight">Integrations</h1>
             <p className="text-sm text-muted-foreground">
-              Connect Isola to the tools you already use.
+              {connectedCount} connected · {integrationCards.length - connectedCount} available
             </p>
           </div>
         </div>
 
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <SummaryStat label="Connected" value={items.filter((i) => i.connected).length} accent />
-          <SummaryStat label="Available" value={items.length} />
-          <SummaryStat label="Categories" value={categories.length} />
-          <SummaryStat label="API calls / day" value="12.4K" />
-        </div>
-
-        {categories.map((cat) => {
-          const catItems = items.filter((i) => i.category === cat);
-          return (
-            <section key={cat} className="mb-8">
-              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {cat}
-              </h2>
-              <div className="grid gap-3 md:grid-cols-2">
-                {catItems.map((item) => (
-                  <Card
-                    key={item.id}
-                    className={`border-border/40 bg-card/40 p-5 transition-all hover:bg-card/60 ${
-                      item.connected ? "border-primary/30" : ""
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {integrationCards.map((item) => {
+            const Icon = ICONS[item.id] ?? Plug;
+            const isConnected = item.status === "connected";
+            const isPhase2 = item.status === "phase2";
+            return (
+              <Card
+                key={item.id}
+                className={`border-border/40 bg-card/40 p-5 transition-all hover:bg-card/60 ${
+                  isConnected ? "border-primary/30" : ""
+                }`}
+              >
+                <div className="mb-4 flex items-start justify-between gap-3">
+                  <div
+                    className={`flex h-11 w-11 items-center justify-center rounded-lg ${
+                      isConnected
+                        ? "bg-primary/15 text-primary"
+                        : "bg-accent/60 text-muted-foreground"
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                            item.connected ? "bg-primary/15 text-primary" : "bg-accent/60 text-muted-foreground"
-                          }`}
-                        >
-                          <span className="font-display text-sm font-bold">
-                            {item.name.slice(0, 2)}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-display text-base font-semibold">{item.name}</h3>
-                            {item.connected && (
-                              <Badge className="bg-primary/15 text-primary hover:bg-primary/20">
-                                <Check className="h-2.5 w-2.5" /> Connected
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="mt-0.5 text-xs text-muted-foreground">{item.desc}</p>
-                          {item.account && (
-                            <p className="mt-2 font-mono text-[11px] text-muted-foreground/80">
-                              {item.account}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <Switch
-                        checked={item.connected}
-                        onCheckedChange={() => toggle(item.id)}
-                      />
-                    </div>
-                    {item.connected && (
-                      <div className="mt-4 flex gap-2 border-t border-border/30 pt-3">
-                        <Button variant="ghost" size="sm" className="text-xs">
-                          <SettingsIcon className="h-3 w-3" /> Configure
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-xs">
-                          <ExternalLink className="h-3 w-3" /> Open
-                        </Button>
-                      </div>
-                    )}
-                  </Card>
-                ))}
-              </div>
-            </section>
-          );
-        })}
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <StatusPill status={item.status} />
+                </div>
+                <h3 className="font-display text-base font-semibold">{item.name}</h3>
+                <p className="mt-1 text-xs text-muted-foreground">{item.desc}</p>
+                <div className="mt-2 text-[10px] uppercase tracking-wider text-muted-foreground/70">
+                  {item.category}
+                </div>
+                {isConnected ? (
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="mt-4 w-full"
+                  >
+                    <a
+                      href={item.actionHref}
+                      target={item.actionHref.startsWith("http") ? "_blank" : undefined}
+                      rel="noreferrer"
+                    >
+                      {item.action}
+                      <ArrowUpRight className="h-3 w-3" />
+                    </a>
+                  </Button>
+                ) : isPhase2 ? (
+                  <Button size="sm" variant="outline" className="mt-4 w-full" disabled>
+                    Coming soon
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    className="mt-4 w-full bg-gradient-primary text-primary-foreground hover:opacity-90"
+                    onClick={() =>
+                      toast.success(`Redirecting to ${item.name}…`, {
+                        description: "Mock OAuth flow.",
+                      })
+                    }
+                  >
+                    Connect
+                    <ArrowUpRight className="h-3 w-3" />
+                  </Button>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+
+        <p className="mt-6 text-xs text-muted-foreground">
+          Need a custom integration? Email{" "}
+          <a className="text-primary hover:underline" href="mailto:hello@epic.dm">
+            hello@epic.dm
+          </a>{" "}
+          — we ship one-off connectors on the Business plan.
+        </p>
       </div>
     </DashboardLayout>
-  );
-}
-
-function SummaryStat({ label, value, accent = false }: { label: string; value: string | number; accent?: boolean }) {
-  return (
-    <Card className="border-border/40 bg-card/40 p-4">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={`mt-1 font-display text-2xl font-bold ${accent ? "text-primary" : ""}`}>
-        {value}
-      </div>
-    </Card>
   );
 }

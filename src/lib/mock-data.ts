@@ -523,8 +523,31 @@ export const knowledgeDocuments: KnowledgeDocument[] = [
 
 // ---------- WhatsApp ----------
 
+export type WhatsAppLineStatus = "active" | "registering" | "failed";
+
+export const whatsappLines = {
+  customer: {
+    label: "Customer-facing number",
+    number: "+1 767-818-3741",
+    waLink: "https://wa.me/17678183741",
+    displayName: "Coalpot Restaurant",
+    status: "active" as WhatsAppLineStatus,
+    lastMessage: "2 minutes ago",
+    description: "Customers reach your AI agents on this number.",
+  },
+  ema: {
+    label: "Ema's number",
+    number: "+1 767-818-3742",
+    waLink: "https://wa.me/17678183742",
+    displayName: "Ema · Chief of Staff",
+    status: "active" as WhatsAppLineStatus,
+    lastMessage: "Pinged you 7 min ago with the morning digest.",
+    description: "Your private line to Ema. Only you and your team see this.",
+  },
+};
+
 export const whatsappStatus = {
-  number: "+1 767 555 0142",
+  number: "+1 767-818-3741",
   displayName: "Coalpot Restaurant",
   verified: true,
   verifiedTier: "Green tick · Official Business Account",
@@ -581,10 +604,34 @@ export const billingPlan = {
 };
 
 export const invoices = [
-  { id: "INV-2026-04", date: "Apr 12, 2026", amount: 249, status: "paid" as const, period: "Apr 12 — May 12" },
-  { id: "INV-2026-03", date: "Mar 12, 2026", amount: 249, status: "paid" as const, period: "Mar 12 — Apr 12" },
-  { id: "INV-2026-02", date: "Feb 12, 2026", amount: 249, status: "paid" as const, period: "Feb 12 — Mar 12" },
-  { id: "INV-2026-01", date: "Jan 12, 2026", amount: 99, status: "paid" as const, period: "Jan 12 — Feb 12 (Starter)" },
+  { id: "INV-2026-04", date: "Apr 12, 2026", amount: 249, currency: "EC$", status: "paid" as const, period: "Apr 12 — May 12" },
+  { id: "INV-2026-03", date: "Mar 12, 2026", amount: 249, currency: "EC$", status: "paid" as const, period: "Mar 12 — Apr 12" },
+  { id: "INV-2026-02", date: "Feb 12, 2026", amount: 249, currency: "EC$", status: "paid" as const, period: "Feb 12 — Mar 12" },
+  { id: "INV-2026-01", date: "Jan 12, 2026", amount: 249, currency: "EC$", status: "paid" as const, period: "Jan 12 — Feb 12" },
+  { id: "INV-2025-12", date: "Dec 12, 2025", amount: 249, currency: "EC$", status: "paid" as const, period: "Dec 12 — Jan 12" },
+  { id: "INV-2025-11", date: "Nov 12, 2025", amount: 249, currency: "EC$", status: "paid" as const, period: "Nov 12 — Dec 12" },
+];
+
+export const voiceUsage = {
+  used: 347,
+  limit: 500,
+  topupPriceEC: 89,
+  topupMinutes: 250,
+};
+
+// ---------- Read-only integrations list (Turn 5) ----------
+
+export type IntegrationStatus = "connected" | "available" | "phase2";
+
+export const integrationCards = [
+  { id: "chatwoot", name: "Chatwoot", desc: "Unified inbox powering all conversations.", status: "connected" as IntegrationStatus, action: "View inbox", actionHref: "https://inbox.epic.dm", category: "Inbox" },
+  { id: "wa", name: "WhatsApp Business API", desc: "Customer + Ema lines, via Meta.", status: "connected" as IntegrationStatus, action: "Manage", actionHref: "/dashboard/whatsapp", category: "Messaging" },
+  { id: "stripe", name: "Stripe", desc: "Deposits and payment links inside chat.", status: "connected" as IntegrationStatus, action: "Open dashboard", actionHref: "https://dashboard.stripe.com", category: "Payments" },
+  { id: "gcal", name: "Google Calendar", desc: "Push bookings to your calendar.", status: "available" as IntegrationStatus, action: "Connect", actionHref: "#", category: "Calendar" },
+  { id: "odoo", name: "Odoo", desc: "Sync customers + invoices to your ERP.", status: "phase2" as IntegrationStatus, action: "Coming soon", actionHref: "#", category: "ERP" },
+  { id: "instagram", name: "Instagram", desc: "DMs, story replies, comment automation.", status: "phase2" as IntegrationStatus, action: "Coming soon", actionHref: "#", category: "Social" },
+  { id: "facebook", name: "Facebook Pages", desc: "Page comments + reviews handled.", status: "phase2" as IntegrationStatus, action: "Coming soon", actionHref: "#", category: "Social" },
+  { id: "messenger", name: "Facebook Messenger", desc: "Page messages answered automatically.", status: "phase2" as IntegrationStatus, action: "Coming soon", actionHref: "#", category: "Social" },
 ];
 
 // ---------- Settings (account) ----------

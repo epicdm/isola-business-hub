@@ -15,12 +15,12 @@ export const trustedLogos = [
 ];
 
 export const homeFeatures = [
-  { icon: "Phone", title: "24/7 WhatsApp answering", desc: "Never miss a message — every customer gets a reply in under 3 seconds." },
-  { icon: "PhoneCall", title: "Voice calls via WhatsApp", desc: "AI receptionist on WhatsApp Business Calling, routes to your team." },
-  { icon: "Instagram", title: "Instagram DMs & comments", desc: "Stories, comments, and DMs handled — Pro tier." },
-  { icon: "MessageCircle", title: "Facebook Messenger", desc: "Page messages answered automatically — Pro tier." },
-  { icon: "Calendar", title: "Bookings captured", desc: "Reservations, appointments, room nights — straight to your calendar." },
-  { icon: "Sparkles", title: "Ema, your AI chief-of-staff", desc: "Daily digests, reports, and commands — over WhatsApp." },
+  { icon: "Phone", title: "Inbound voice (AI receptionist)", desc: "Local Dominican number. AI answers, books, transfers — 24/7." },
+  { icon: "PhoneCall", title: "Outbound voice (AI calls out)", desc: "Confirms tomorrow's bookings, recovers no-shows, chases invoices." },
+  { icon: "Instagram", title: "Instagram DMs, comments, stories", desc: "Reply to every comment. Sell from a story. Capture every lead." },
+  { icon: "MessageCircle", title: "Facebook Messenger + page comments", desc: "Page messages and post comments — never missed, always on-brand." },
+  { icon: "Calendar", title: "Odoo-aware bookings", desc: "Sees inventory, takes deposit via Fiserv XCD, books to Google Calendar." },
+  { icon: "Sparkles", title: "Ema, your AI chief-of-staff", desc: "Reads everything overnight. Briefs you at 7am. Runs commands by chat." },
 ] as const;
 
 export const testimonials = [
@@ -28,29 +28,29 @@ export const testimonials = [
     name: "Marcus Joseph",
     role: "Chef-Owner, Coalpot Restaurant",
     location: "Roseau, Dominica",
-    quote: "We captured 30% more reservations in month one. Isola never sleeps and never says the wrong thing about our menu.",
+    quote: "Fridays used to be brutal. Phone never stopped. Now Isola books the tables, reminds the customers, and I cook. We captured 30% more reservations in month one.",
   },
   {
     name: "Janelle Rose",
     role: "GM, Fort Young Hotel",
     location: "Roseau, Dominica",
-    quote: "Guest satisfaction jumped 15 points. Late-night booking questions are no longer a problem.",
+    quote: "Our concierge agent handles excursion bookings in three languages. Guest satisfaction jumped 15 points. And it paid for itself the first month.",
   },
   {
     name: "Dr. Alvarez",
     role: "Founder, Pediatric Clinic",
     location: "Castries, Saint Lucia",
-    quote: "We added 40 appointments per week without adding any staff. Ema's morning digest tells me everything.",
+    quote: "We added 40 appointments a week without hiring anyone. Isola confirms every booking by voice the day before. No-shows dropped 60%.",
   },
 ];
 
 export const faqs = [
-  { q: "Does it work in Caribbean Creole / French / Spanish?", a: "Yes. Isola handles English, Kwéyòl, French, and Spanish out of the box." },
-  { q: "How fast can we go live?", a: "Most businesses are live within 48 hours of signup, including WhatsApp Business verification." },
-  { q: "What happens if the AI doesn't know the answer?", a: "It escalates to you on WhatsApp instantly with full context, and Ema follows up if you're unavailable." },
-  { q: "Do I keep my existing phone number?", a: "We provision a new WhatsApp Business number for your customers and a separate one for Ema (your private line)." },
-  { q: "Can it take payments?", a: "Yes — Stripe integration on Pro and Business tiers, with deposits and full payment links." },
-  { q: "Is my customer data safe?", a: "All data is encrypted at rest and in transit, hosted in compliance with GDPR and Caribbean data laws." },
+  { q: "How is Isola different from Wati or Respond.io?", a: "They rent Twilio. We own our telco. They do WhatsApp. We do WhatsApp + Instagram + Messenger + voice + Odoo + payments + airtime. They're US-focused. We're Caribbean-native." },
+  { q: "Do I need to use Odoo?", a: "No. Isola works on WhatsApp alone at Starter. Pro and Business unlock Odoo integration — huge leverage for tracking sales, stock, and invoices. You can connect later if you're not on Odoo yet." },
+  { q: "What does the AI actually say? Won't it sound like a robot?", a: "You configure tone (Friendly, Formal, Casual, Warm, Professional), name each agent, and write their welcome message. They're your brand, not ours. Every call opens with 'I'm an AI assistant calling on behalf of {business}' — customers can always reach a human by replying HUMAN." },
+  { q: "What happens if the internet goes down?", a: "Voice keeps working over PSTN — we own the telephone network. Text resumes when internet returns, with a backfill of messages received during downtime." },
+  { q: "Can my customers pay in XCD?", a: "Yes. Fiserv, via our own gateway, clears XCD natively. No conversion fees. No mysterious Stripe declines on Caribbean-issued cards." },
+  { q: "How long does setup take?", a: "Ten minutes to your first AI-answered WhatsApp message. Three days to full Odoo + Fiserv + voice stack." },
 ];
 
 export const pricingTiers = [
@@ -59,8 +59,15 @@ export const pricingTiers = [
     price: 149,
     annual: 119,
     badge: null,
-    desc: "For solo operators getting started.",
-    features: ["1 WhatsApp number", "100 voice minutes/mo", "WhatsApp only", "Ema chief-of-staff", "Email support"],
+    desc: "Try it on WhatsApp.",
+    features: [
+      "1 AI agent + 1 Ema number",
+      "WhatsApp text only",
+      "100 voice minutes/mo (inbound receptionist)",
+      "Fiserv payments (XCD + USD)",
+      "Ema chief-of-staff",
+      "Email support",
+    ],
     cta: "Start free trial",
   },
   {
@@ -68,8 +75,16 @@ export const pricingTiers = [
     price: 249,
     annual: 199,
     badge: "Most Popular",
-    desc: "For growing teams across channels.",
-    features: ["1 WhatsApp number", "500 voice minutes/mo", "WhatsApp + IG + FB + Voice", "Ema chief-of-staff", "Priority support", "Stripe payments"],
+    desc: "The full operating system.",
+    features: [
+      "Everything in Starter, plus:",
+      "All Meta channels (IG DMs, comments, stories, FB Messenger)",
+      "Outbound AI voice calls (confirms, no-show recovery)",
+      "500 voice minutes/mo",
+      "Odoo integration (invoices, inventory, P&L)",
+      "Reloadly (airtime, bill pay, mobile money)",
+      "Priority email support",
+    ],
     cta: "Start free trial",
   },
   {
@@ -77,8 +92,15 @@ export const pricingTiers = [
     price: 449,
     annual: 359,
     badge: null,
-    desc: "For multi-location operations.",
-    features: ["3 WhatsApp numbers", "Unlimited voice minutes", "All channels + custom integrations", "Ema chief-of-staff", "Dedicated success manager", "Custom workflows"],
+    desc: "Multi-location or high-volume.",
+    features: [
+      "Everything in Pro, plus:",
+      "3 agent numbers (not 1)",
+      "Unlimited voice minutes",
+      "Dedicated support line + WhatsApp",
+      "Custom onboarding",
+      "Multi-location migration (Phase 3, free)",
+    ],
     cta: "Book a demo",
   },
 ];

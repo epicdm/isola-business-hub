@@ -291,7 +291,7 @@ export default function InboxPage() {
   const [pendingFilter, setPendingFilter] = useState<string>("all");
   const [pendingQueue, setPendingQueue] = useState<PendingDraft[]>(seedPendingDrafts);
   const [rejectingDraft, setRejectingDraft] = useState<PendingDraft | null>(null);
-  const [rejectNote, setRejectNote] = useState("");
+  
 
   // ---- Turn 8 · Feature 1: Status + labels ----
   const [convMeta, setConvMeta] = useState<Record<string, ConversationMeta>>(() => {

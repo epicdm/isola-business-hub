@@ -14,6 +14,13 @@ import {
   Clock,
   MessageSquare,
   Rocket,
+  Database,
+  Eye,
+  EyeOff,
+  ExternalLink,
+  PlayCircle,
+  RefreshCw,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

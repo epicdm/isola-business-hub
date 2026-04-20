@@ -364,29 +364,52 @@ export default function InboxPage() {
             )}
 
             <div className="flex-1 space-y-4 overflow-y-auto px-6 py-6">
-              {active.messages.map((m) => (
-                <div key={m.id} className={`flex ${m.from === "customer" ? "justify-start" : "justify-end"}`}>
-                  <div className="max-w-[75%]">
-                    {m.from === "ai" && (
-                      <div className="mb-1 flex items-center justify-end gap-1.5 text-[10px] text-muted-foreground">
-                        <Sparkles className="h-2.5 w-2.5 text-primary" /> AI replied
+              {[...(active.messages as ThreadMsg[]), ...(extraWhispers[active.id] ?? [])].map((m) => {
+                if (m.from === "whisper") {
+                  return (
+                    <div key={m.id} className="w-full">
+                      <div className="rounded-xl border-l-4 border-amber-500 bg-amber-950/30 px-4 py-3">
+                        <div className="mb-1.5 flex flex-wrap items-center gap-2 text-[11px] font-medium text-amber-300">
+                          <span className="inline-flex items-center gap-1">
+                            <Lock className="h-3 w-3" /> Private note by {m.ownerName ?? OWNER_NAME}
+                          </span>
+                          <span className="text-amber-300/60">·</span>
+                          <span className="text-amber-300/80">{m.time}</span>
+                          {m.teachAi && (
+                            <span className="ml-auto inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-200">
+                              <BookOpen className="h-2.5 w-2.5" /> AI will remember this
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm leading-relaxed text-amber-50">{m.text}</p>
                       </div>
-                    )}
-                    <Card
-                      className={`px-4 py-2.5 text-sm ${
-                        m.from === "customer"
-                          ? "rounded-2xl rounded-tl-sm border-transparent bg-bubble-in text-bubble-in-foreground"
-                          : "rounded-2xl rounded-tr-sm border-transparent bg-bubble-out text-bubble-out-foreground"
-                      }`}
-                    >
-                      {m.text}
-                    </Card>
-                    <div className={`mt-1 text-[10px] text-muted-foreground ${m.from === "customer" ? "text-left" : "text-right"}`}>
-                      {m.time}
+                    </div>
+                  );
+                }
+                return (
+                  <div key={m.id} className={`flex ${m.from === "customer" ? "justify-start" : "justify-end"}`}>
+                    <div className="max-w-[75%]">
+                      {m.from === "ai" && (
+                        <div className="mb-1 flex items-center justify-end gap-1.5 text-[10px] text-muted-foreground">
+                          <Sparkles className="h-2.5 w-2.5 text-primary" /> AI replied
+                        </div>
+                      )}
+                      <Card
+                        className={`px-4 py-2.5 text-sm ${
+                          m.from === "customer"
+                            ? "rounded-2xl rounded-tl-sm border-transparent bg-bubble-in text-bubble-in-foreground"
+                            : "rounded-2xl rounded-tr-sm border-transparent bg-bubble-out text-bubble-out-foreground"
+                        }`}
+                      >
+                        {m.text}
+                      </Card>
+                      <div className={`mt-1 text-[10px] text-muted-foreground ${m.from === "customer" ? "text-left" : "text-right"}`}>
+                        {m.time}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Composer */}

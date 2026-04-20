@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { Link } from "@tanstack/react-router";
 import {
   RefreshCw,
   Info,
@@ -16,6 +17,7 @@ import {
   ShoppingBag,
   UtensilsCrossed,
   ChevronRight,
+  Database,
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../layout";

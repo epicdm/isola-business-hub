@@ -462,6 +462,29 @@ export default function InboxPage() {
                 </div>
               </button>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setEmaOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-violet/40 bg-violet/10 px-3 py-1.5 text-xs font-semibold text-violet transition-colors hover:bg-violet/20"
+                >
+                  <Sparkles className="h-3 w-3" /> Ask Ema
+                </button>
+                {anyReviewModeOn && (
+                  <button
+                    onClick={() => setLeftPane(leftPane === "pending" ? "conversations" : "pending")}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      leftPane === "pending"
+                        ? "border-violet/60 bg-violet/20 text-violet"
+                        : "border-border/60 bg-card/40 text-muted-foreground hover:bg-accent"
+                    }`}
+                  >
+                    <ShieldPending /> Pending
+                    {visiblePending.length > 0 && (
+                      <span className="ml-0.5 rounded-full bg-violet px-1.5 text-[10px] font-bold text-violet-foreground">
+                        {visiblePending.length}
+                      </span>
+                    )}
+                  </button>
+                )}
                 {isAi ? (
                   <Button
                     size="sm"

@@ -237,6 +237,18 @@ function SignInForm() {
             Email me a magic link
           </Link>
         </Button>
+
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => {
+            toast.success("Demo mode — skipping sign-in");
+            mockLogin(navigate);
+          }}
+          className="mt-1 w-full text-center text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+        >
+          Skip — enter demo →
+        </button>
       </form>
     </FormCard>
   );

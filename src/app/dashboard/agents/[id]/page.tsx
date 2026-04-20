@@ -85,6 +85,9 @@ export default function AgentDetailPage() {
   const [useBusinessHours, setUseBusinessHours] = useState(true);
   const [agentHours, setAgentHours] = useState(defaultHours);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  // Instagram sub-channels (UI-only — not part of AgentChannel union)
+  const [igComments, setIgComments] = useState(false);
+  const [igStories, setIgStories] = useState(true);
 
   useEffect(() => {
     setAgent(original);
@@ -365,10 +368,31 @@ export default function AgentDetailPage() {
                       </Select>
                     </div>
                   )}
-                  {enabled && (c === "instagram" || c === "messenger") && (
+                  {enabled && c === "instagram" && (
+                    <div className="mt-4 space-y-3 rounded-lg border border-border/40 bg-background/40 p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-sm font-medium">Instagram comments</div>
+                          <p className="text-xs text-muted-foreground">Auto-reply on post comments tagged with a question.</p>
+                        </div>
+                        <Switch checked={igComments} onCheckedChange={setIgComments} />
+                      </div>
+                      <div className="flex items-start justify-between gap-3 border-t border-border/40 pt-3">
+                        <div>
+                          <div className="text-sm font-medium">Instagram story mentions</div>
+                          <p className="text-xs text-muted-foreground">Reply when customers @-mention you in a story.</p>
+                        </div>
+                        <Switch checked={igStories} onCheckedChange={setIgStories} />
+                      </div>
+                      <p className="border-t border-border/40 pt-3 text-[11px] text-muted-foreground">
+                        <span className="font-medium text-foreground">Connected via Meta.</span> @coalpot_dom · 2.4k followers
+                      </p>
+                    </div>
+                  )}
+                  {enabled && c === "messenger" && (
                     <div className="mt-4 flex flex-wrap gap-2 rounded-lg border border-border/40 bg-background/40 p-3 text-xs text-muted-foreground">
                       <span className="font-medium text-foreground">Connected via Meta.</span>
-                      Available in Phase 2 — preview only.
+                      Page messages on Coalpot Restaurant.
                     </div>
                   )}
                 </Card>

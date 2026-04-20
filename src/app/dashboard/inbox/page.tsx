@@ -642,6 +642,10 @@ export default function InboxPage() {
               {filtered.map((c) => {
                 const Icon = channelMeta[c.channel].icon;
                 const isActive = c.id === activeId;
+                const m = getMeta(c.id);
+                const sm = statusMeta[m.status];
+                const visibleLabels = m.labels.slice(0, 2);
+                const overflow = m.labels.length - visibleLabels.length;
                 return (
                   <li key={c.id}>
                     <button
@@ -657,14 +661,40 @@ export default function InboxPage() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline justify-between gap-2">
-                          <span className="truncate text-sm font-semibold">{c.customer}</span>
+                          <span className="inline-flex min-w-0 items-center gap-1.5">
+                            <span
+                              className={`h-1.5 w-1.5 shrink-0 rounded-full ${sm.dot}`}
+                              title={sm.label}
+                            />
+                            <span className="truncate text-sm font-semibold">{c.customer}</span>
+                          </span>
                           <span className="shrink-0 text-[10px] text-muted-foreground">{c.time}</span>
                         </div>
                         <p className="mt-0.5 truncate text-xs text-muted-foreground">{c.preview}</p>
-                        {c.status === "escalated" && (
-                          <Badge variant="outline" className="mt-1.5 border-warning/30 bg-warning/10 text-[10px] text-warning">
-                            <AlertCircle className="mr-1 h-2.5 w-2.5" /> Needs you
-                          </Badge>
+                        {(visibleLabels.length > 0 || c.status === "escalated") && (
+                          <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                            {visibleLabels.map((id) => {
+                              const lab = labelById[id];
+                              if (!lab) return null;
+                              const cls = labelColorClasses[lab.color];
+                              return (
+                                <span
+                                  key={id}
+                                  className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0 text-[9px] font-medium ${cls.chip}`}
+                                >
+                                  {lab.name}
+                                </span>
+                              );
+                            })}
+                            {overflow > 0 && (
+                              <span className="text-[9px] text-muted-foreground">+{overflow}</span>
+                            )}
+                            {c.status === "escalated" && (
+                              <Badge variant="outline" className="border-warning/30 bg-warning/10 px-1.5 py-0 text-[9px] text-warning">
+                                <AlertCircle className="mr-0.5 h-2 w-2" /> Needs you
+                              </Badge>
+                            )}
+                          </div>
                         )}
                       </div>
                       {c.unread > 0 && (

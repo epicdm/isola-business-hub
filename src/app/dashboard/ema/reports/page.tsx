@@ -105,7 +105,16 @@ export default function EmaReportsPage() {
             return (
               <Card
                 key={r.id}
-                className="group flex flex-col gap-4 border-border/40 bg-card/60 p-6 transition-all hover:border-ema/30 hover:shadow-ema"
+                role="button"
+                tabIndex={0}
+                onClick={() => setOpenId(r.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setOpenId(r.id);
+                  }
+                }}
+                className="group flex cursor-pointer flex-col gap-4 border-border/40 bg-card/60 p-6 transition-all hover:border-ema/30 hover:shadow-ema focus:outline-none focus-visible:ring-2 focus-visible:ring-ema/40"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -146,10 +155,22 @@ export default function EmaReportsPage() {
                 </ul>
 
                 <div className="mt-auto flex items-center justify-between border-t border-border/40 pt-3">
-                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground hover:text-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenId(r.id);
+                    }}
+                  >
                     View full report
                   </Button>
-                  <button className="text-muted-foreground transition-colors hover:text-foreground">
+                  <button
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-muted-foreground transition-colors hover:text-foreground"
+                    aria-label="Download report"
+                  >
                     <Download className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -158,7 +179,88 @@ export default function EmaReportsPage() {
           })}
         </div>
       </div>
+
+      {/* Full report dialog */}
+      <Dialog open={!!openId} onOpenChange={(o) => !o && setOpenId(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          {active && activeMeta && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center gap-3">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${activeMeta.color}`}>
+                    <ActiveIcon className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <Badge variant="outline" className="mb-1.5 border-border/60 bg-background/40 text-[10px] uppercase tracking-wider text-muted-foreground">
+                      {activeMeta.label}
+                    </Badge>
+                    <DialogTitle className="font-display text-xl">{active.title}</DialogTitle>
+                    <DialogDescription className="mt-0.5">{active.date}</DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="mt-2 rounded-lg border border-ema/20 bg-ema/5 p-4 text-sm leading-relaxed">
+                <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-ema">
+                  <Sparkles className="h-3 w-3" /> Ema's summary
+                </div>
+                {active.summary}
+              </div>
+
+              <div>
+                <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Stats breakdown</h4>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <StatTile icon={MessageSquare} label="Messages" value={active.metrics.messages.toString()} />
+                  <StatTile icon={Calendar} label="Bookings" value={active.metrics.bookings.toString()} />
+                  <StatTile icon={DollarSign} label="Revenue" value={`EC$${active.metrics.revenue.toLocaleString()}`} />
+                  <StatTile icon={AlertCircle} label="Escalations" value={active.metrics.escalations.toString()} />
+                </div>
+              </div>
+
+              <div>
+                <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {active.type === "campaign" ? "Highlights" : "Anomalies & highlights"}
+                </h4>
+                <ul className="space-y-2">
+                  {active.highlights.map((h, i) => (
+                    <li key={i} className="flex items-start gap-2 rounded-md border border-border/40 bg-card/40 p-2.5 text-sm">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-ema" />
+                      <span>{h}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="flex justify-end gap-2 border-t border-border/40 pt-3">
+                <Button variant="outline" size="sm">
+                  <Download className="h-3.5 w-3.5" /> Download PDF
+                </Button>
+                <Button size="sm" onClick={() => setOpenId(null)}>Close</Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
+  );
+}
+
+function StatTile({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof MessageSquare;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-lg border border-border/40 bg-background/40 p-3">
+      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+        <Icon className="h-3 w-3" /> {label}
+      </div>
+      <div className="mt-1 font-display text-lg font-bold">{value}</div>
+    </div>
   );
 }
 

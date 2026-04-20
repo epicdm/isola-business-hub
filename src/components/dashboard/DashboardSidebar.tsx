@@ -12,7 +12,10 @@ import {
   Plug,
   CreditCard,
   ShoppingBag,
+  LogOut,
 } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import logoEpic from "@/assets/logo-epic.png";
 
 const sections = [
@@ -53,6 +56,16 @@ const sections = [
 ];
 
 export default function DashboardSidebar({ currentPath = "/dashboard" }: { currentPath?: string }) {
+  const navigate = useNavigate();
+
+  const handleSignOut = () => {
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem("mockLoggedIn");
+    }
+    toast.success("Signed out");
+    navigate({ to: "/" });
+  };
+
   return (
     <aside className="hidden w-64 shrink-0 border-r border-sidebar-border bg-sidebar lg:block">
       <div className="sticky top-0 flex h-screen flex-col">
@@ -101,6 +114,14 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
               <div className="truncate text-sm font-medium">Marcus Joseph</div>
               <div className="truncate text-xs text-muted-foreground">Coalpot Restaurant</div>
             </div>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              aria-label="Sign out"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
           <a
             href="https://epic.communications"

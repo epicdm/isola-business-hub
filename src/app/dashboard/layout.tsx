@@ -1,6 +1,7 @@
 "use client";
 
-import { type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import EmaChatWidget from "@/components/dashboard/EmaChatWidget";
 
@@ -11,6 +12,23 @@ export default function DashboardLayout({
   children: ReactNode;
   currentPath?: string;
 }) {
+  const navigate = useNavigate();
+  const [allowed, setAllowed] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const loggedIn = window.localStorage.getItem("mockLoggedIn") === "true";
+    if (!loggedIn) {
+      navigate({ to: "/auth/$pathname", params: { pathname: "sign-in" } });
+    } else {
+      setAllowed(true);
+    }
+  }, [navigate]);
+
+  if (!allowed) {
+    return <div className="min-h-screen bg-background" />;
+  }
+
   return (
     <div className="flex min-h-screen bg-background">
       <DashboardSidebar currentPath={currentPath} />

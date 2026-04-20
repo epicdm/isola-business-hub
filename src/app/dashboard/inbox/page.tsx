@@ -218,6 +218,7 @@ function initials(name: string) {
 
 export default function InboxPage() {
   const [activeTab, setActiveTab] = useState<"all" | Channel>("all");
+  const [statusTab, setStatusTab] = useState<"active" | "snoozed">("active");
   const [activeId, setActiveId] = useState(conversations[0].id);
   const [search, setSearch] = useState("");
   const [draft, setDraft] = useState("");
@@ -230,8 +231,8 @@ export default function InboxPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   // Filter inbox by a specific contact (when "View all conversations" clicked)
   const [contactFilter, setContactFilter] = useState<string | null>(null);
-  // Composer mode: reply or whisper
-  const [composerMode, setComposerMode] = useState<"reply" | "whisper">("reply");
+  // Composer mode: reply / whisper / template
+  const [composerMode, setComposerMode] = useState<"reply" | "whisper" | "template">("reply");
   const [teachAi, setTeachAi] = useState(false);
   // Whispers added at runtime, keyed by conversation id
   const [extraWhispers, setExtraWhispers] = useState<Record<string, ThreadMsg[]>>({});
@@ -279,6 +280,85 @@ export default function InboxPage() {
   const [pendingQueue, setPendingQueue] = useState<PendingDraft[]>(seedPendingDrafts);
   const [rejectingDraft, setRejectingDraft] = useState<PendingDraft | null>(null);
   const [rejectNote, setRejectNote] = useState("");
+
+  // ---- Turn 8 · Feature 1: Status + labels ----
+  const [convMeta, setConvMeta] = useState<Record<string, ConversationMeta>>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = window.localStorage.getItem("isola.convMeta");
+        if (raw) return { ...seedConvMeta, ...(JSON.parse(raw) as Record<string, ConversationMeta>) };
+      } catch {
+        /* ignore */
+      }
+    }
+    return seedConvMeta;
+  });
+  const [labelLibrary, setLabelLibrary] = useState<LabelDef[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = window.localStorage.getItem("isola.labels");
+        if (raw) return JSON.parse(raw) as LabelDef[];
+      } catch {
+        /* ignore */
+      }
+    }
+    return seedLabels;
+  });
+  const [statusFilter, setStatusFilter] = useState<"all" | ConversationStatus>("all");
+  const [labelFilter, setLabelFilter] = useState<string>("all");
+  const [snoozePopoverFor, setSnoozePopoverFor] = useState<string | null>(null);
+  const [snoozeCustomDate, setSnoozeCustomDate] = useState<Date | undefined>(undefined);
+
+  // ---- Turn 8 · Feature 2: Templates ----
+  const [templates, setTemplates] = useState<MessageTemplate[]>([]);
+  const [templateSearch, setTemplateSearch] = useState("");
+  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
+  const [templateValues, setTemplateValues] = useState<Record<number, string>>({});
+
+  // ---- Turn 8 · Feature 3: Media (extras added at runtime) ----
+  const [extraMedia, setExtraMedia] = useState<Record<string, ThreadMsg[]>>({});
+
+  // Persist meta + labels
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("isola.convMeta", JSON.stringify(convMeta));
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [convMeta]);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("isola.labels", JSON.stringify(labelLibrary));
+      } catch {
+        /* ignore */
+      }
+      // Re-read on focus so changes from /dashboard/settings appear without reload
+      const reread = () => {
+        const raw = window.localStorage.getItem("isola.labels");
+        if (raw) {
+          try {
+            setLabelLibrary(JSON.parse(raw) as LabelDef[]);
+          } catch {
+            /* ignore */
+          }
+        }
+      };
+      window.addEventListener("focus", reread);
+      window.addEventListener("storage", reread);
+      return () => {
+        window.removeEventListener("focus", reread);
+        window.removeEventListener("storage", reread);
+      };
+    }
+  }, [labelLibrary]);
+
+  // Load templates once
+  useEffect(() => {
+    void fetchTemplates().then((r) => setTemplates(r.templates));
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Phone, PhoneCall, Instagram, MessageCircle, Search, Send, Sparkles, AlertCircle, Paperclip, Smile } from "lucide-react";
+import { Phone, PhoneCall, Instagram, MessageCircle, Search, Send, Sparkles, AlertCircle, Paperclip, Smile, UserCheck } from "lucide-react";
+import { toast } from "sonner";
 import DashboardLayout from "../layout";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,17 @@ export default function InboxPage() {
   const [activeId, setActiveId] = useState(conversations[0].id);
   const [search, setSearch] = useState("");
   const [draft, setDraft] = useState("");
+  // Track AI-handled flag per conversation (default: true unless escalated)
+  const [aiHandled, setAiHandled] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(conversations.map((c) => [c.id, c.status === "ai"])),
+  );
+
+  const handleTakeOver = (id: string, customer: string) => {
+    setAiHandled((prev) => ({ ...prev, [id]: false }));
+    toast.success("You're now handling this conversation", {
+      description: `AI handoff complete for ${customer}.`,
+    });
+  };
 
   const filtered = conversations.filter((c) => {
     if (activeTab !== "all" && c.channel !== activeTab) return false;
@@ -149,7 +161,23 @@ export default function InboxPage() {
                   </div>
                 </div>
               </div>
-              <Button variant="outline" size="sm">View contact</Button>
+              <div className="flex items-center gap-2">
+                {aiHandled[active.id] ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleTakeOver(active.id, active.customer)}
+                    className="border-warning/40 bg-warning/5 text-warning hover:bg-warning/10"
+                  >
+                    <UserCheck className="h-3.5 w-3.5" /> Take over
+                  </Button>
+                ) : (
+                  <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">
+                    <UserCheck className="mr-1 h-2.5 w-2.5" /> You're handling
+                  </Badge>
+                )}
+                <Button variant="outline" size="sm">View contact</Button>
+              </div>
             </div>
 
             <div className="flex-1 space-y-4 overflow-y-auto px-6 py-6">

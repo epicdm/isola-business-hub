@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Calendar, List, Phone, PhoneCall, Instagram, MessageCircle, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, List, Phone, PhoneCall, Instagram, MessageCircle, Plus, ChevronLeft, ChevronRight, X, MessageSquare } from "lucide-react";
 import DashboardLayout from "../layout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { bookings, type Channel, type BookingStatus } from "@/lib/mock-data";
 
 const channelIcon: Record<Channel, typeof Phone> = {
@@ -37,11 +44,15 @@ function formatDate(iso: string) {
 export default function BookingsPage() {
   const [view, setView] = useState<"list" | "calendar">("list");
   const [statusFilter, setStatusFilter] = useState<"all" | BookingStatus>("all");
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const filtered = useMemo(
     () => (statusFilter === "all" ? bookings : bookings.filter((b) => b.status === statusFilter)),
     [statusFilter]
   );
+
+  const activeBooking = bookings.find((b) => b.id === openId);
+  const ActiveChannelIcon = activeBooking ? channelIcon[activeBooking.channel] : Phone;
 
   // Build a calendar week view (next 7 days from a fixed reference for SSR stability)
   const referenceDate = "2026-04-21";
@@ -136,7 +147,11 @@ export default function BookingsPage() {
                 {filtered.map((b) => {
                   const ChannelIcon = channelIcon[b.channel];
                   return (
-                    <TableRow key={b.id} className="border-border/30">
+                    <TableRow
+                      key={b.id}
+                      className="cursor-pointer border-border/30 hover:bg-accent/30"
+                      onClick={() => setOpenId(b.id)}
+                    >
                       <TableCell className="pl-5 font-medium">{b.guest}</TableCell>
                       <TableCell>{b.party}</TableCell>
                       <TableCell className="text-muted-foreground">{formatDate(b.date)}</TableCell>
@@ -191,9 +206,10 @@ export default function BookingsPage() {
                     </div>
                     <div className="space-y-1.5">
                       {dayItems.map((b) => (
-                        <div
+                        <button
                           key={b.id}
-                          className={`rounded border-l-2 bg-card/60 p-1.5 text-[11px] leading-tight ${
+                          onClick={() => setOpenId(b.id)}
+                          className={`block w-full rounded border-l-2 bg-card/60 p-1.5 text-left text-[11px] leading-tight transition-colors hover:bg-card ${
                             b.status === "confirmed"
                               ? "border-l-success"
                               : b.status === "pending"
@@ -203,7 +219,7 @@ export default function BookingsPage() {
                         >
                           <div className="font-semibold">{b.time}</div>
                           <div className="truncate text-muted-foreground">{b.guest} · {b.party}</div>
-                        </div>
+                        </button>
                       ))}
                       {dayItems.length === 0 && (
                         <div className="py-4 text-center text-[10px] text-muted-foreground/40">No bookings</div>
@@ -216,6 +232,81 @@ export default function BookingsPage() {
           </Card>
         )}
       </div>
+
+      {/* Booking detail drawer */}
+      <Sheet open={!!openId} onOpenChange={(o) => !o && setOpenId(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-md">
+          {activeBooking && (
+            <>
+              <SheetHeader className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-primary text-base font-semibold text-primary-foreground shadow-glow">
+                    {activeBooking.guest.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <SheetTitle className="font-display text-xl">{activeBooking.guest}</SheetTitle>
+                    <SheetDescription className="mt-0.5 flex items-center gap-2">
+                      <ActiveChannelIcon className="h-3.5 w-3.5" /> Booked via {activeBooking.channel}
+                    </SheetDescription>
+                  </div>
+                  <Badge variant="outline" className={`capitalize ${statusStyle[activeBooking.status]}`}>
+                    {activeBooking.status}
+                  </Badge>
+                </div>
+              </SheetHeader>
+
+              <div className="mt-6 grid grid-cols-3 gap-3">
+                <Card className="border-border/60 bg-card/40 p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Party</div>
+                  <div className="mt-1 font-display text-xl font-bold">{activeBooking.party}</div>
+                </Card>
+                <Card className="border-border/60 bg-card/40 p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Date</div>
+                  <div className="mt-1 text-sm font-semibold">{formatDate(activeBooking.date)}</div>
+                </Card>
+                <Card className="border-border/60 bg-card/40 p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Time</div>
+                  <div className="mt-1 text-sm font-semibold">{activeBooking.time}</div>
+                </Card>
+              </div>
+
+              <div className="mt-6">
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notes</h3>
+                <Card className="border-border/60 bg-card/40 p-4 text-sm leading-relaxed">
+                  {activeBooking.notes || <span className="italic text-muted-foreground">No notes for this booking.</span>}
+                </Card>
+              </div>
+
+              <div className="mt-6">
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Timeline</h3>
+                <ul className="space-y-2 text-sm">
+                  {[
+                    { t: `Booking ${activeBooking.status} via ${activeBooking.channel}`, d: "Captured by AI" },
+                    { t: "Reminder scheduled", d: "Sent 24h before" },
+                    { t: "Confirmation requested", d: "On the day" },
+                  ].map((a) => (
+                    <li key={a.t} className="flex items-center justify-between rounded-lg border border-border/40 bg-card/40 px-3 py-2">
+                      <span>{a.t}</span>
+                      <span className="text-xs text-muted-foreground">{a.d}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="mt-6 flex gap-2">
+                <Button className="flex-1 bg-gradient-primary text-primary-foreground" asChild>
+                  <a href="/dashboard/inbox">
+                    <MessageSquare className="h-3.5 w-3.5" /> Open chat
+                  </a>
+                </Button>
+                <Button variant="outline" className="flex-1" onClick={() => setOpenId(null)}>
+                  <X className="h-3.5 w-3.5" /> Close
+                </Button>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </DashboardLayout>
   );
 }

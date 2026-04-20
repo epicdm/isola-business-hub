@@ -381,6 +381,11 @@ export default function OnboardingPage({ step, setStep, resumeMode = false, retu
     }
     saveProfile({ contactName: data.contactName, businessName: data.businessName });
     window.localStorage.removeItem(STORAGE_KEY);
+    // First-win activation moment — only on the *initial* completion, never on resume
+    if (!resumeMode) {
+      window.localStorage.setItem("isola.firstWinPending", "true");
+      window.localStorage.setItem("isola.firstWinIndustry", data.industry || "");
+    }
     if (odooConnected) {
       setShowConfetti(true);
       toast.success("✓ Odoo connected. Welcome to Isola.");

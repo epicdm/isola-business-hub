@@ -1,7 +1,8 @@
 "use client";
 
-import { Sparkles, ArrowRight, Phone, PhoneCall, Instagram, MessageCircle, Facebook, TrendingUp } from "lucide-react";
+import { Sparkles, ArrowRight, Phone, PhoneCall, Instagram, MessageCircle, Facebook, TrendingUp, Database, X } from "lucide-react";
 import { motion } from "framer-motion";
+import { Link } from "@tanstack/react-router";
 import DashboardLayout from "./layout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

@@ -73,6 +73,32 @@ const tabs: Array<{ key: "all" | Channel; label: string }> = [
 
 type Qualification = "Lead" | "Customer" | "Blocked" | "Unknown";
 
+type ThreadMsg = {
+  id: number | string;
+  from: "customer" | "ai" | "owner" | "whisper";
+  text: string;
+  time: string;
+  ownerName?: string;
+  teachAi?: boolean;
+};
+
+// Mocked POST /api/inbox/conversations/[id]/whisper.
+// In a real backend this would persist + (if teachAi) push to the agent's memory.
+async function postWhisper(
+  conversationId: string,
+  body: { text: string; teachAi: boolean },
+): Promise<{ id: string; text: string; teachAi: boolean; createdAt: string }> {
+  await new Promise((r) => setTimeout(r, 200));
+  return {
+    id: `wh_${Date.now()}_${conversationId}`,
+    text: body.text,
+    teachAi: body.teachAi,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+const OWNER_NAME = "You";
+
 function initials(name: string) {
   return name
     .split(/\s+/)

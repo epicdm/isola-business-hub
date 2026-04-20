@@ -26,7 +26,7 @@ function OnboardingRoute() {
   const navigate = useNavigate({ from: "/onboarding" });
 
   const setStep = (n: number) => {
-    navigate({ search: (prev) => ({ ...prev, step: n }) });
+    navigate({ search: (prev: { step: number; resume: number; returnTo: string }) => ({ ...prev, step: n }) });
   };
 
   return <OnboardingPage step={step} setStep={setStep} resumeMode={resume === 1} returnTo={returnTo} />;

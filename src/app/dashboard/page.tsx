@@ -6,6 +6,7 @@ import DashboardLayout from "./layout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
 import { kpis, recentActivity, type Channel } from "@/lib/mock-data";
 
 const channelIcon: Record<Channel, typeof Phone> = {
@@ -23,11 +24,16 @@ const channelColor: Record<Channel, string> = {
 };
 
 export default function DashboardHomePage() {
-  const today = new Date().toLocaleDateString(undefined, {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
+  const [today, setToday] = useState("");
+  useEffect(() => {
+    setToday(
+      new Date().toLocaleDateString(undefined, {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      })
+    );
+  }, []);
 
   return (
     <DashboardLayout currentPath="/dashboard">

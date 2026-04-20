@@ -86,7 +86,7 @@ export default function EmaSettingsPage() {
             <Section icon={MessageSquare} title="Personality" subtitle="How Ema sounds when she replies.">
               <Field label="Tone of voice">
                 <Select value={tone} onValueChange={setTone}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select tone">{tone}</SelectValue></SelectTrigger>
                   <SelectContent>
                     {tones.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                   </SelectContent>
@@ -190,7 +190,7 @@ export default function EmaSettingsPage() {
               {dailyDigest && (
                 <Field label="Digest delivery time">
                   <Select value={digestTime} onValueChange={setDigestTime}>
-                    <SelectTrigger className="max-w-40"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="max-w-40"><SelectValue placeholder="Pick a time">{digestTime}</SelectValue></SelectTrigger>
                     <SelectContent>
                       {digestTimes.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                     </SelectContent>

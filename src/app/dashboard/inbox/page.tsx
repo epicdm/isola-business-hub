@@ -477,7 +477,7 @@ export default function InboxPage() {
                         : "border-border/60 bg-card/40 text-muted-foreground hover:bg-accent"
                     }`}
                   >
-                    <ShieldPending /> Pending
+                    <InboxIcon className="h-3 w-3" /> Pending
                     {visiblePending.length > 0 && (
                       <span className="ml-0.5 rounded-full bg-violet px-1.5 text-[10px] font-bold text-violet-foreground">
                         {visiblePending.length}
@@ -948,6 +948,248 @@ export default function InboxPage() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Ask Ema drawer (Feature 1) */}
+      <Sheet open={emaOpen} onOpenChange={setEmaOpen}>
+        <SheetContent className="flex w-full flex-col gap-0 border-l-violet/40 bg-background p-0 sm:max-w-[400px]">
+          <SheetHeader className="border-b border-violet/30 bg-violet/8 px-6 py-5">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-violet text-white shadow-violet">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <SheetTitle className="font-display text-base">Ema — about this conversation</SheetTitle>
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">{active.customer} · {channelMeta[active.channel].label}</p>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-1.5">
+              {emaConvQuickActions.map((q) => (
+                <button
+                  key={q}
+                  disabled={emaThinking}
+                  onClick={async () => {
+                    const userMsg: EmaConvChatMsg = { id: `u${Date.now()}`, from: "owner", text: q, time: "now" };
+                    setEmaChats((p) => ({ ...p, [activeId]: [...(p[activeId] ?? []), userMsg] }));
+                    setEmaThinking(true);
+                    const res = await postEmaConversationChat(activeId, q);
+                    setEmaChats((p) => ({
+                      ...p,
+                      [activeId]: [
+                        ...(p[activeId] ?? []),
+                        { id: res.id, from: "ema", text: res.text, time: "now", draftReply: res.draftReply },
+                      ],
+                    }));
+                    setEmaThinking(false);
+                  }}
+                  className="rounded-full border border-violet/40 bg-violet/10 px-2.5 py-1 text-[11px] font-medium text-violet transition-colors hover:bg-violet/20 disabled:opacity-50"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          </SheetHeader>
+
+          <div ref={emaScrollRef} className="flex-1 space-y-3 overflow-y-auto px-5 py-5">
+            {(emaChats[activeId] ?? []).length === 0 && !emaThinking && (
+              <div className="rounded-lg border border-violet/20 bg-violet/5 p-3 text-xs text-muted-foreground">
+                Tap a chip above or type below — Ema reads the full thread for context.
+              </div>
+            )}
+            {(emaChats[activeId] ?? []).map((m) => (
+              <div key={m.id} className={`flex ${m.from === "owner" ? "justify-end" : "justify-start"}`}>
+                <div className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm ${
+                  m.from === "owner"
+                    ? "rounded-tr-sm bg-bubble-out text-bubble-out-foreground"
+                    : "rounded-tl-sm border border-violet/30 bg-violet/10 text-foreground"
+                }`}>
+                  <p className="whitespace-pre-wrap leading-relaxed">{m.text}</p>
+                  {m.draftReply && (
+                    <div className="mt-2 rounded-md border border-violet/40 bg-background/60 p-2">
+                      <p className="text-xs italic text-muted-foreground">"{m.draftReply}"</p>
+                      <Button
+                        size="sm"
+                        className="mt-2 h-7 bg-gradient-violet text-white hover:opacity-90"
+                        onClick={() => {
+                          setDraft(m.draftReply!);
+                          setComposerMode("reply");
+                          setEmaOpen(false);
+                          toast.success("Draft inserted into composer");
+                        }}
+                      >
+                        <Pencil className="h-3 w-3" /> Insert into composer
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+            {emaThinking && (
+              <div className="flex justify-start">
+                <div className="rounded-2xl rounded-tl-sm border border-violet/30 bg-violet/10 px-3.5 py-2 text-xs text-muted-foreground">
+                  Ema is thinking…
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-violet/30 bg-violet/5 p-3">
+            <div className="flex items-end gap-2 rounded-xl border border-violet/40 bg-background p-2">
+              <Input
+                value={emaInput}
+                onChange={(e) => setEmaInput(e.target.value)}
+                placeholder="Ask Ema anything about this conversation…"
+                className="border-0 focus-visible:ring-0"
+                onKeyDown={async (e) => {
+                  if (e.key === "Enter" && emaInput.trim() && !emaThinking) {
+                    e.preventDefault();
+                    const text = emaInput.trim();
+                    setEmaInput("");
+                    const userMsg: EmaConvChatMsg = { id: `u${Date.now()}`, from: "owner", text, time: "now" };
+                    setEmaChats((p) => ({ ...p, [activeId]: [...(p[activeId] ?? []), userMsg] }));
+                    setEmaThinking(true);
+                    const res = await postEmaConversationChat(activeId, text);
+                    setEmaChats((p) => ({
+                      ...p,
+                      [activeId]: [
+                        ...(p[activeId] ?? []),
+                        { id: res.id, from: "ema", text: res.text, time: "now", draftReply: res.draftReply },
+                      ],
+                    }));
+                    setEmaThinking(false);
+                  }
+                }}
+              />
+              <Button size="sm" disabled={!emaInput.trim() || emaThinking} className="bg-gradient-violet text-white hover:opacity-90">
+                <Send className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Pending approval drawer (Feature 3) */}
+      <Sheet open={leftPane === "pending"} onOpenChange={(o) => setLeftPane(o ? "pending" : "conversations")}>
+        <SheetContent side="left" className="flex w-full flex-col gap-0 p-0 sm:max-w-[440px]">
+          <SheetHeader className="border-b border-border/40 px-6 py-5">
+            <SheetTitle className="flex items-center gap-2 font-display text-lg">
+              <InboxIcon className="h-4 w-4 text-violet" /> Pending approval
+              <Badge variant="outline" className="border-violet/40 bg-violet/15 text-violet">{visiblePending.length}</Badge>
+            </SheetTitle>
+            <p className="text-xs text-muted-foreground">
+              AI drafts from agents with Review mode on. Approve, edit, or reject.
+            </p>
+            <div className="mt-2">
+              <Select value={pendingFilter} onValueChange={setPendingFilter}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All agents</SelectItem>
+                  {agents.filter((a) => reviewModeMap[a.id]).map((a) => (
+                    <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </SheetHeader>
+          <div className="flex-1 space-y-3 overflow-y-auto p-4">
+            {visiblePending.length === 0 && (
+              <div className="rounded-lg border border-border/40 bg-card/40 p-6 text-center text-sm text-muted-foreground">
+                <CheckCircle2 className="mx-auto mb-2 h-6 w-6 text-success" />
+                Inbox zero — no drafts waiting.
+              </div>
+            )}
+            {visiblePending.map((d) => {
+              const ChIcon = channelMeta[d.channel].icon;
+              return (
+                <Card key={d.id} className="border-border/40 bg-card/40 p-4">
+                  <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <span className="inline-flex items-center gap-1.5"><ChIcon className="h-3 w-3" /> {d.customer}</span>
+                    <span><Clock className="mr-1 inline h-3 w-3" />{d.draftTime}</span>
+                  </div>
+                  <div className="rounded-lg bg-bubble-in px-3 py-2 text-xs text-bubble-in-foreground">{d.customerMessage}</div>
+                  <div className="mt-1.5 flex items-start gap-1.5">
+                    <ChevronRight className="mt-0.5 h-3 w-3 shrink-0 text-violet" />
+                    <div className="flex-1 rounded-lg border border-violet/30 bg-violet/8 px-3 py-2 text-xs">
+                      <div className="mb-1 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-violet">
+                        <Sparkles className="h-2.5 w-2.5" /> AI draft
+                      </div>
+                      <p className="leading-relaxed text-foreground">{d.draft}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    <Button
+                      size="sm"
+                      className="h-7 flex-1 bg-success text-success-foreground hover:bg-success/90"
+                      onClick={() => {
+                        setPendingQueue((p) => p.filter((x) => x.id !== d.id));
+                        toast.success(`Sent to ${d.customer}`);
+                      }}
+                    >
+                      <CheckCircle2 className="h-3 w-3" /> Approve & send
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7"
+                      onClick={() => {
+                        setActiveId(d.conversationId);
+                        setDraft(d.draft);
+                        setComposerMode("reply");
+                        setAiHandled((p) => ({ ...p, [d.conversationId]: false }));
+                        setPendingQueue((p) => p.filter((x) => x.id !== d.id));
+                        setLeftPane("conversations");
+                        toast.success("Draft loaded into composer");
+                      }}
+                    >
+                      <Pencil className="h-3 w-3" /> Edit & send
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 border-amber-500/40 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20"
+                      onClick={() => { setRejectingDraft(d); setRejectNote(""); }}
+                    >
+                      <X className="h-3 w-3" /> Reject + teach
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Reject + teach Ema dialog */}
+      <Dialog open={!!rejectingDraft} onOpenChange={(o) => !o && setRejectingDraft(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><BookOpen className="h-4 w-4 text-amber-400" /> Teach Ema</DialogTitle>
+            <DialogDescription>
+              Tell Ema what was wrong with this draft so future replies improve.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            rows={4}
+            value={rejectNote}
+            onChange={(e) => setRejectNote(e.target.value)}
+            placeholder="E.g., 'Don't quote prices for private dinners — escalate to Marcus instead.'"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectingDraft(null)}>Cancel</Button>
+            <Button
+              className="bg-amber-500 text-amber-950 hover:bg-amber-400"
+              onClick={() => {
+                if (rejectingDraft) {
+                  setPendingQueue((p) => p.filter((x) => x.id !== rejectingDraft.id));
+                }
+                setRejectingDraft(null);
+                toast.success("Got it — Ema will remember this");
+              }}
+            >
+              <BookOpen className="h-3.5 w-3.5" /> Save & reject
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
@@ -958,5 +1200,71 @@ function KV({ label, value }: { label: string; value: string }) {
       <div className="text-[9px] uppercase tracking-wider text-muted-foreground">{label}</div>
       <div className="mt-0.5 text-sm font-semibold">{value}</div>
     </div>
+  );
+}
+
+// Feature 4 — Rich message cards (catalog / payment / booking) rendered inside an AI bubble.
+function RichCard({ card, fromCustomer }: { card: MessageCard; fromCustomer: boolean }) {
+  if (card.kind === "catalog") {
+    return (
+      <Card className="overflow-hidden rounded-2xl rounded-tr-sm border-border/60 bg-card p-0">
+        <div className="flex items-center justify-center bg-gradient-to-br from-primary/30 to-ema/30 py-6 text-4xl">
+          {card.emoji}
+        </div>
+        <div className="p-3">
+          <div className="flex items-baseline justify-between gap-2">
+            <div className="text-sm font-semibold">{card.name}</div>
+            <div className="text-sm font-bold text-primary">EC${card.price}</div>
+          </div>
+          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{card.desc}</p>
+          {card.tapped && (
+            <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-medium text-success">
+              <CheckCircle2 className="h-2.5 w-2.5" /> Customer tapped Order
+            </div>
+          )}
+        </div>
+      </Card>
+    );
+  }
+  if (card.kind === "payment") {
+    const statusMeta = {
+      pending: { cls: "border-warning/40 bg-warning/15 text-warning", label: "Pending" },
+      paid: { cls: "border-success/40 bg-success/15 text-success", label: "Paid" },
+      expired: { cls: "border-border bg-muted text-muted-foreground", label: "Expired" },
+    }[card.status];
+    return (
+      <Card className={`rounded-2xl ${fromCustomer ? "rounded-tl-sm" : "rounded-tr-sm"} border-border/60 bg-card p-3.5`}>
+        <div className="flex items-start justify-between gap-2">
+          <div className="text-sm font-semibold">💰 Payment request — EC${card.amount}</div>
+          <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusMeta.cls}`}>{statusMeta.label}</span>
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">{card.description}</p>
+        {card.status === "paid" && card.paidAt && (
+          <p className="mt-1 text-[10px] text-success">Paid at {card.paidAt}</p>
+        )}
+        <div className="mt-2 flex items-center justify-end text-[9px] uppercase tracking-wider text-muted-foreground">
+          <CreditCard className="mr-1 h-2.5 w-2.5" /> via {card.provider}
+        </div>
+      </Card>
+    );
+  }
+  // booking
+  return (
+    <Card className={`rounded-2xl ${fromCustomer ? "rounded-tl-sm" : "rounded-tr-sm"} border-primary/30 bg-card p-3.5`}>
+      <div className="text-sm font-semibold">📅 Booking confirmed</div>
+      <div className="mt-1.5 text-sm">
+        <div className="font-semibold">{card.service}</div>
+        <div className="text-xs text-muted-foreground">{card.date} · {card.time} · party of {card.party}</div>
+        {card.notes && <div className="mt-1 text-xs text-muted-foreground">Notes: {card.notes}</div>}
+      </div>
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        <Button size="sm" variant="outline" className="h-7" onClick={() => toast.success("Calendar event created")}>
+          <CalendarIcon className="h-3 w-3" /> Add to calendar
+        </Button>
+        <Button size="sm" variant="ghost" className="h-7" onClick={() => toast("Reschedule flow — coming soon")}>
+          Reschedule
+        </Button>
+      </div>
+    </Card>
   );
 }

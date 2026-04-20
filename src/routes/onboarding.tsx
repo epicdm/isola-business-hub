@@ -1,14 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import OnboardingPage from "@/app/onboarding/page";
 
 const searchSchema = z.object({
-  step: fallback(z.number().int().min(1).max(5), 1).default(1),
+  step: z.number().int().min(1).max(5).catch(1).default(1),
 });
 
 export const Route = createFileRoute("/onboarding")({
-  validateSearch: zodValidator(searchSchema),
+  validateSearch: (input: Record<string, unknown>) => searchSchema.parse(input),
   head: () => ({
     meta: [
       { title: "Get started — Ema" },

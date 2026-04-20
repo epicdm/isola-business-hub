@@ -43,7 +43,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { accountDefaults } from "@/lib/mock-data";
+import { accountDefaults, tenantLabels as seedLabels, labelPalette, labelColorClasses, type LabelDef, type LabelColor } from "@/lib/mock-data";
 import { clearProfile, readProfile } from "@/lib/profile";
 
 const verticals = ["Restaurant", "Hotel", "Clinic", "Tour operator", "Retail", "Other"];

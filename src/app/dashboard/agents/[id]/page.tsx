@@ -231,6 +231,7 @@ export default function AgentDetailPage() {
             <TabsTrigger value="channels">Channels</TabsTrigger>
             <TabsTrigger value="hours">Hours</TabsTrigger>
             <TabsTrigger value="routing">Routing</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
           </TabsList>
 
           <TabsContent value="persona" className="mt-6 space-y-6">

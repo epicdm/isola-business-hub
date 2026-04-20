@@ -27,9 +27,26 @@ import {
   ArrowUpRight,
   Activity as ActivityIcon,
   ShieldCheck,
+  Wrench,
+  Lock,
+  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../../layout";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  allTools,
+  toolCategories,
+  roleDefaultTools,
+  roleForTemplate,
+  tenantTier,
+  type ToolCategory,
+} from "@/lib/turn10-data";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -27,9 +27,26 @@ import {
   ArrowUpRight,
   Activity as ActivityIcon,
   ShieldCheck,
+  Wrench,
+  Lock,
+  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../../layout";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  allTools,
+  toolCategories,
+  roleDefaultTools,
+  roleForTemplate,
+  tenantTier,
+  type ToolCategory,
+} from "@/lib/turn10-data";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -123,6 +140,25 @@ export default function AgentDetailPage() {
   const [igStories, setIgStories] = useState(true);
   // Review mode (Safety) — persisted to localStorage so /dashboard/inbox can read it
   const [reviewMode, setReviewMode] = useState<boolean>(false);
+  // Tools enabled — initialized per role template
+  const initialTools = useMemo(() => {
+    const role = roleForTemplate(original.template);
+    return new Set<string>(roleDefaultTools[role] ?? []);
+  }, [original]);
+  const [enabledTools, setEnabledTools] = useState<Set<string>>(initialTools);
+
+  useEffect(() => {
+    setEnabledTools(new Set(initialTools));
+  }, [initialTools]);
+
+  const toggleTool = (id: string) => {
+    setEnabledTools((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   useEffect(() => {
     setAgent(original);
@@ -311,10 +347,28 @@ export default function AgentDetailPage() {
           )}
         </Card>
 
+        {/* Tier indicator (Turn 10 · Section 4) */}
+        <div className="mb-6 flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 text-xs">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <span className="text-muted-foreground">Current plan:</span>
+            <span className="font-semibold capitalize text-foreground">{tenantTier}</span>
+            <span className="text-muted-foreground">— all tool categories unlocked</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => toast("Upgrade flow coming soon")}
+            className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+          >
+            Upgrade to Business <ArrowRight className="h-3 w-3" />
+          </button>
+        </div>
+
         <Tabs defaultValue="persona">
           <TabsList>
             <TabsTrigger value="persona">Persona</TabsTrigger>
             <TabsTrigger value="channels">Channels</TabsTrigger>
+            <TabsTrigger value="tools">Tools</TabsTrigger>
             <TabsTrigger value="hours">Hours</TabsTrigger>
             <TabsTrigger value="routing">Routing</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
@@ -517,6 +571,107 @@ export default function AgentDetailPage() {
                 </Card>
               );
             })}
+          </TabsContent>
+
+          <TabsContent value="tools" className="mt-6 space-y-4">
+            <Card className="border-border/40 bg-card/40 p-6">
+              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Wrench className="h-4 w-4 text-primary" />
+                    <h3 className="font-display text-base font-semibold">Tools enabled</h3>
+                  </div>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    What {agent.name} is allowed to do on your behalf. Defaults match the{" "}
+                    <span className="font-medium text-foreground">{agent.templateLabel}</span> role.
+                  </p>
+                </div>
+                <Badge variant="outline" className="w-fit gap-1 border-primary/30 bg-primary/10 text-primary">
+                  {enabledTools.size} tool{enabledTools.size === 1 ? "" : "s"} active
+                </Badge>
+              </div>
+
+              <Accordion
+                type="multiple"
+                defaultValue={toolCategories.filter((c) => c.defaultOpen).map((c) => c.id)}
+                className="space-y-2"
+              >
+                {toolCategories.map((cat) => {
+                  const tools = allTools.filter((t) => t.category === cat.id);
+                  const locked = cat.gated === "pro" && tenantTier === "starter";
+                  const activeInCat = tools.filter((t) => enabledTools.has(t.id)).length;
+                  return (
+                    <AccordionItem
+                      key={cat.id}
+                      value={cat.id}
+                      className="rounded-lg border border-border/40 bg-background/40 px-4"
+                    >
+                      <AccordionTrigger className="py-3 hover:no-underline">
+                        <div className="flex flex-1 items-center justify-between gap-3 pr-3">
+                          <div className="flex items-center gap-2">
+                            {locked ? (
+                              <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                            ) : (
+                              <CheckCircle2 className="h-3.5 w-3.5 text-primary/60" />
+                            )}
+                            <span className="text-sm font-medium">{cat.label}</span>
+                            {cat.gated === "pro" && (
+                              <Badge variant="outline" className="border-primary/30 bg-primary/10 text-[9px] uppercase tracking-wider text-primary">
+                                Pro
+                              </Badge>
+                            )}
+                          </div>
+                          <span className="text-[11px] text-muted-foreground">
+                            {locked ? "Locked" : `${activeInCat} / ${tools.length} on`}
+                          </span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="pt-0">
+                        {locked ? (
+                          <div className="mb-3 flex items-center justify-between gap-3 rounded-md border border-primary/30 bg-primary/5 p-3">
+                            <div className="text-xs text-muted-foreground">
+                              Upgrade to Pro to unlock {cat.label} tools.
+                            </div>
+                            <Button size="sm" variant="outline" className="border-primary/40 text-primary hover:bg-primary/10">
+                              Upgrade <ArrowRight className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="space-y-1.5 pb-2">
+                            {tools.map((tool) => {
+                              const checked = enabledTools.has(tool.id);
+                              return (
+                                <label
+                                  key={tool.id}
+                                  className={cn(
+                                    "flex cursor-pointer items-start gap-3 rounded-md border border-transparent p-2.5 transition-colors hover:border-border/40 hover:bg-accent/20",
+                                    checked && "border-border/40 bg-accent/15",
+                                  )}
+                                >
+                                  <Checkbox
+                                    checked={checked}
+                                    onCheckedChange={() => toggleTool(tool.id)}
+                                    className="mt-0.5"
+                                  />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <code className="rounded bg-muted/50 px-1.5 py-0.5 font-mono text-[11px] text-foreground">
+                                        {tool.label}
+                                      </code>
+                                    </div>
+                                    <p className="mt-1 text-xs text-muted-foreground">{tool.desc}</p>
+                                  </div>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
+            </Card>
           </TabsContent>
 
           <TabsContent value="hours" className="mt-6 space-y-4">

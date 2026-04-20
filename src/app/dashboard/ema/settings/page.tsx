@@ -190,7 +190,7 @@ export default function EmaSettingsPage() {
               {dailyDigest && (
                 <Field label="Digest delivery time">
                   <Select value={digestTime} onValueChange={setDigestTime}>
-                    <SelectTrigger className="max-w-40"><SelectValue placeholder="Pick a time" /></SelectTrigger>
+                    <SelectTrigger className="max-w-40"><SelectValue placeholder="Pick a time">{digestTime}</SelectValue></SelectTrigger>
                     <SelectContent>
                       {digestTimes.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                     </SelectContent>

@@ -720,8 +720,53 @@ function Step4({ data, errors, update }: StepProps) {
 }
 
 function Step5({ data, errors, update }: StepProps) {
+  const firstName = (data.contactName?.trim().split(/\s+/)[0]) || "there";
+  const emaPhone = "+1 767-818-3742";
+  const fullMessage = `Hi ${firstName}! I'm Ema — your Epic Management Agent. Think of me as your chief of staff. Every morning I'll send you a digest of what happened overnight. Whenever you want a report, a campaign, a reminder, just ask. I'm on ${emaPhone} on WhatsApp, or right here in the dashboard. Want to try me? Ask 'What should I do today?'`;
+
+  // Type the message character-by-character ~3s total. Restart only when name changes.
+  const [typed, setTyped] = useState("");
+  useEffect(() => {
+    setTyped("");
+    const total = fullMessage.length;
+    const intervalMs = Math.max(8, Math.floor(3000 / total));
+    let i = 0;
+    const id = setInterval(() => {
+      i += 1;
+      setTyped(fullMessage.slice(0, i));
+      if (i >= total) clearInterval(id);
+    }, intervalMs);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstName]);
+
+  const done = typed.length >= fullMessage.length;
+
   return (
     <>
+      {/* Ema's first message — typed */}
+      <div className="rounded-2xl border border-ema/30 bg-gradient-to-br from-ema/10 via-background to-background p-5 shadow-ema">
+        <div className="mb-3 flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-ema text-ema-foreground shadow-ema">
+            <Sparkles className="h-4 w-4" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold">Ema</div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              Your chief of staff
+            </div>
+          </div>
+        </div>
+        <p
+          className="text-sm leading-relaxed text-foreground"
+          aria-live="polite"
+          aria-busy={!done}
+        >
+          {typed}
+          {!done && <span className="ml-0.5 inline-block h-3.5 w-1 -mb-0.5 animate-pulse bg-ema align-middle" />}
+        </p>
+      </div>
+
       <div className="rounded-lg border border-border bg-muted/30 p-4">
         <p className="text-sm font-medium">Connect WhatsApp Business</p>
         <p className="mt-1 text-xs text-muted-foreground">

@@ -43,6 +43,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { saveProfile } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
 const TOTAL_STEPS = 5;

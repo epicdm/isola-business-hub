@@ -18,6 +18,7 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as ForRestaurantsRouteImport } from './routes/for.restaurants'
 import { Route as ForHotelsRouteImport } from './routes/for.hotels'
 import { Route as ForClinicsRouteImport } from './routes/for.clinics'
+import { Route as DashboardWhatsappRouteImport } from './routes/dashboard.whatsapp'
 import { Route as DashboardKnowledgeRouteImport } from './routes/dashboard.knowledge'
 import { Route as DashboardInboxRouteImport } from './routes/dashboard.inbox'
 import { Route as DashboardHoursRouteImport } from './routes/dashboard.hours'
@@ -72,6 +73,11 @@ const ForHotelsRoute = ForHotelsRouteImport.update({
 const ForClinicsRoute = ForClinicsRouteImport.update({
   id: '/for/clinics',
   path: '/for/clinics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardWhatsappRoute = DashboardWhatsappRouteImport.update({
+  id: '/dashboard/whatsapp',
+  path: '/dashboard/whatsapp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardKnowledgeRoute = DashboardKnowledgeRouteImport.update({
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/hours': typeof DashboardHoursRoute
   '/dashboard/inbox': typeof DashboardInboxRoute
   '/dashboard/knowledge': typeof DashboardKnowledgeRoute
+  '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/for/clinics': typeof ForClinicsRoute
   '/for/hotels': typeof ForHotelsRoute
   '/for/restaurants': typeof ForRestaurantsRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByTo {
   '/dashboard/hours': typeof DashboardHoursRoute
   '/dashboard/inbox': typeof DashboardInboxRoute
   '/dashboard/knowledge': typeof DashboardKnowledgeRoute
+  '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/for/clinics': typeof ForClinicsRoute
   '/for/hotels': typeof ForHotelsRoute
   '/for/restaurants': typeof ForRestaurantsRoute
@@ -180,6 +188,7 @@ export interface FileRoutesById {
   '/dashboard/hours': typeof DashboardHoursRoute
   '/dashboard/inbox': typeof DashboardInboxRoute
   '/dashboard/knowledge': typeof DashboardKnowledgeRoute
+  '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/for/clinics': typeof ForClinicsRoute
   '/for/hotels': typeof ForHotelsRoute
   '/for/restaurants': typeof ForRestaurantsRoute
@@ -203,6 +212,7 @@ export interface FileRouteTypes {
     | '/dashboard/hours'
     | '/dashboard/inbox'
     | '/dashboard/knowledge'
+    | '/dashboard/whatsapp'
     | '/for/clinics'
     | '/for/hotels'
     | '/for/restaurants'
@@ -223,6 +233,7 @@ export interface FileRouteTypes {
     | '/dashboard/hours'
     | '/dashboard/inbox'
     | '/dashboard/knowledge'
+    | '/dashboard/whatsapp'
     | '/for/clinics'
     | '/for/hotels'
     | '/for/restaurants'
@@ -244,6 +255,7 @@ export interface FileRouteTypes {
     | '/dashboard/hours'
     | '/dashboard/inbox'
     | '/dashboard/knowledge'
+    | '/dashboard/whatsapp'
     | '/for/clinics'
     | '/for/hotels'
     | '/for/restaurants'
@@ -266,6 +278,7 @@ export interface RootRouteChildren {
   DashboardHoursRoute: typeof DashboardHoursRoute
   DashboardInboxRoute: typeof DashboardInboxRoute
   DashboardKnowledgeRoute: typeof DashboardKnowledgeRoute
+  DashboardWhatsappRoute: typeof DashboardWhatsappRoute
   ForClinicsRoute: typeof ForClinicsRoute
   ForHotelsRoute: typeof ForHotelsRoute
   ForRestaurantsRoute: typeof ForRestaurantsRoute
@@ -335,6 +348,13 @@ declare module '@tanstack/react-router' {
       path: '/for/clinics'
       fullPath: '/for/clinics'
       preLoaderRoute: typeof ForClinicsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/whatsapp': {
+      id: '/dashboard/whatsapp'
+      path: '/dashboard/whatsapp'
+      fullPath: '/dashboard/whatsapp'
+      preLoaderRoute: typeof DashboardWhatsappRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/knowledge': {
@@ -439,6 +459,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardHoursRoute: DashboardHoursRoute,
   DashboardInboxRoute: DashboardInboxRoute,
   DashboardKnowledgeRoute: DashboardKnowledgeRoute,
+  DashboardWhatsappRoute: DashboardWhatsappRoute,
   ForClinicsRoute: ForClinicsRoute,
   ForHotelsRoute: ForHotelsRoute,
   ForRestaurantsRoute: ForRestaurantsRoute,

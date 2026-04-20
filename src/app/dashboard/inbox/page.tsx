@@ -328,7 +328,16 @@ export default function InboxPage() {
   const [templateValues, setTemplateValues] = useState<Record<number, string>>({});
 
   // ---- Turn 8 · Feature 3: Media (extras added at runtime) ----
+  // ---- Turn 8 · Feature 3: Media (extras added at runtime) ----
   const [extraMedia, setExtraMedia] = useState<Record<string, ThreadMsg[]>>({});
+
+  // ---- Turn 8 · Section 4: image lightbox ----
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [lightboxAlt, setLightboxAlt] = useState<string>("");
+  const [lightboxCaption, setLightboxCaption] = useState<string | undefined>(undefined);
+  // ---- Turn 8 · Section 4: audio playback simulation (one playing at a time) ----
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [audioProgress, setAudioProgress] = useState(0);
 
   // Persist meta + labels
   useEffect(() => {

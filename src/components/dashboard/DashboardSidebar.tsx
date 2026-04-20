@@ -13,6 +13,7 @@ import {
   CreditCard,
   ShoppingBag,
   LogOut,
+  Bot,
 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -37,6 +38,12 @@ const sections = [
       { href: "/dashboard/ema", icon: Sparkles, label: "Chat with Ema" },
       { href: "/dashboard/ema/reports", icon: FileText, label: "Reports" },
       { href: "/dashboard/ema/settings", icon: SettingsIcon, label: "Configure" },
+    ],
+  },
+  {
+    label: "Agents",
+    items: [
+      { href: "/dashboard/agents", icon: Bot, label: "Agents" },
     ],
   },
   {

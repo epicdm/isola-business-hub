@@ -628,6 +628,108 @@ export default function SettingsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Add/Edit label dialog (Section 6) */}
+      <Dialog open={labelDialogOpen} onOpenChange={setLabelDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingLabel ? "Edit label" : "Add label"}</DialogTitle>
+            <DialogDescription>
+              Pick a name and a color. Labels appear in the inbox label picker.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Field label="Name">
+              <Input
+                value={labelDraftName}
+                onChange={(e) => setLabelDraftName(e.target.value)}
+                placeholder="e.g. Refund"
+                autoFocus
+              />
+            </Field>
+            <div>
+              <Label className="mb-2 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Color
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                {labelPalette.map((c) => {
+                  const cls = labelColorClasses[c];
+                  const selected = labelDraftColor === c;
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setLabelDraftColor(c)}
+                      aria-label={c}
+                      className={`h-8 w-8 rounded-full ${cls.swatch} transition-all ${
+                        selected ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "opacity-80 hover:opacity-100"
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setLabelDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              className="bg-gradient-primary text-primary-foreground hover:opacity-90"
+              disabled={!labelDraftName.trim()}
+              onClick={() => {
+                const name = labelDraftName.trim();
+                if (!name) return;
+                if (editingLabel) {
+                  setLabels((prev) =>
+                    prev.map((l) => (l.id === editingLabel.id ? { ...l, name, color: labelDraftColor } : l)),
+                  );
+                  toast.success("Label updated");
+                } else {
+                  const id = `lb-${Date.now()}`;
+                  setLabels((prev) => [...prev, { id, name, color: labelDraftColor }]);
+                  toast.success("Label added");
+                }
+                setLabelDialogOpen(false);
+              }}
+            >
+              {editingLabel ? "Save" : "Add"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete label confirm */}
+      <Dialog open={!!confirmDeleteLabel} onOpenChange={(o) => !o && setConfirmDeleteLabel(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-4 w-4" /> Delete label?
+            </DialogTitle>
+            <DialogDescription>
+              "{confirmDeleteLabel?.name}" will be removed from this workspace. Conversations using it will lose the label.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setConfirmDeleteLabel(null)}>Cancel</Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-destructive/40 text-destructive hover:bg-destructive/10"
+              onClick={() => {
+                if (confirmDeleteLabel) {
+                  setLabels((prev) => prev.filter((l) => l.id !== confirmDeleteLabel.id));
+                  toast.success("Label deleted");
+                }
+                setConfirmDeleteLabel(null);
+              }}
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

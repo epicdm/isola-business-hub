@@ -128,6 +128,7 @@ const channelMeta: Record<Channel, { icon: typeof Phone; label: string; color: s
   voice: { icon: PhoneCall, label: "Voice", color: "text-primary bg-primary/15" },
   instagram: { icon: Instagram, label: "Instagram", color: "text-ema bg-ema/15" },
   messenger: { icon: MessageCircle, label: "Messenger", color: "text-chart-4 bg-chart-4/15" },
+  facebook: { icon: Facebook, label: "Facebook", color: "text-chart-4 bg-chart-4/15" },
 };
 
 const tabs: Array<{ key: "all" | Channel; label: string }> = [
@@ -136,7 +137,9 @@ const tabs: Array<{ key: "all" | Channel; label: string }> = [
   { key: "voice", label: "Voice" },
   { key: "instagram", label: "Instagram" },
   { key: "messenger", label: "Messenger" },
+  { key: "facebook", label: "Facebook" },
 ];
+
 
 // Mock — which agent handles which conversation. Read-only pill in header.
 const conversationAgent: Record<string, string> = {

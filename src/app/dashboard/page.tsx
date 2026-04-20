@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, ArrowRight, Phone, PhoneCall, Instagram, MessageCircle, TrendingUp } from "lucide-react";
+import { Sparkles, ArrowRight, Phone, PhoneCall, Instagram, MessageCircle, Facebook, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 import DashboardLayout from "./layout";
 import { Card } from "@/components/ui/card";
@@ -14,6 +14,7 @@ const channelIcon: Record<Channel, typeof Phone> = {
   voice: PhoneCall,
   instagram: Instagram,
   messenger: MessageCircle,
+  facebook: Facebook,
 };
 
 const channelColor: Record<Channel, string> = {
@@ -21,7 +22,9 @@ const channelColor: Record<Channel, string> = {
   voice: "text-primary bg-primary/15",
   instagram: "text-ema bg-ema/15",
   messenger: "text-chart-4 bg-chart-4/15",
+  facebook: "text-chart-4 bg-chart-4/15",
 };
+
 
 export default function DashboardHomePage() {
   const [today, setToday] = useState("");

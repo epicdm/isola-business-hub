@@ -32,6 +32,7 @@ import {
   Inbox as InboxIcon,
   Tag,
   FileText,
+  FileArchive,
   ImageIcon,
   Play,
   Pause,
@@ -40,6 +41,7 @@ import {
   ChevronDown,
   Camera,
   LayoutTemplate,
+  Bot,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";

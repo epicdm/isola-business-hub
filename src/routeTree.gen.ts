@@ -19,6 +19,7 @@ import { Route as ForRestaurantsRouteImport } from './routes/for.restaurants'
 import { Route as ForHotelsRouteImport } from './routes/for.hotels'
 import { Route as ForClinicsRouteImport } from './routes/for.clinics'
 import { Route as DashboardWhatsappRouteImport } from './routes/dashboard.whatsapp'
+import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
 import { Route as DashboardKnowledgeRouteImport } from './routes/dashboard.knowledge'
 import { Route as DashboardIntegrationsRouteImport } from './routes/dashboard.integrations'
 import { Route as DashboardInboxRouteImport } from './routes/dashboard.inbox'
@@ -27,6 +28,7 @@ import { Route as DashboardEmaRouteImport } from './routes/dashboard.ema'
 import { Route as DashboardContactsRouteImport } from './routes/dashboard.contacts'
 import { Route as DashboardCatalogRouteImport } from './routes/dashboard.catalog'
 import { Route as DashboardBookingsRouteImport } from './routes/dashboard.bookings'
+import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
 import { Route as DashboardEmaIndexRouteImport } from './routes/dashboard.ema.index'
 import { Route as DashboardEmaSettingsRouteImport } from './routes/dashboard.ema.settings'
 import { Route as DashboardEmaReportsRouteImport } from './routes/dashboard.ema.reports'
@@ -81,6 +83,11 @@ const DashboardWhatsappRoute = DashboardWhatsappRouteImport.update({
   path: '/dashboard/whatsapp',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
+  id: '/dashboard/settings',
+  path: '/dashboard/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardKnowledgeRoute = DashboardKnowledgeRouteImport.update({
   id: '/dashboard/knowledge',
   path: '/dashboard/knowledge',
@@ -121,6 +128,11 @@ const DashboardBookingsRoute = DashboardBookingsRouteImport.update({
   path: '/dashboard/bookings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardBillingRoute = DashboardBillingRouteImport.update({
+  id: '/dashboard/billing',
+  path: '/dashboard/billing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardEmaIndexRoute = DashboardEmaIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -143,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
   '/dashboard/catalog': typeof DashboardCatalogRoute
   '/dashboard/contacts': typeof DashboardContactsRoute
@@ -151,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/inbox': typeof DashboardInboxRoute
   '/dashboard/integrations': typeof DashboardIntegrationsRoute
   '/dashboard/knowledge': typeof DashboardKnowledgeRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/for/clinics': typeof ForClinicsRoute
   '/for/hotels': typeof ForHotelsRoute
@@ -166,6 +180,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
   '/dashboard/catalog': typeof DashboardCatalogRoute
   '/dashboard/contacts': typeof DashboardContactsRoute
@@ -173,6 +188,7 @@ export interface FileRoutesByTo {
   '/dashboard/inbox': typeof DashboardInboxRoute
   '/dashboard/integrations': typeof DashboardIntegrationsRoute
   '/dashboard/knowledge': typeof DashboardKnowledgeRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/for/clinics': typeof ForClinicsRoute
   '/for/hotels': typeof ForHotelsRoute
@@ -189,6 +205,7 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
   '/dashboard/catalog': typeof DashboardCatalogRoute
   '/dashboard/contacts': typeof DashboardContactsRoute
@@ -197,6 +214,7 @@ export interface FileRoutesById {
   '/dashboard/inbox': typeof DashboardInboxRoute
   '/dashboard/integrations': typeof DashboardIntegrationsRoute
   '/dashboard/knowledge': typeof DashboardKnowledgeRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/for/clinics': typeof ForClinicsRoute
   '/for/hotels': typeof ForHotelsRoute
@@ -214,6 +232,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/terms'
+    | '/dashboard/billing'
     | '/dashboard/bookings'
     | '/dashboard/catalog'
     | '/dashboard/contacts'
@@ -222,6 +241,7 @@ export interface FileRouteTypes {
     | '/dashboard/inbox'
     | '/dashboard/integrations'
     | '/dashboard/knowledge'
+    | '/dashboard/settings'
     | '/dashboard/whatsapp'
     | '/for/clinics'
     | '/for/hotels'
@@ -237,6 +257,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/terms'
+    | '/dashboard/billing'
     | '/dashboard/bookings'
     | '/dashboard/catalog'
     | '/dashboard/contacts'
@@ -244,6 +265,7 @@ export interface FileRouteTypes {
     | '/dashboard/inbox'
     | '/dashboard/integrations'
     | '/dashboard/knowledge'
+    | '/dashboard/settings'
     | '/dashboard/whatsapp'
     | '/for/clinics'
     | '/for/hotels'
@@ -259,6 +281,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/terms'
+    | '/dashboard/billing'
     | '/dashboard/bookings'
     | '/dashboard/catalog'
     | '/dashboard/contacts'
@@ -267,6 +290,7 @@ export interface FileRouteTypes {
     | '/dashboard/inbox'
     | '/dashboard/integrations'
     | '/dashboard/knowledge'
+    | '/dashboard/settings'
     | '/dashboard/whatsapp'
     | '/for/clinics'
     | '/for/hotels'
@@ -283,6 +307,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
+  DashboardBillingRoute: typeof DashboardBillingRoute
   DashboardBookingsRoute: typeof DashboardBookingsRoute
   DashboardCatalogRoute: typeof DashboardCatalogRoute
   DashboardContactsRoute: typeof DashboardContactsRoute
@@ -291,6 +316,7 @@ export interface RootRouteChildren {
   DashboardInboxRoute: typeof DashboardInboxRoute
   DashboardIntegrationsRoute: typeof DashboardIntegrationsRoute
   DashboardKnowledgeRoute: typeof DashboardKnowledgeRoute
+  DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardWhatsappRoute: typeof DashboardWhatsappRoute
   ForClinicsRoute: typeof ForClinicsRoute
   ForHotelsRoute: typeof ForHotelsRoute
@@ -370,6 +396,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardWhatsappRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/settings': {
+      id: '/dashboard/settings'
+      path: '/dashboard/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof DashboardSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/knowledge': {
       id: '/dashboard/knowledge'
       path: '/dashboard/knowledge'
@@ -426,6 +459,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardBookingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/billing': {
+      id: '/dashboard/billing'
+      path: '/dashboard/billing'
+      fullPath: '/dashboard/billing'
+      preLoaderRoute: typeof DashboardBillingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/ema/': {
       id: '/dashboard/ema/'
       path: '/'
@@ -472,6 +512,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
+  DashboardBillingRoute: DashboardBillingRoute,
   DashboardBookingsRoute: DashboardBookingsRoute,
   DashboardCatalogRoute: DashboardCatalogRoute,
   DashboardContactsRoute: DashboardContactsRoute,
@@ -480,6 +521,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardInboxRoute: DashboardInboxRoute,
   DashboardIntegrationsRoute: DashboardIntegrationsRoute,
   DashboardKnowledgeRoute: DashboardKnowledgeRoute,
+  DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardWhatsappRoute: DashboardWhatsappRoute,
   ForClinicsRoute: ForClinicsRoute,
   ForHotelsRoute: ForHotelsRoute,

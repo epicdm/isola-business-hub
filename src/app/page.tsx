@@ -74,8 +74,9 @@ export default function HomePage() {
       <section className="relative overflow-hidden bg-hero">
         <div className="absolute inset-0 grid-bg opacity-40" />
         <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-6 py-20 lg:grid-cols-[1.1fr_1fr] lg:py-28">
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+          <motion.div initial={false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <Badge variant="outline" className="mb-6 border-primary/30 bg-primary/10 text-primary">
+
               <Sparkles className="mr-1.5 h-3 w-3" />
               One stack. One bill. One vendor.
             </Badge>

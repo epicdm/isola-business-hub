@@ -1822,38 +1822,6 @@ export default function InboxPage() {
         </SheetContent>
       </Sheet>
 
-      {/* Reject + teach Ema dialog */}
-      <Dialog open={!!rejectingDraft} onOpenChange={(o) => !o && setRejectingDraft(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><BookOpen className="h-4 w-4 text-amber-400" /> Teach Ema</DialogTitle>
-            <DialogDescription>
-              Tell Ema what was wrong with this draft so future replies improve.
-            </DialogDescription>
-          </DialogHeader>
-          <Textarea
-            rows={4}
-            value={rejectNote}
-            onChange={(e) => setRejectNote(e.target.value)}
-            placeholder="E.g., 'Don't quote prices for private dinners — escalate to Marcus instead.'"
-          />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRejectingDraft(null)}>Cancel</Button>
-            <Button
-              className="bg-amber-500 text-amber-950 hover:bg-amber-400"
-              onClick={() => {
-                if (rejectingDraft) {
-                  setPendingQueue((p) => p.filter((x) => x.id !== rejectingDraft.id));
-                }
-                setRejectingDraft(null);
-                toast.success("Got it — Ema will remember this");
-              }}
-            >
-              <BookOpen className="h-3.5 w-3.5" /> Save & reject
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </DashboardLayout>
   );
 }

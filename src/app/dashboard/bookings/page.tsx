@@ -28,7 +28,9 @@ const channelIcon: Record<Channel, typeof Phone> = {
   voice: PhoneCall,
   instagram: Instagram,
   messenger: MessageCircle,
+  facebook: MessageCircle,
 };
+
 
 const statusStyle: Record<BookingStatus, string> = {
   confirmed: "border-success/30 bg-success/10 text-success",

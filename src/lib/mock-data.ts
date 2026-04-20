@@ -265,7 +265,11 @@ export const emaReports = [
   },
 ];
 
-export type Channel = "whatsapp" | "voice" | "instagram" | "messenger";
+export type Channel = "whatsapp" | "voice" | "instagram" | "messenger" | "facebook";
+
+/** Sub-type for channels that can carry both private DMs and public comments. */
+export type ChannelSubType = "dm" | "comment" | "page_comment" | "story";
+
 
 // ---------- Inbox ----------
 
@@ -461,7 +465,122 @@ export const conversations = [
       { id: 7, from: "customer" as const, text: "🙌", time: "7:15 PM" },
     ],
   },
+  // ---------- Turn 10 · Section 1 — IG + FB conversations ----------
+  {
+    id: "c7",
+    channel: "instagram" as Channel,
+    subType: "dm" as ChannelSubType,
+    customer: "Sarah Mitchell",
+    handle: "@sarahm_travels",
+    preview: "paid!",
+    time: "3:45 PM",
+    unread: 0,
+    status: "ai" as const,
+    messages: [
+      { id: 1, from: "customer" as const, text: "hey saw your post about the ocean suite, is it free dec 22-26?", time: "3:20 PM" },
+      { id: 2, from: "ai" as const, text: "Hi Sarah! Let me check — yes, the Ocean Suite is open Dec 22-26 (4 nights).", time: "3:21 PM" },
+      {
+        id: "card-catalog-c7",
+        from: "ai" as const,
+        text: "",
+        time: "3:21 PM",
+        card: {
+          kind: "catalog" as const,
+          itemId: "ocean-suite",
+          name: "Ocean Suite",
+          price: 1200,
+          desc: "Private balcony, king bed, ocean view, breakfast incl.",
+          emoji: "🌊",
+          tapped: true,
+        },
+      },
+      { id: 3, from: "customer" as const, text: "how do i book", time: "3:28 PM" },
+      { id: 4, from: "ai" as const, text: "I'll send a payment link for the first night as a deposit (EC$1,200). Balance due at check-in.", time: "3:29 PM" },
+      {
+        id: "card-payment-c7-pending",
+        from: "ai" as const,
+        text: "",
+        time: "3:29 PM",
+        card: {
+          kind: "payment" as const,
+          amount: 1200,
+          description: "Ocean Suite deposit · Dec 22-26",
+          status: "pending" as const,
+          provider: "Fiserv",
+        },
+      },
+      { id: 5, from: "customer" as const, text: "paid!", time: "3:38 PM" },
+      {
+        id: "card-booking-c7",
+        from: "ai" as const,
+        text: "",
+        time: "3:39 PM",
+        card: {
+          kind: "booking" as const,
+          service: "Ocean Suite",
+          date: "Dec 22-26",
+          time: "Check-in 3pm",
+          party: 2,
+          notes: "4 nights · deposit EC$1,200 paid",
+        },
+      },
+    ],
+  },
+  {
+    id: "c8",
+    channel: "instagram" as Channel,
+    subType: "comment" as ChannelSubType,
+    parentPost: "Tonight's special — lobster thermidor",
+    customer: "Andre Joseph",
+    handle: "@andrejxo",
+    preview: "EC$145/person tonight. DM us to reserve 🦞",
+    time: "7:15 PM",
+    unread: 0,
+    status: "ai" as const,
+    messages: [
+      { id: 1, from: "customer" as const, text: "how much?", time: "7:12 PM" },
+      { id: 2, from: "ai" as const, text: "Hi Andre! EC$145/person tonight. DM us to reserve 🦞", time: "7:13 PM" },
+      { id: 3, from: "ai" as const, text: "Hey Andre — saw you asked about tonight's lobster thermidor. EC$145/person, want me to hold a table?", time: "7:15 PM" },
+    ],
+  },
+  {
+    id: "c9",
+    channel: "messenger" as Channel,
+    subType: "dm" as ChannelSubType,
+    customer: "Monica Charles",
+    handle: "Monica Charles",
+    preview: "Wed 10am · Thu 2pm · Fri 9am · Fri 3pm",
+    time: "10:18 AM",
+    unread: 1,
+    status: "ai" as const,
+    messages: [
+      { id: 1, from: "customer" as const, text: "Hi, I need to book my son for a check-up this week", time: "10:05 AM" },
+      { id: 2, from: "ai" as const, text: "Hi Monica! Happy to help. Is this with Dr. Alvarez?", time: "10:06 AM" },
+      { id: 3, from: "customer" as const, text: "yes", time: "10:14 AM" },
+      { id: 4, from: "ai" as const, text: "Dr. Alvarez has these slots open:", time: "10:15 AM" },
+      { id: 5, from: "ai" as const, text: "Wed 10am · Thu 2pm · Fri 9am · Fri 3pm", time: "10:16 AM" },
+      { id: 6, from: "ai" as const, text: "Which works best? Or I can text more options.", time: "10:18 AM" },
+    ],
+  },
+  {
+    id: "c10",
+    channel: "facebook" as Channel,
+    subType: "page_comment" as ChannelSubType,
+    parentPost: "We're closed tomorrow for staff training",
+    customer: "Kareem Louis",
+    handle: "@kareeml_84",
+    preview: "Hi Kareem — we've sent you a DM to help sort that out.",
+    time: "11:43 AM",
+    unread: 0,
+    status: "ai" as const,
+    messages: [
+      { id: 1, from: "customer" as const, text: "what about my reservation at 7 tomorrow", time: "11:43 AM" },
+      { id: 2, from: "ai" as const, text: "Hi Kareem — we've sent you a DM to help sort that out.", time: "11:43 AM" },
+      { id: 3, from: "ai" as const, text: "Hi Kareem — I see you have a 7pm booking tomorrow (party of 3). Want me to move it to Thursday 7pm or Saturday 7pm? Or cancel with no fee.", time: "11:44 AM" },
+    ],
+  },
 ];
+
 
 // ---------- Bookings ----------
 
@@ -1246,9 +1365,11 @@ export const tenantLabels: LabelDef[] = [
   { id: "lb-complaint", name: "Complaint", color: "rose" },
   { id: "lb-booking", name: "Booking", color: "emerald" },
   { id: "lb-lead", name: "Lead", color: "sky" },
+  { id: "lb-customer", name: "Customer", color: "fuchsia" },
   { id: "lb-urgent", name: "Urgent", color: "orange" },
   { id: "lb-support", name: "Support", color: "amber" },
 ];
+
 
 // ---------- Conversation status + per-conversation labels (Turn 8 · Feature 1) ----------
 // Mock storage for the editable status/labels/last-customer-message-age, keyed by conversation id.
@@ -1273,7 +1394,13 @@ export const conversationMeta: Record<string, ConversationMeta> = {
   c4: { status: "open", labels: ["lb-support"], hoursSinceLastInbound: 26 },
   c5: { status: "open", labels: ["lb-lead"], hoursSinceLastInbound: 0.5 },
   c6: { status: "open", labels: ["lb-vip", "lb-booking"], hoursSinceLastInbound: 0.08 },
+  // Turn 10 · Section 1 — IG / FB seeds
+  c7: { status: "open", labels: ["lb-lead"], hoursSinceLastInbound: 0.12 },
+  c8: { status: "resolved", labels: [], hoursSinceLastInbound: 0.05 },
+  c9: { status: "pending", labels: ["lb-customer"], hoursSinceLastInbound: 0.3 },
+  c10: { status: "resolved", labels: ["lb-support"], hoursSinceLastInbound: 0.4 },
 };
+
 
 export const statusMeta: Record<
   ConversationStatus,

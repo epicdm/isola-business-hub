@@ -29,7 +29,9 @@ const channelIcon: Record<Channel, typeof Phone> = {
   voice: PhoneCall,
   instagram: Instagram,
   messenger: MessageCircle,
+  facebook: MessageCircle,
 };
+
 
 const tagStyle: Record<string, string> = {
   vip: "border-ema/30 bg-ema/10 text-ema",

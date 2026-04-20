@@ -5,6 +5,7 @@ import {
   Phone,
   PhoneCall,
   Instagram,
+  Facebook,
   MessageCircle,
   Search,
   Send,
@@ -128,6 +129,7 @@ const channelMeta: Record<Channel, { icon: typeof Phone; label: string; color: s
   voice: { icon: PhoneCall, label: "Voice", color: "text-primary bg-primary/15" },
   instagram: { icon: Instagram, label: "Instagram", color: "text-ema bg-ema/15" },
   messenger: { icon: MessageCircle, label: "Messenger", color: "text-chart-4 bg-chart-4/15" },
+  facebook: { icon: Facebook, label: "Facebook", color: "text-chart-4 bg-chart-4/15" },
 };
 
 const tabs: Array<{ key: "all" | Channel; label: string }> = [
@@ -136,7 +138,9 @@ const tabs: Array<{ key: "all" | Channel; label: string }> = [
   { key: "voice", label: "Voice" },
   { key: "instagram", label: "Instagram" },
   { key: "messenger", label: "Messenger" },
+  { key: "facebook", label: "Facebook" },
 ];
+
 
 // Mock — which agent handles which conversation. Read-only pill in header.
 const conversationAgent: Record<string, string> = {
@@ -146,7 +150,12 @@ const conversationAgent: Record<string, string> = {
   c4: "ag-receptionist",
   c5: "ag-aftersales",
   c6: "ag-receptionist",
+  c7: "ag-receptionist",
+  c8: "ag-receptionist",
+  c9: "ag-receptionist",
+  c10: "ag-receptionist",
 };
+
 
 type Qualification = "Lead" | "Customer" | "Blocked" | "Unknown";
 
@@ -677,9 +686,17 @@ export default function InboxPage() {
                           : "border-l-transparent hover:bg-accent/20"
                       }`}
                     >
-                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${channelMeta[c.channel].color}`}>
-                        <Icon className="h-4 w-4" />
+                      <div className="relative">
+                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${channelMeta[c.channel].color}`}>
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        {("subType" in c && (c.subType === "comment" || c.subType === "page_comment")) && (
+                          <span className="absolute -bottom-1 -right-1 inline-flex items-center rounded-full border border-border/60 bg-background px-1 py-0 text-[8px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            cmt
+                          </span>
+                        )}
                       </div>
+
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline justify-between gap-2">
                           <span className="inline-flex min-w-0 items-center gap-1.5">

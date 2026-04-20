@@ -425,6 +425,76 @@ export default function SettingsPage() {
             </Card>
           </TabsContent>
 
+          {/* LABELS */}
+          <TabsContent value="labels">
+            <Card className="border-border/40 bg-card/40 p-6">
+              <div className="mb-5 flex items-center justify-between">
+                <div>
+                  <h3 className="font-display text-base font-semibold">Labels</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Tag conversations in the inbox. Changes appear instantly.
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  className="bg-gradient-primary text-primary-foreground hover:opacity-90"
+                  onClick={() => {
+                    setEditingLabel(null);
+                    setLabelDraftName("");
+                    setLabelDraftColor("emerald");
+                    setLabelDialogOpen(true);
+                  }}
+                >
+                  <Plus className="h-3.5 w-3.5" /> Add label
+                </Button>
+              </div>
+
+              {labels.length === 0 && (
+                <div className="rounded-md border border-dashed border-border/60 p-8 text-center text-sm text-muted-foreground">
+                  No labels yet. Create one to get started.
+                </div>
+              )}
+
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {labels.map((l) => {
+                  const cls = labelColorClasses[l.color];
+                  return (
+                    <div
+                      key={l.id}
+                      className="flex items-center justify-between gap-2 rounded-lg border border-border/40 bg-background/30 p-3"
+                    >
+                      <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${cls.chip}`}>
+                        <span className={`h-2 w-2 rounded-full ${cls.dot}`} />
+                        {l.name}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          aria-label={`Edit ${l.name}`}
+                          className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                          onClick={() => {
+                            setEditingLabel(l);
+                            setLabelDraftName(l.name);
+                            setLabelDraftColor(l.color);
+                            setLabelDialogOpen(true);
+                          }}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          aria-label={`Delete ${l.name}`}
+                          className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => setConfirmDeleteLabel(l)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          </TabsContent>
+
           {/* ACCOUNT */}
           <TabsContent value="account">
             <Card className="border-border/40 bg-card/40 p-6">

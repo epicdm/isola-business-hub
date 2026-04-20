@@ -1,11 +1,25 @@
 import { useEffect, useRef, useState } from "react";
-import { Sparkles, X, Send, ExternalLink } from "lucide-react";
+import { Sparkles, X, Send, ExternalLink, Plug } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { emaInitialMessages, emaQuickActions } from "@/lib/mock-data";
+import { useOdooConnection, requiresOdoo } from "@/hooks/use-odoo-connection";
 
-type Msg = { id: string; role: "ema" | "owner"; content: string; timestamp: string };
+type Msg = {
+  id: string;
+  role: "ema" | "owner";
+  content: string;
+  timestamp: string;
+  cta?: { label: string; to: string };
+};
 
 const STORAGE_KEY = "isola.ema.widget.open";
 
@@ -19,16 +33,17 @@ function fakeEmaReply(msg: string): string {
 
 export default function EmaChatWidget() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Msg[]>(emaInitialMessages);
+  const [messages, setMessages] = useState<Msg[]>(emaInitialMessages as Msg[]);
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { connected } = useOdooConnection();
+  const odooReady = connected === true;
 
   useEffect(() => {
     const v = localStorage.getItem(STORAGE_KEY);
     if (v === "1") setOpen(true);
   }, []);
 
-  // Listen for "Ask Ema" requests dispatched from cards / alerts
   useEffect(() => {
     const handler = (e: Event) => {
       const ctx = (e as CustomEvent<{ cardTitle: string; summary: string; prompt: string }>).detail;
@@ -67,6 +82,28 @@ export default function EmaChatWidget() {
     ]);
     setInput("");
     setTimeout(() => {
+      const needsOdoo = !odooReady && requiresOdoo(text);
+      if (needsOdoo) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `e${Date.now()}`,
+            role: "ema",
+            content:
+              "I'd love to help with that — I just need Odoo connected so I can look at your actual invoices, inventory, or expenses. Want me to walk you to setup?",
+            timestamp: now,
+            cta: { label: "Connect Odoo →", to: "/onboarding?step=6&resume=1" },
+          },
+          {
+            id: `e2${Date.now()}`,
+            role: "ema",
+            content:
+              "Or if this is something I can answer without Odoo, rephrase it like \"show me today's conversations\" and I'll do that.",
+            timestamp: now,
+          },
+        ]);
+        return;
+      }
       setMessages((prev) => [
         ...prev,
         { id: `e${Date.now()}`, role: "ema", content: fakeEmaReply(text), timestamp: now },
@@ -105,8 +142,27 @@ export default function EmaChatWidget() {
           >
             <header className="flex items-center justify-between border-b border-border bg-gradient-ema px-4 py-3">
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-background/20 backdrop-blur">
+                <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-background/20 backdrop-blur">
                   <Sparkles className="h-4 w-4 text-ema-foreground" />
+                  {connected !== null && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span
+                            className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-ema ${
+                              odooReady ? "bg-success" : "bg-warning"
+                            }`}
+                            aria-label={odooReady ? "Odoo connected" : "Odoo not connected"}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="text-xs">
+                          {odooReady
+                            ? "Odoo connected — full insights available"
+                            : "Odoo not connected — some answers are limited"}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-ema-foreground">Ema</div>
@@ -129,6 +185,15 @@ export default function EmaChatWidget() {
                     }`}
                   >
                     <div>{m.content}</div>
+                    {m.cta && (
+                      <Link
+                        to={m.cta.to as "/onboarding"}
+                        search={{ step: 6, resume: 1, returnTo: typeof window !== "undefined" ? window.location.pathname : "/dashboard" }}
+                        className="mt-2 inline-flex items-center gap-1 rounded-md bg-ema px-2.5 py-1 text-[11px] font-semibold text-ema-foreground hover:opacity-90"
+                      >
+                        <Plug className="h-3 w-3" /> {m.cta.label}
+                      </Link>
+                    )}
                     <div className={`mt-1 text-[10px] ${m.role === "owner" ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                       {m.timestamp}
                     </div>

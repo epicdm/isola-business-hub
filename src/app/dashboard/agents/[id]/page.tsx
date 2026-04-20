@@ -26,6 +26,7 @@ import {
   MessageSquare,
   ArrowUpRight,
   Activity as ActivityIcon,
+  ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../../layout";

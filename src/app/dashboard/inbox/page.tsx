@@ -1306,7 +1306,7 @@ export default function InboxPage() {
                       <Input
                         value={draft}
                         onChange={(e) => setDraft(e.target.value)}
-                        placeholder="Private note — customer won't see this"
+                        placeholder={rejectingDraft ? "Tell Ema why this reply was wrong" : "Private note — customer won't see this"}
                         className="border-0 bg-transparent text-amber-50 placeholder:text-amber-200/50 focus-visible:ring-0"
                       />
                       <Button
@@ -1336,6 +1336,10 @@ export default function InboxPage() {
                             toast.success(
                               res.teachAi ? "Note saved · AI will remember" : "Private note saved",
                             );
+                            if (rejectingDraft) {
+                              setPendingQueue((p) => p.filter((x) => x.id !== rejectingDraft.id));
+                              setRejectingDraft(null);
+                            }
                             setDraft("");
                           } catch {
                             toast.error("Couldn't save note");

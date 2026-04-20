@@ -11,19 +11,14 @@ import {
   MessageSquare,
   AlertCircle,
   DollarSign,
+  ChevronDown,
 } from "lucide-react";
 import DashboardLayout from "../../layout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { emaReports } from "@/lib/mock-data";
+import { cn } from "@/lib/utils";
 
 type Filter = "all" | "daily" | "weekly" | "campaign";
 
@@ -40,14 +35,44 @@ const typeMeta = {
   campaign: { label: "Campaign", icon: Megaphone, color: "text-ema bg-ema/15" },
 };
 
+// Top topics chip pool — purely visual, deterministic per id.
+function topicsFor(id: string): string[] {
+  const pool = [
+    "reservations", "menu questions", "hours", "directions", "private dinners",
+    "vegetarian options", "dietary restrictions", "anniversary", "birthday",
+    "deposits", "tour groups", "kids menu", "VIP table", "wine list",
+  ];
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  const out: string[] = [];
+  while (out.length < 5) {
+    h = (h * 1664525 + 1013904223) >>> 0;
+    const t = pool[h % pool.length];
+    if (!out.includes(t)) out.push(t);
+  }
+  return out;
+}
+
+// Anomalies — derived from metrics. Returns 0-2 short strings.
+function anomaliesFor(r: (typeof emaReports)[number]): string[] {
+  const out: string[] = [];
+  if (r.metrics.escalations >= 2) {
+    out.push(`${r.metrics.escalations} escalations still open`);
+  }
+  if (r.metrics.bookings === 0) {
+    out.push("No bookings captured");
+  }
+  if (r.type === "campaign" && r.metrics.messages > 50 && r.metrics.bookings / r.metrics.messages < 0.2) {
+    out.push("Conversion below benchmark");
+  }
+  return out;
+}
+
 export default function EmaReportsPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [openId, setOpenId] = useState<string | null>(null);
 
   const visible = emaReports.filter((r) => filter === "all" || r.type === filter);
-  const active = emaReports.find((r) => r.id === openId);
-  const activeMeta = active ? typeMeta[active.type] : null;
-  const ActiveIcon = activeMeta?.icon ?? FileText;
 
   return (
     <DashboardLayout currentPath="/dashboard/ema/reports">
@@ -92,160 +117,156 @@ export default function EmaReportsPage() {
           })}
         </div>
 
-        {/* Report cards */}
-        <div className="grid gap-4 md:grid-cols-2">
+        {/* Report cards — single column, expand inline */}
+        <div className="space-y-3">
           {visible.length === 0 && (
-            <div className="col-span-full py-16 text-center text-sm text-muted-foreground">
+            <div className="py-16 text-center text-sm text-muted-foreground">
               No reports match this filter yet.
             </div>
           )}
           {visible.map((r) => {
             const meta = typeMeta[r.type];
             const TypeIcon = meta.icon;
+            const expanded = openId === r.id;
+            const isWeekly = r.type === "weekly";
+            const topics = topicsFor(r.id);
+            const anomalies = anomaliesFor(r);
             return (
               <Card
                 key={r.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => setOpenId(r.id)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setOpenId(r.id);
-                  }
-                }}
-                className="group flex cursor-pointer flex-col gap-4 border-border/40 bg-card/60 p-6 transition-all hover:border-ema/30 hover:shadow-ema focus:outline-none focus-visible:ring-2 focus-visible:ring-ema/40"
+                className={cn(
+                  "overflow-hidden bg-card/60 transition-all",
+                  isWeekly ? "border-2 border-chart-2/30" : "border border-border/40",
+                  expanded && "shadow-ema",
+                )}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${meta.color}`}>
-                      <TypeIcon className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <Badge variant="outline" className="mb-1 border-border/60 bg-background/40 text-[10px] uppercase tracking-wider text-muted-foreground">
+                {/* Collapsed/header row */}
+                <button
+                  onClick={() => setOpenId(expanded ? null : r.id)}
+                  aria-expanded={expanded}
+                  className="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-accent/20"
+                >
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${meta.color}`}>
+                    <TypeIcon className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className="border-border/60 bg-background/40 text-[10px] uppercase tracking-wider text-muted-foreground"
+                      >
                         {meta.label}
                       </Badge>
-                      <div className="text-xs text-muted-foreground">{r.date}</div>
+                      {isWeekly && (
+                        <Badge className="bg-chart-2/15 text-[10px] uppercase tracking-wider text-chart-2 hover:bg-chart-2/20">
+                          Weekly
+                        </Badge>
+                      )}
+                      <span className="text-xs text-muted-foreground">{r.date}</span>
+                    </div>
+                    <div className="mt-1 flex items-baseline gap-2">
+                      <h3 className="font-display text-base font-semibold">{r.title}</h3>
+                    </div>
+                    <p className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">{r.summary}</p>
+                  </div>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
+                      expanded && "rotate-180",
+                    )}
+                  />
+                </button>
+
+                {/* Expanded body */}
+                {expanded && (
+                  <div className="space-y-4 border-t border-border/40 px-5 py-5">
+                    {/* Ema's voice block — canonical digest body */}
+                    <div className="rounded-lg border border-ema/20 bg-ema/5 p-4 text-sm leading-relaxed">
+                      <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-ema">
+                        <Sparkles className="h-3 w-3" /> Ema's summary
+                      </div>
+                      <DigestBody report={r} />
+                    </div>
+
+                    {/* Stat breakdown row */}
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      <Stat icon={MessageSquare} label="Messages" value={r.metrics.messages.toString()} />
+                      <Stat icon={Calendar} label="Bookings" value={r.metrics.bookings.toString()} />
+                      <Stat icon={AlertCircle} label="Escalations" value={r.metrics.escalations.toString()} />
+                      <Stat icon={DollarSign} label="Revenue" value={`EC$${r.metrics.revenue.toLocaleString()}`} />
+                    </div>
+
+                    {/* Anomalies */}
+                    {anomalies.length > 0 && (
+                      <div>
+                        <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          Anomalies
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {anomalies.map((a, i) => (
+                            <span
+                              key={i}
+                              className="inline-flex items-center gap-1 rounded-full border border-destructive/30 bg-destructive/10 px-2.5 py-0.5 text-[11px] font-medium text-destructive"
+                            >
+                              <AlertCircle className="h-2.5 w-2.5" />
+                              {a}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Top topics */}
+                    <div>
+                      <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        Top conversation topics
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {topics.map((t) => (
+                          <span
+                            key={t}
+                            className="rounded-full border border-border/60 bg-background/40 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground"
+                          >
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Highlights */}
+                    {r.highlights.length > 0 && (
+                      <div>
+                        <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          Highlights
+                        </div>
+                        <ul className="space-y-1.5">
+                          {r.highlights.map((h, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm">
+                              <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-ema" />
+                              <span className="text-muted-foreground">{h}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    <div className="flex justify-end gap-2 border-t border-border/40 pt-3">
+                      <Button variant="outline" size="sm">
+                        <Download className="h-3.5 w-3.5" /> Download PDF
+                      </Button>
                     </div>
                   </div>
-                  <Sparkles className="h-3.5 w-3.5 shrink-0 text-ema opacity-50 transition-opacity group-hover:opacity-100" />
-                </div>
-
-                <div>
-                  <h3 className="font-display text-lg font-semibold">{r.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{r.summary}</p>
-                </div>
-
-                {/* Metric strip */}
-                <div className="grid grid-cols-4 gap-2 rounded-lg border border-border/40 bg-background/40 p-3">
-                  <Metric icon={MessageSquare} label="Msgs" value={r.metrics.messages.toString()} />
-                  <Metric icon={Calendar} label="Bookings" value={r.metrics.bookings.toString()} />
-                  <Metric icon={DollarSign} label="Revenue" value={`EC$${r.metrics.revenue.toLocaleString()}`} />
-                  <Metric icon={AlertCircle} label="Escal." value={r.metrics.escalations.toString()} />
-                </div>
-
-                {/* Highlights */}
-                <ul className="space-y-1.5 text-sm">
-                  {r.highlights.map((h, i) => (
-                    <li key={i} className="flex items-start gap-2 text-muted-foreground">
-                      <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-ema" />
-                      <span>{h}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="mt-auto flex items-center justify-between border-t border-border/40 pt-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground hover:text-foreground"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenId(r.id);
-                    }}
-                  >
-                    View full report
-                  </Button>
-                  <button
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-muted-foreground transition-colors hover:text-foreground"
-                    aria-label="Download report"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                  </button>
-                </div>
+                )}
               </Card>
             );
           })}
         </div>
       </div>
-
-      {/* Full report dialog */}
-      <Dialog open={!!openId} onOpenChange={(o) => !o && setOpenId(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-          {active && activeMeta && (
-            <>
-              <DialogHeader>
-                <div className="flex items-center gap-3">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${activeMeta.color}`}>
-                    <ActiveIcon className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1">
-                    <Badge variant="outline" className="mb-1.5 border-border/60 bg-background/40 text-[10px] uppercase tracking-wider text-muted-foreground">
-                      {activeMeta.label}
-                    </Badge>
-                    <DialogTitle className="font-display text-xl">{active.title}</DialogTitle>
-                    <DialogDescription className="mt-0.5">{active.date}</DialogDescription>
-                  </div>
-                </div>
-              </DialogHeader>
-
-              <div className="mt-2 rounded-lg border border-ema/20 bg-ema/5 p-4 text-sm leading-relaxed">
-                <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-ema">
-                  <Sparkles className="h-3 w-3" /> Ema's summary
-                </div>
-                {active.summary}
-              </div>
-
-              <div>
-                <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Stats breakdown</h4>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <StatTile icon={MessageSquare} label="Messages" value={active.metrics.messages.toString()} />
-                  <StatTile icon={Calendar} label="Bookings" value={active.metrics.bookings.toString()} />
-                  <StatTile icon={DollarSign} label="Revenue" value={`EC$${active.metrics.revenue.toLocaleString()}`} />
-                  <StatTile icon={AlertCircle} label="Escalations" value={active.metrics.escalations.toString()} />
-                </div>
-              </div>
-
-              <div>
-                <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {active.type === "campaign" ? "Highlights" : "Anomalies & highlights"}
-                </h4>
-                <ul className="space-y-2">
-                  {active.highlights.map((h, i) => (
-                    <li key={i} className="flex items-start gap-2 rounded-md border border-border/40 bg-card/40 p-2.5 text-sm">
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-ema" />
-                      <span>{h}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="flex justify-end gap-2 border-t border-border/40 pt-3">
-                <Button variant="outline" size="sm">
-                  <Download className="h-3.5 w-3.5" /> Download PDF
-                </Button>
-                <Button size="sm" onClick={() => setOpenId(null)}>Close</Button>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
     </DashboardLayout>
   );
 }
 
-function StatTile({
+function Stat({
   icon: Icon,
   label,
   value,
@@ -264,22 +285,50 @@ function StatTile({
   );
 }
 
-function Metric({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof MessageSquare;
-  label: string;
-  value: string;
-}) {
+// Builds the canonical digest body string with light markdown rendering for **bold**.
+function DigestBody({ report: r }: { report: (typeof emaReports)[number] }) {
+  const aiHandled = Math.max(0, Math.round(r.metrics.messages * 0.85));
+  const humanHandled = Math.max(0, r.metrics.messages - aiHandled);
+  const paid = Math.round(r.metrics.bookings * 0.6);
+  const topics = topicsFor(r.id);
+  const topTopic = topics[0];
+  const topTopicCount = 3 + (r.metrics.messages % 7);
+
+  let anomalyLine = "Everything's on track.";
+  if (r.metrics.escalations >= 2) {
+    anomalyLine = `⚠️ You've got ${r.metrics.escalations} escalations older than 24h — oldest is from Marcus Phillip.`;
+  } else if (r.metrics.bookings === 0) {
+    anomalyLine = `⚠️ Bookings down 100% vs last week.`;
+  }
+
+  const lines: Array<{ t: string }> = [
+    { t: `📅 ${r.date} — here's your day.` },
+    { t: "" },
+    { t: `💬 **${r.metrics.messages}** messages handled (**${aiHandled}** by AI, **${humanHandled}** by you)` },
+    { t: `📅 **${r.metrics.bookings}** bookings captured` },
+    { t: `⚠️ **${r.metrics.escalations}** conversations still waiting for you` },
+    { t: `💰 **EC$${r.metrics.revenue.toLocaleString()}** in payment links sent (**${paid}** paid)` },
+    { t: "" },
+    { t: `**Top topic:** '${topTopic}' (${topTopicCount} mentions)` },
+    { t: "" },
+    { t: anomalyLine },
+    { t: "" },
+    { t: "Need the long version? Reply 'details'." },
+  ];
+
   return (
-    <div className="flex flex-col gap-0.5">
-      <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-        <Icon className="h-2.5 w-2.5" />
-        {label}
-      </div>
-      <div className="text-sm font-semibold">{value}</div>
+    <div className="space-y-1">
+      {lines.map((line, i) =>
+        line.t === "" ? (
+          <div key={i} className="h-1" />
+        ) : (
+          <p key={i} dangerouslySetInnerHTML={{ __html: renderBold(line.t) }} />
+        ),
+      )}
     </div>
   );
+}
+
+function renderBold(s: string): string {
+  return s.replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground">$1</strong>');
 }

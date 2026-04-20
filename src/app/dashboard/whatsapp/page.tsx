@@ -1,19 +1,36 @@
 "use client";
 
 import { useState } from "react";
-import { Phone, CheckCircle2, AlertTriangle, Loader2, RefreshCw, Sparkles, PhoneCall, Info } from "lucide-react";
+import {
+  Phone,
+  CheckCircle2,
+  AlertTriangle,
+  Loader2,
+  RefreshCw,
+  Sparkles,
+  Info,
+  Send,
+  Crown,
+  Pause,
+} from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { whatsappLines, type WhatsAppLineStatus } from "@/lib/mock-data";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { agents, whatsappLines, type WhatsAppLineStatus, type AgentStatus } from "@/lib/mock-data";
 
 // Tiny generated QR-like grid (deterministic from string) — pure CSS, no deps.
-function MockQR({ seed, size = 132 }: { seed: string; size?: number }) {
+function MockQR({ seed, size = 110 }: { seed: string; size?: number }) {
   const cells = 21;
-  // Deterministic pseudo-random from seed
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
   const grid: boolean[] = [];
@@ -21,7 +38,6 @@ function MockQR({ seed, size = 132 }: { seed: string; size?: number }) {
     h = (h * 1103515245 + 12345) >>> 0;
     grid.push((h & 1) === 1);
   }
-  // Force the three finder boxes (top-left, top-right, bottom-left)
   const setBlock = (cx: number, cy: number) => {
     for (let y = 0; y < 7; y++) {
       for (let x = 0; x < 7; x++) {
@@ -86,15 +102,36 @@ function StatusBadge({ status }: { status: WhatsAppLineStatus }) {
   );
 }
 
-export default function WhatsAppPage() {
-  const [callingEnabled, setCallingEnabled] = useState(true);
-  const [pinging, setPinging] = useState(false);
+function PausedBadge() {
+  return (
+    <Badge className="bg-muted text-muted-foreground hover:bg-muted/80">
+      <Pause className="h-3 w-3" /> Paused
+    </Badge>
+  );
+}
 
-  const handlePing = () => {
-    setPinging(true);
-    toast.success("Ping sent to Ema", { description: "She'll reply on WhatsApp shortly." });
-    setTimeout(() => setPinging(false), 1600);
+// Map agents → fake DID phones (1-767-818-XXXX pool, deterministic)
+function didFor(agentId: string): { display: string; href: string } {
+  let h = 0;
+  for (let i = 0; i < agentId.length; i++) h = (h * 31 + agentId.charCodeAt(i)) >>> 0;
+  const last4 = String(1000 + (h % 9000)).padStart(4, "0");
+  return {
+    display: `+1 767-818-${last4}`,
+    href: `https://wa.me/1767818${last4}?text=test`,
   };
+}
+
+function agentStatusToLine(s: AgentStatus): WhatsAppLineStatus | "paused" {
+  if (s === "active") return "active";
+  if (s === "error") return "failed";
+  return "paused";
+}
+
+export default function WhatsAppPage() {
+  const [zoomedQr, setZoomedQr] = useState<{ seed: string; title: string } | null>(null);
+  const [voiceState, setVoiceState] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(agents.map((a) => [a.id, a.channels.includes("voice")])),
+  );
 
   return (
     <DashboardLayout currentPath="/dashboard/whatsapp">
@@ -107,7 +144,7 @@ export default function WhatsAppPage() {
             <div>
               <h1 className="font-display text-2xl font-bold leading-tight">WhatsApp</h1>
               <p className="text-sm text-muted-foreground">
-                Your two dedicated lines: customers and Ema.
+                Every agent has its own dedicated number. Ema gets her own private line.
               </p>
             </div>
           </div>
@@ -116,158 +153,193 @@ export default function WhatsAppPage() {
           </Button>
         </div>
 
-        {/* Two number cards side-by-side */}
-        <div className="mb-6 grid gap-4 lg:grid-cols-2">
-          {/* Customer-facing */}
-          <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-6">
-            <div className="mb-4 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-primary" />
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {whatsappLines.customer.label}
-                </h2>
-              </div>
-              <StatusBadge status={whatsappLines.customer.status} />
-            </div>
-            <div className="flex items-center gap-5">
-              <MockQR seed={whatsappLines.customer.number} />
-              <div className="min-w-0 flex-1">
-                <div className="font-display text-2xl font-bold tabular-nums leading-tight">
-                  {whatsappLines.customer.number}
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {whatsappLines.customer.displayName}
-                </p>
-                <a
-                  href={whatsappLines.customer.waLink}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-2 block truncate font-mono text-[11px] text-primary hover:underline"
-                >
-                  wa.me/17678183741
-                </a>
-                <div className="mt-4 rounded-md border border-border/40 bg-background/40 px-3 py-2">
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Last message
+        {/* Grid: 1 card per agent + 1 Ema card */}
+        <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {agents.map((a) => {
+            const did = didFor(a.id);
+            const lineStatus = agentStatusToLine(a.status);
+            const failed = lineStatus === "failed";
+            return (
+              <Card
+                key={a.id}
+                className="flex flex-col gap-4 border-border/40 bg-card/60 p-5"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h2 className="truncate font-display text-base font-semibold">{a.name}</h2>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className="mt-1 border-border/60 bg-background/40 text-[10px] uppercase tracking-wider text-muted-foreground"
+                    >
+                      {a.templateLabel}
+                    </Badge>
                   </div>
-                  <div className="text-sm">{whatsappLines.customer.lastMessage}</div>
+                  {lineStatus === "paused" ? (
+                    <PausedBadge />
+                  ) : (
+                    <StatusBadge status={lineStatus as WhatsAppLineStatus} />
+                  )}
                 </div>
-                {whatsappLines.customer.status === "failed" && (
-                  <Button size="sm" className="mt-3 w-full">
-                    Retry registration
-                  </Button>
-                )}
-              </div>
-            </div>
-            <p className="mt-4 text-xs text-muted-foreground">
-              {whatsappLines.customer.description}
-            </p>
-          </Card>
 
-          {/* Ema's number */}
-          <Card className="border-ema/30 bg-gradient-to-br from-ema/5 to-transparent p-6">
-            <div className="mb-4 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-ema" />
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {whatsappLines.ema.label}
-                </h2>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => setZoomedQr({ seed: did.display, title: a.name })}
+                    className="rounded-md transition-transform hover:scale-105"
+                    aria-label={`Enlarge QR for ${a.name}`}
+                  >
+                    <MockQR seed={did.display} />
+                  </button>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-display text-lg font-bold tabular-nums leading-tight">
+                      {did.display}
+                    </div>
+                    <a
+                      href={did.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-1 block truncate font-mono text-[11px] text-primary hover:underline"
+                    >
+                      wa.me/1767818{did.display.slice(-4)}
+                    </a>
+                    <div className="mt-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Last message
+                    </div>
+                    <div className="text-xs">
+                      {a.status === "active"
+                        ? `${Math.max(2, a.messagesThisWeek % 30)}m ago`
+                        : a.status === "paused"
+                          ? "—"
+                          : "Awaiting registration"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 rounded-md border border-border/40 bg-background/40 px-3 py-2">
+                  <div className="flex items-center gap-2 text-xs">
+                    <Phone className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-muted-foreground">Voice calls</span>
+                  </div>
+                  <Switch
+                    checked={voiceState[a.id]}
+                    onCheckedChange={(v) => {
+                      setVoiceState((prev) => ({ ...prev, [a.id]: v }));
+                      toast.success(v ? `Voice enabled for ${a.name}` : `Voice disabled for ${a.name}`);
+                    }}
+                    disabled={failed}
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  {failed ? (
+                    <Button
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => toast.success("Retrying registration with Meta…")}
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" /> Retry registration
+                    </Button>
+                  ) : (
+                    <Button
+                      asChild
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      <a href={did.href} target="_blank" rel="noreferrer">
+                        <Send className="h-3.5 w-3.5" /> Test on WhatsApp
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            );
+          })}
+
+          {/* Ema card — distinct */}
+          <Card className="relative flex flex-col gap-4 border-2 border-ema/40 bg-gradient-to-br from-ema/10 via-card/60 to-transparent p-5 shadow-ema">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-ema" />
+                  <h2 className="truncate font-display text-base font-semibold">Ema</h2>
+                </div>
+                <Badge className="mt-1 bg-ema/20 text-[10px] uppercase tracking-wider text-ema hover:bg-ema/25">
+                  <Crown className="h-2.5 w-2.5" /> Chief of Staff
+                </Badge>
               </div>
               <StatusBadge status={whatsappLines.ema.status} />
             </div>
-            <div className="flex items-center gap-5">
-              <MockQR seed={whatsappLines.ema.number} />
+
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setZoomedQr({ seed: whatsappLines.ema.number, title: "Ema" })}
+                className="rounded-md transition-transform hover:scale-105"
+                aria-label="Enlarge QR for Ema"
+              >
+                <MockQR seed={whatsappLines.ema.number} />
+              </button>
               <div className="min-w-0 flex-1">
-                <div className="font-display text-2xl font-bold tabular-nums leading-tight">
+                <div className="font-display text-lg font-bold tabular-nums leading-tight">
                   {whatsappLines.ema.number}
                 </div>
-                <p className="mt-1 text-sm text-muted-foreground">{whatsappLines.ema.displayName}</p>
                 <a
                   href={whatsappLines.ema.waLink}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-2 block truncate font-mono text-[11px] text-ema hover:underline"
+                  className="mt-1 block truncate font-mono text-[11px] text-ema hover:underline"
                 >
                   wa.me/17678183742
                 </a>
-                <div className="mt-4 rounded-md border border-border/40 bg-background/40 px-3 py-2">
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Last from Ema
-                  </div>
-                  <div className="text-sm">{whatsappLines.ema.lastMessage}</div>
+                <div className="mt-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Last from Ema
                 </div>
-                <Button
-                  size="sm"
-                  onClick={handlePing}
-                  disabled={pinging}
-                  className="mt-3 w-full bg-gradient-ema text-ema-foreground hover:opacity-90"
-                >
-                  {pinging ? (
-                    <>
-                      <span className="relative flex h-2 w-2">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ema-foreground/60" />
-                        <span className="relative inline-flex h-2 w-2 rounded-full bg-ema-foreground" />
-                      </span>
-                      Pinging…
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-3.5 w-3.5" /> Ping Ema
-                    </>
-                  )}
-                </Button>
+                <div className="text-xs">{whatsappLines.ema.lastMessage}</div>
               </div>
             </div>
-            <p className="mt-4 text-xs text-muted-foreground">{whatsappLines.ema.description}</p>
+
+            <p className="text-xs text-muted-foreground">{whatsappLines.ema.description}</p>
+
+            <Button
+              asChild
+              size="sm"
+              className="bg-gradient-ema text-ema-foreground hover:opacity-90"
+            >
+              <a href={whatsappLines.ema.waLink} target="_blank" rel="noreferrer">
+                <Send className="h-3.5 w-3.5" /> Message Ema
+              </a>
+            </Button>
           </Card>
         </div>
-
-        {/* WA Calling toggle */}
-        <Card className="mb-6 border-border/40 bg-card/40 p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
-                <PhoneCall className="h-4 w-4" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-display text-base font-semibold">
-                    WhatsApp Business Calling API
-                  </h3>
-                  <Badge
-                    className={
-                      callingEnabled
-                        ? "bg-primary/15 text-primary hover:bg-primary/20"
-                        : "bg-muted text-muted-foreground"
-                    }
-                  >
-                    {callingEnabled ? "Enabled" : "Disabled"}
-                  </Badge>
-                </div>
-                <p className="mt-1 max-w-xl text-xs text-muted-foreground">
-                  Customers can voice-call your WhatsApp number directly. Calls are answered by your AI receptionist and routed to your team or a SIP trunk.
-                </p>
-              </div>
-            </div>
-            <Switch
-              checked={callingEnabled}
-              onCheckedChange={(v) => {
-                setCallingEnabled(v);
-                toast.success(v ? "Voice calling enabled" : "Voice calling disabled");
-              }}
-            />
-          </div>
-        </Card>
 
         {/* Footer info */}
         <div className="flex items-start gap-3 rounded-lg border border-border/30 bg-card/20 p-4">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
           <p className="text-xs text-muted-foreground">
-            Connected via Meta WhatsApp Business API. Your dedicated number is allocated from{" "}
-            <span className="text-foreground">EPIC Communications'</span> Dominica DID pool.
+            All numbers connected via Meta WhatsApp Business API. Calls routed through{" "}
+            <span className="text-foreground">EPIC Communications'</span> Dominica pool
+            (1-767-818-XXXX).
           </p>
         </div>
       </div>
+
+      {/* QR zoom dialog */}
+      <Dialog open={!!zoomedQr} onOpenChange={(o) => !o && setZoomedQr(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Scan to chat with {zoomedQr?.title}</DialogTitle>
+            <DialogDescription>
+              Open WhatsApp on your phone, tap Camera, and point at this code.
+            </DialogDescription>
+          </DialogHeader>
+          {zoomedQr && (
+            <div className="flex justify-center py-4">
+              <MockQR seed={zoomedQr.seed} size={260} />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

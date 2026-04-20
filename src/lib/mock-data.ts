@@ -1365,9 +1365,11 @@ export const tenantLabels: LabelDef[] = [
   { id: "lb-complaint", name: "Complaint", color: "rose" },
   { id: "lb-booking", name: "Booking", color: "emerald" },
   { id: "lb-lead", name: "Lead", color: "sky" },
+  { id: "lb-customer", name: "Customer", color: "fuchsia" },
   { id: "lb-urgent", name: "Urgent", color: "orange" },
   { id: "lb-support", name: "Support", color: "amber" },
 ];
+
 
 // ---------- Conversation status + per-conversation labels (Turn 8 · Feature 1) ----------
 // Mock storage for the editable status/labels/last-customer-message-age, keyed by conversation id.

@@ -368,7 +368,7 @@ function DeviceStack() {
 
       {/* Floating Ema digest */}
       <motion.div
-        initial={{ opacity: 0, x: 40 }}
+        initial={false}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.6, duration: 0.6 }}
         className="absolute -right-16 top-12 hidden w-52 rounded-2xl border border-ema/30 bg-card/95 p-3 shadow-ema backdrop-blur md:block"
@@ -384,7 +384,7 @@ function DeviceStack() {
 
       {/* Floating call card */}
       <motion.div
-        initial={{ opacity: 0, x: -40 }}
+        initial={false}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.8, duration: 0.6 }}
         className="absolute -left-12 bottom-16 hidden w-48 rounded-2xl border border-primary/30 bg-card/95 p-3 shadow-glow backdrop-blur md:block"

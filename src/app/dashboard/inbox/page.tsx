@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Phone,
   PhoneCall,
@@ -21,6 +21,15 @@ import {
   BookOpen,
   StickyNote,
   MessageSquare,
+  RefreshCw,
+  Wand2,
+  Calendar as CalendarIcon,
+  CreditCard,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  Pencil,
+  Inbox as InboxIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../layout";
@@ -31,6 +40,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Select,
   SelectContent,
@@ -49,12 +59,32 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { conversations, contacts, type Channel } from "@/lib/mock-data";
+import {
+  conversations,
+  contacts,
+  agents,
+  pendingDrafts as seedPendingDrafts,
+  emaConvQuickActions,
+  emaConversationReply,
+  getSuggestions,
+  type Channel,
+  type EmaConvChatMsg,
+  type MessageCard,
+  type PendingDraft,
+} from "@/lib/mock-data";
 
 const channelMeta: Record<Channel, { icon: typeof Phone; label: string; color: string }> = {
   whatsapp: { icon: Phone, label: "WhatsApp", color: "text-success bg-success/15" },

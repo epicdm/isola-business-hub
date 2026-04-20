@@ -146,6 +146,7 @@ type ThreadMsg = {
   ownerName?: string;
   teachAi?: boolean;
   card?: MessageCard;
+  media?: MessageMedia;
 };
 
 // Mocked POST /api/inbox/conversations/[id]/whisper.
@@ -187,6 +188,21 @@ async function fetchSuggestions(
   await new Promise((r) => setTimeout(r, 200));
   const s = getSuggestions(conversationId, rotation);
   return { suggestions: [s[0], s[1], s[2]] as [string, string, string] };
+}
+
+// Mocked PATCH /api/inbox/conversations/[id]. Mutates the in-memory store via setState in caller.
+async function patchConversation(
+  conversationId: string,
+  body: Partial<{ status: ConversationStatus; snoozeUntil?: string; labels: string[] }>,
+): Promise<{ id: string } & Partial<ConversationMeta>> {
+  await new Promise((r) => setTimeout(r, 120));
+  return { id: conversationId, ...body };
+}
+
+// Mocked GET /api/labels + POST /api/labels — local-only here.
+async function fetchTemplates(): Promise<{ templates: MessageTemplate[] }> {
+  await new Promise((r) => setTimeout(r, 80));
+  return { templates: messageTemplates };
 }
 
 const OWNER_NAME = "You";

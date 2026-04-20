@@ -53,7 +53,7 @@ import { toast } from "sonner";
 import { saveProfile } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 6;
 
 interface StepDef {
   id: number;
@@ -68,6 +68,7 @@ const STEPS: StepDef[] = [
   { id: 3, title: "Operating hours", subtitle: "When Ema replies live", icon: Clock },
   { id: 4, title: "Voice & tone", subtitle: "How Ema should sound", icon: MessageSquare },
   { id: 5, title: "Connect WhatsApp", subtitle: "Almost done", icon: Rocket },
+  { id: 6, title: "Connect Odoo", subtitle: "Unlock Insights & invoicing", icon: Database },
 ];
 
 interface OnboardingData {

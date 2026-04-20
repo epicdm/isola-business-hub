@@ -264,6 +264,8 @@ export const conversations = [
       { id: 5, from: "customer" as const, text: "Yes please, under Aaliyah George.", time: "7:44 PM" },
       { id: 6, from: "ai" as const, text: "Booked ✓ Table for 4, Friday 7:00 PM, under Aaliyah George. We'll send a reminder Friday morning. See you then!", time: "7:44 PM" },
       { id: 7, from: "customer" as const, text: "Perfect, see you Friday at 7!", time: "7:45 PM" },
+      { id: 8, from: "whisper" as const, text: "FYI — Aaliyah usually orders the snapper. Pre-stage a vegetarian alternative for her plus-one.", time: "7:46 PM", ownerName: "Marcus", teachAi: false },
+      { id: 9, from: "whisper" as const, text: "If anyone in her party asks for cake plating, no fee — confirmed by chef. AI should remember this for VIPs.", time: "7:47 PM", ownerName: "Marcus", teachAi: true },
     ],
   },
   {

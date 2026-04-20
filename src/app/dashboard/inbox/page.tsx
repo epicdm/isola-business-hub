@@ -17,6 +17,10 @@ import {
   X,
   Plus,
   Ban,
+  Lock,
+  BookOpen,
+  StickyNote,
+  MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../layout";
@@ -26,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -68,6 +73,32 @@ const tabs: Array<{ key: "all" | Channel; label: string }> = [
 
 type Qualification = "Lead" | "Customer" | "Blocked" | "Unknown";
 
+type ThreadMsg = {
+  id: number | string;
+  from: "customer" | "ai" | "owner" | "whisper";
+  text: string;
+  time: string;
+  ownerName?: string;
+  teachAi?: boolean;
+};
+
+// Mocked POST /api/inbox/conversations/[id]/whisper.
+// In a real backend this would persist + (if teachAi) push to the agent's memory.
+async function postWhisper(
+  conversationId: string,
+  body: { text: string; teachAi: boolean },
+): Promise<{ id: string; text: string; teachAi: boolean; createdAt: string }> {
+  await new Promise((r) => setTimeout(r, 200));
+  return {
+    id: `wh_${Date.now()}_${conversationId}`,
+    text: body.text,
+    teachAi: body.teachAi,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+const OWNER_NAME = "You";
+
 function initials(name: string) {
   return name
     .split(/\s+/)
@@ -91,6 +122,12 @@ export default function InboxPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   // Filter inbox by a specific contact (when "View all conversations" clicked)
   const [contactFilter, setContactFilter] = useState<string | null>(null);
+  // Composer mode: reply or whisper
+  const [composerMode, setComposerMode] = useState<"reply" | "whisper">("reply");
+  const [teachAi, setTeachAi] = useState(false);
+  // Whispers added at runtime, keyed by conversation id
+  const [extraWhispers, setExtraWhispers] = useState<Record<string, ThreadMsg[]>>({});
+  const [savingWhisper, setSavingWhisper] = useState(false);
   // Editable per-contact state (mock — local only)
   const [contactState, setContactState] = useState<
     Record<
@@ -327,74 +364,189 @@ export default function InboxPage() {
             )}
 
             <div className="flex-1 space-y-4 overflow-y-auto px-6 py-6">
-              {active.messages.map((m) => (
-                <div key={m.id} className={`flex ${m.from === "customer" ? "justify-start" : "justify-end"}`}>
-                  <div className="max-w-[75%]">
-                    {m.from === "ai" && (
-                      <div className="mb-1 flex items-center justify-end gap-1.5 text-[10px] text-muted-foreground">
-                        <Sparkles className="h-2.5 w-2.5 text-primary" /> AI replied
+              {[...(active.messages as ThreadMsg[]), ...(extraWhispers[active.id] ?? [])].map((m) => {
+                if (m.from === "whisper") {
+                  return (
+                    <div key={m.id} className="w-full">
+                      <div className="rounded-xl border-l-4 border-amber-500 bg-amber-950/30 px-4 py-3">
+                        <div className="mb-1.5 flex flex-wrap items-center gap-2 text-[11px] font-medium text-amber-300">
+                          <span className="inline-flex items-center gap-1">
+                            <Lock className="h-3 w-3" /> Private note by {m.ownerName ?? OWNER_NAME}
+                          </span>
+                          <span className="text-amber-300/60">·</span>
+                          <span className="text-amber-300/80">{m.time}</span>
+                          {m.teachAi && (
+                            <span className="ml-auto inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-200">
+                              <BookOpen className="h-2.5 w-2.5" /> AI will remember this
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm leading-relaxed text-amber-50">{m.text}</p>
                       </div>
-                    )}
-                    <Card
-                      className={`px-4 py-2.5 text-sm ${
-                        m.from === "customer"
-                          ? "rounded-2xl rounded-tl-sm border-transparent bg-bubble-in text-bubble-in-foreground"
-                          : "rounded-2xl rounded-tr-sm border-transparent bg-bubble-out text-bubble-out-foreground"
-                      }`}
-                    >
-                      {m.text}
-                    </Card>
-                    <div className={`mt-1 text-[10px] text-muted-foreground ${m.from === "customer" ? "text-left" : "text-right"}`}>
-                      {m.time}
+                    </div>
+                  );
+                }
+                return (
+                  <div key={m.id} className={`flex ${m.from === "customer" ? "justify-start" : "justify-end"}`}>
+                    <div className="max-w-[75%]">
+                      {m.from === "ai" && (
+                        <div className="mb-1 flex items-center justify-end gap-1.5 text-[10px] text-muted-foreground">
+                          <Sparkles className="h-2.5 w-2.5 text-primary" /> AI replied
+                        </div>
+                      )}
+                      <Card
+                        className={`px-4 py-2.5 text-sm ${
+                          m.from === "customer"
+                            ? "rounded-2xl rounded-tl-sm border-transparent bg-bubble-in text-bubble-in-foreground"
+                            : "rounded-2xl rounded-tr-sm border-transparent bg-bubble-out text-bubble-out-foreground"
+                        }`}
+                      >
+                        {m.text}
+                      </Card>
+                      <div className={`mt-1 text-[10px] text-muted-foreground ${m.from === "customer" ? "text-left" : "text-right"}`}>
+                        {m.time}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Composer */}
             <div className="border-t border-border/40 bg-card/30 p-4">
-              <div className={`flex items-end gap-2 rounded-xl border p-2 transition-colors ${isAi ? "border-border/40 bg-background/40 opacity-60" : "border-border/60 bg-background"}`}>
-                <Button variant="ghost" size="icon" className="shrink-0" disabled={isAi}>
-                  <Paperclip className="h-4 w-4" />
-                </Button>
-                <Input
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  placeholder={isAi ? "AI is handling this thread — take over to reply" : "Type your reply…"}
-                  disabled={isAi}
-                  className="border-0 focus-visible:ring-0 disabled:cursor-not-allowed"
-                />
-                <Button variant="ghost" size="icon" className="shrink-0" disabled={isAi}>
-                  <Smile className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  className="shrink-0 bg-gradient-primary text-primary-foreground"
-                  disabled={composerDisabled}
-                  onClick={() => {
-                    if (!draft.trim()) return;
-                    toast.success("Message sent");
-                    setDraft("");
-                  }}
+              {/* Tabs */}
+              <div className="mb-2 flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setComposerMode("reply")}
+                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    composerMode === "reply"
+                      ? "bg-accent text-foreground"
+                      : "text-muted-foreground hover:bg-accent/40"
+                  }`}
                 >
-                  <Send className="h-3.5 w-3.5" /> Send
-                </Button>
+                  <MessageSquare className="h-3 w-3" /> Reply
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setComposerMode("whisper")}
+                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    composerMode === "whisper"
+                      ? "bg-amber-500/20 text-amber-300"
+                      : "text-muted-foreground hover:bg-accent/40"
+                  }`}
+                >
+                  <StickyNote className="h-3 w-3" /> Whisper
+                </button>
               </div>
-              <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  {isAi ? (
-                    <>
-                      <Sparkles className="h-3 w-3 text-primary" /> AI is monitoring this thread
-                    </>
-                  ) : (
-                    <>
-                      <UserCheck className="h-3 w-3 text-warning" /> You're replying as yourself
-                    </>
-                  )}
-                </span>
-                <span>Press ⌘⏎ to send</span>
-              </div>
+
+              {composerMode === "reply" ? (
+                <>
+                  <div className={`flex items-end gap-2 rounded-xl border p-2 transition-colors ${isAi ? "border-border/40 bg-background/40 opacity-60" : "border-border/60 bg-background"}`}>
+                    <Button variant="ghost" size="icon" className="shrink-0" disabled={isAi}>
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                    <Input
+                      value={draft}
+                      onChange={(e) => setDraft(e.target.value)}
+                      placeholder={isAi ? "AI is handling this thread — take over to reply" : "Type your reply…"}
+                      disabled={isAi}
+                      className="border-0 focus-visible:ring-0 disabled:cursor-not-allowed"
+                    />
+                    <Button variant="ghost" size="icon" className="shrink-0" disabled={isAi}>
+                      <Smile className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="shrink-0 bg-success text-success-foreground hover:bg-success/90"
+                      disabled={composerDisabled}
+                      onClick={() => {
+                        if (!draft.trim()) return;
+                        toast.success("Message sent");
+                        setDraft("");
+                      }}
+                    >
+                      <Send className="h-3.5 w-3.5" /> Send
+                    </Button>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      {isAi ? (
+                        <>
+                          <Sparkles className="h-3 w-3 text-primary" /> AI is monitoring this thread
+                        </>
+                      ) : (
+                        <>
+                          <UserCheck className="h-3 w-3 text-warning" /> You're replying as yourself
+                        </>
+                      )}
+                    </span>
+                    <span>Press ⌘⏎ to send</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="rounded-xl border border-amber-500/40 bg-amber-950/30 p-2">
+                    <div className="flex items-end gap-2">
+                      <Lock className="ml-1 mb-2 h-3.5 w-3.5 shrink-0 text-amber-400" />
+                      <Input
+                        value={draft}
+                        onChange={(e) => setDraft(e.target.value)}
+                        placeholder="Private note — customer won't see this"
+                        className="border-0 bg-transparent text-amber-50 placeholder:text-amber-200/50 focus-visible:ring-0"
+                      />
+                      <Button
+                        size="sm"
+                        className="shrink-0 bg-amber-500 text-amber-950 hover:bg-amber-400"
+                        disabled={!draft.trim() || savingWhisper}
+                        onClick={async () => {
+                          if (!draft.trim()) return;
+                          setSavingWhisper(true);
+                          try {
+                            const res = await postWhisper(active.id, {
+                              text: draft.trim(),
+                              teachAi,
+                            });
+                            const msg: ThreadMsg = {
+                              id: res.id,
+                              from: "whisper",
+                              text: res.text,
+                              time: "just now",
+                              ownerName: OWNER_NAME,
+                              teachAi: res.teachAi,
+                            };
+                            setExtraWhispers((prev) => ({
+                              ...prev,
+                              [active.id]: [...(prev[active.id] ?? []), msg],
+                            }));
+                            toast.success(
+                              res.teachAi ? "Note saved · AI will remember" : "Private note saved",
+                            );
+                            setDraft("");
+                          } catch {
+                            toast.error("Couldn't save note");
+                          } finally {
+                            setSavingWhisper(false);
+                          }
+                        }}
+                      >
+                        <StickyNote className="h-3.5 w-3.5" /> Save note
+                      </Button>
+                    </div>
+                  </div>
+                  <label className="mt-2 flex cursor-pointer items-start gap-2 rounded-md px-1 py-1 text-[11px] text-muted-foreground hover:text-foreground">
+                    <Checkbox
+                      checked={teachAi}
+                      onCheckedChange={(v) => setTeachAi(v === true)}
+                      className="mt-0.5"
+                    />
+                    <span className="flex items-center gap-1.5">
+                      <BookOpen className="h-3 w-3 text-amber-400" />
+                      Teach the AI — include this note in future AI responses to this contact
+                    </span>
+                  </label>
+                </>
+              )}
             </div>
           </section>
         </div>

@@ -1052,9 +1052,9 @@ export const suggestionSeeds: Record<string, string[][]> = {
   ],
   c6: [
     [
-      "Confirmed ✓ See you tomorrow at 6:30!",
-      "All set — table for 2, tomorrow 6:30 PM. Anything special I should note?",
-      "Lovely. Want me to set aside our window table tomorrow?",
+      "Glad it went through! See you Saturday at 8 — ask for Marcus at the door.",
+      "Payment received ✓ Anything special I should flag for the kitchen?",
+      "Locked in. Want me to add a wine pairing to the tasting menu?",
     ],
   ],
 };
@@ -1249,7 +1249,7 @@ export const conversationMeta: Record<string, ConversationMeta> = {
   // Marcus Phillip (voice) — last customer reply was 26 hours ago. Triggers template-only banner.
   c4: { status: "open", labels: ["lb-support"], hoursSinceLastInbound: 26 },
   c5: { status: "open", labels: ["lb-lead"], hoursSinceLastInbound: 0.5 },
-  c6: { status: "resolved", labels: ["lb-booking"], hoursSinceLastInbound: 0.4 },
+  c6: { status: "open", labels: ["lb-vip", "lb-booking"], hoursSinceLastInbound: 0.08 },
 };
 
 export const statusMeta: Record<

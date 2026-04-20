@@ -943,3 +943,299 @@ function Step5({ data, errors, update }: StepProps) {
     </>
   );
 }
+
+interface Step6Props extends StepProps {
+  connection: ConnectionResult;
+  onTest: () => void;
+  onReset: () => void;
+}
+
+function Step6({ data, errors, update, connection, onTest, onReset }: Step6Props) {
+  const [showKey, setShowKey] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+
+  const lead = useMemo(() => {
+    switch (data.industry) {
+      case "restaurant":
+        return "For restaurants, this powers: inventory-aware menu (agent stops offering 86'd items), live sales dashboard, invoice payment via Fiserv, supplier POs.";
+      case "hotel":
+        return "For hotels, this powers: room availability sync, guest folio charges, excursion booking Odoo records, post-stay invoice.";
+      case "clinic":
+        return "For clinics, this powers: patient records, appointment billing, insurance card intake.";
+      default:
+        return "Powers your invoicing, inventory, customer records, and AI-assisted ops.";
+    }
+  }, [data.industry]);
+
+  const isOk = connection.state === "ok";
+  const isTesting = connection.state === "testing";
+  const isError = connection.state === "error";
+
+  return (
+    <>
+      {/* Lead copy + Odoo badge */}
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-lg font-semibold tracking-tight">Connect your Odoo</h2>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-violet-500">
+            <Database className="h-3 w-3" /> Odoo
+          </span>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Unlock real-time insights, AI-assisted invoicing, and inventory-aware
+          agents. Your Odoo stays your source of truth — we only read what's
+          needed and write what you authorize.
+        </p>
+        <p className="rounded-lg border border-violet-500/20 bg-violet-500/5 px-3 py-2 text-xs text-foreground">
+          {lead}
+        </p>
+      </div>
+
+      {/* Form */}
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="odooUrl">Odoo URL</Label>
+          <Input
+            id="odooUrl"
+            type="url"
+            placeholder="https://coalpot.odoo.com"
+            value={data.odooUrl}
+            onChange={(e) => {
+              update("odooUrl", e.target.value);
+              if (connection.state !== "idle") onReset();
+            }}
+          />
+          <FieldError msg={errors.odooUrl} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="odooDb">Database name</Label>
+          <Input
+            id="odooDb"
+            placeholder="coalpot-prod"
+            value={data.odooDb}
+            onChange={(e) => {
+              update("odooDb", e.target.value);
+              if (connection.state !== "idle") onReset();
+            }}
+          />
+          <p className="text-[11px] text-muted-foreground">
+            Find this in Odoo under <span className="font-mono">Settings → Manage Databases</span>.
+          </p>
+          <FieldError msg={errors.odooDb} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="odooApiKey">API key</Label>
+          <div className="relative">
+            <Input
+              id="odooApiKey"
+              type={showKey ? "text" : "password"}
+              placeholder="••••••••••••••••"
+              className="pr-10 font-mono"
+              value={data.odooApiKey}
+              onChange={(e) => {
+                update("odooApiKey", e.target.value);
+                if (connection.state !== "idle") onReset();
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowKey((v) => !v)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+              aria-label={showKey ? "Hide API key" : "Show API key"}
+            >
+              {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Generate in Odoo <span className="font-mono">Settings → Users &amp; Companies → Users → API Keys</span>.
+          </p>
+          <FieldError msg={errors.odooApiKey} />
+        </div>
+
+        {/* More options */}
+        <button
+          type="button"
+          onClick={() => setMoreOpen((v) => !v)}
+          className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+        >
+          <ArrowRight
+            className={cn(
+              "h-3 w-3 transition-transform",
+              moreOpen && "rotate-90",
+            )}
+          />
+          More options
+        </button>
+        {moreOpen && (
+          <div className="space-y-2 rounded-md border border-border/60 bg-muted/20 p-3">
+            <Label htmlFor="odooUsername" className="text-xs">
+              Username (optional — for API-key auto-generation)
+            </Label>
+            <Input
+              id="odooUsername"
+              placeholder="alex@coalpot.dm"
+              value={data.odooUsername}
+              onChange={(e) => update("odooUsername", e.target.value)}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Test connection */}
+      <div className="space-y-3">
+        <Button
+          type="button"
+          onClick={onTest}
+          disabled={isTesting || isOk}
+          className={cn(
+            "w-full",
+            isOk && "bg-success text-success-foreground hover:bg-success/90",
+          )}
+        >
+          {isTesting && (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Testing…
+            </>
+          )}
+          {isOk && (
+            <>
+              <Check className="mr-2 h-4 w-4" />
+              Connected · Odoo {connection.version}
+            </>
+          )}
+          {!isTesting && !isOk && (
+            <>
+              <Plug className="mr-2 h-4 w-4" />
+              Test connection
+            </>
+          )}
+        </Button>
+
+        {isOk && (
+          <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/5 px-3 py-2 text-xs text-foreground">
+            <RefreshCw className="h-3.5 w-3.5 animate-spin text-success" />
+            <span>
+              Detected{" "}
+              <span className="font-semibold">{connection.customers.toLocaleString()} customers</span>
+              {" "}and{" "}
+              <span className="font-semibold">{connection.products.toLocaleString()} products</span>.
+              Live sync is now armed.
+            </span>
+          </div>
+        )}
+
+        {isError && (
+          <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-xs text-destructive">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div className="space-y-1">
+              <p className="font-medium">{connection.message}</p>
+              <button
+                type="button"
+                className="underline-offset-2 hover:underline"
+                onClick={() => toast("Troubleshoot guide opened (mock)")}
+              >
+                Troubleshoot →
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Help me find these */}
+      <div className="rounded-lg border border-border/60">
+        <button
+          type="button"
+          onClick={() => setHelpOpen((v) => !v)}
+          className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/30"
+        >
+          <span>Help me find these</span>
+          <ArrowRight
+            className={cn("h-4 w-4 transition-transform", helpOpen && "rotate-90")}
+          />
+        </button>
+        {helpOpen && (
+          <div className="space-y-3 border-t border-border/60 px-4 py-4">
+            <HelpMock label="Where to find Odoo URL" hint="Browser address bar when logged into Odoo." />
+            <HelpMock label="Where to find database name" hint="Settings → Manage Databases." />
+            <HelpMock label="Where to generate API key" hint="Settings → Users & Companies → Users → API Keys → New." />
+            <button
+              type="button"
+              onClick={() => toast("Setup video — coming soon")}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+            >
+              <PlayCircle className="h-3.5 w-3.5" />
+              Watch 60-sec setup video
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Tertiary link */}
+      <button
+        type="button"
+        onClick={() => toast("EPIC-hosted Odoo — coming soon")}
+        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+      >
+        <ExternalLink className="h-3 w-3" />
+        I don't have Odoo — help me set one up →
+      </button>
+    </>
+  );
+}
+
+function HelpMock({ label, hint }: { label: string; hint: string }) {
+  return (
+    <div className="overflow-hidden rounded-md border border-border/60">
+      <div className="flex h-24 items-center justify-center bg-gradient-to-br from-muted/40 to-muted/10 text-[10px] uppercase tracking-wider text-muted-foreground">
+        Screenshot preview
+      </div>
+      <div className="border-t border-border/60 bg-background/40 px-3 py-2">
+        <p className="text-xs font-medium">{label}</p>
+        <p className="text-[11px] text-muted-foreground">{hint}</p>
+      </div>
+    </div>
+  );
+}
+
+function ConfettiBurst() {
+  // Simple emoji-particle confetti — no extra deps
+  const particles = useMemo(
+    () =>
+      Array.from({ length: 28 }, (_, i) => ({
+        id: i,
+        emoji: ["🎉", "✨", "🎊", "💜"][i % 4],
+        left: Math.random() * 100,
+        delay: Math.random() * 0.3,
+        duration: 1.6 + Math.random() * 0.8,
+        rotate: Math.random() * 540 - 270,
+      })),
+    [],
+  );
+  return (
+    <div className="pointer-events-none fixed inset-0 z-[100] overflow-hidden">
+      {particles.map((p) => (
+        <span
+          key={p.id}
+          className="absolute -top-6 text-2xl"
+          style={{
+            left: `${p.left}%`,
+            animation: `confetti-fall ${p.duration}s ease-out ${p.delay}s forwards`,
+            transform: `rotate(${p.rotate}deg)`,
+          }}
+        >
+          {p.emoji}
+        </span>
+      ))}
+      <style>{`
+        @keyframes confetti-fall {
+          0%   { transform: translateY(0) rotate(0); opacity: 1; }
+          100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+      `}</style>
+    </div>
+  );
+}

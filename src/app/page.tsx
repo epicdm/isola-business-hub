@@ -340,7 +340,7 @@ function DeviceStack() {
     <div className="relative mx-auto h-[520px] w-[300px]">
       {/* Phone */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={false}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.6 }}
         className="absolute inset-0 rounded-[3rem] border-[10px] border-foreground/80 bg-background shadow-glow"

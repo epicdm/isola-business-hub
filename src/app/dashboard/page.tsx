@@ -82,6 +82,7 @@ export default function DashboardHomePage() {
 
   return (
     <DashboardLayout currentPath="/dashboard">
+      <FirstWinOverlay open={firstWinOpen} industry={firstWinIndustry} onClose={closeFirstWin} />
       <div className="mx-auto max-w-7xl space-y-8 p-6 lg:p-10">
         {/* Resume banner — appears when onboarding skipped Odoo */}
         {showOdooBanner && (

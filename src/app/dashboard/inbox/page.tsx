@@ -990,6 +990,17 @@ export default function InboxPage() {
               </div>
             )}
 
+            {/* Parent-post context bar — for IG/FB comment-type conversations */}
+            {("subType" in active && (active.subType === "comment" || active.subType === "page_comment") && "parentPost" in active && active.parentPost) && (
+              <div className="flex items-center gap-2 border-b border-border/50 bg-muted/30 px-6 py-2 text-xs text-muted-foreground">
+                <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
+                <span className="truncate">
+                  Replying on:{" "}
+                  <span className="font-medium text-foreground">"{active.parentPost as string}"</span>
+                </span>
+              </div>
+            )}
+
             {/* 24-hour template-only banner (Section 1) */}
             {isStale24h && (
               <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-amber-500/40 bg-amber-500/15 px-6 py-2.5 text-xs text-amber-200 backdrop-blur">

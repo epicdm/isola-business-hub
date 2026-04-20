@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard,
+  Home,
   Inbox,
   Calendar,
   Users,
@@ -8,12 +8,13 @@ import {
   Settings as SettingsIcon,
   BookOpen,
   Clock,
-  Phone,
+  Antenna,
   Plug,
   CreditCard,
-  ShoppingBag,
+  Package,
   LogOut,
-  Bot,
+  UsersRound,
+  PhoneOutgoing,
 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -26,10 +27,12 @@ const sections = [
   {
     label: "Overview",
     items: [
-      { href: "/dashboard", icon: LayoutDashboard, label: "Home" },
+      { href: "/dashboard", icon: Home, label: "Home" },
       { href: "/dashboard/inbox", icon: Inbox, label: "Inbox" },
+      { href: "/dashboard/outbound", icon: PhoneOutgoing, label: "Outbound" },
       { href: "/dashboard/bookings", icon: Calendar, label: "Bookings" },
       { href: "/dashboard/contacts", icon: Users, label: "Contacts" },
+      { href: "/dashboard/agents", icon: UsersRound, label: "Agents" },
     ],
   },
   {
@@ -41,15 +44,9 @@ const sections = [
     ],
   },
   {
-    label: "Agents",
-    items: [
-      { href: "/dashboard/agents", icon: Bot, label: "Agents" },
-    ],
-  },
-  {
     label: "Business",
     items: [
-      { href: "/dashboard/catalog", icon: ShoppingBag, label: "Catalog" },
+      { href: "/dashboard/catalog", icon: Package, label: "Catalog" },
       { href: "/dashboard/hours", icon: Clock, label: "Hours" },
       { href: "/dashboard/knowledge", icon: BookOpen, label: "Knowledge" },
     ],
@@ -57,7 +54,7 @@ const sections = [
   {
     label: "Account",
     items: [
-      { href: "/dashboard/whatsapp", icon: Phone, label: "WhatsApp" },
+      { href: "/dashboard/channels", icon: Antenna, label: "Channels" },
       { href: "/dashboard/integrations", icon: Plug, label: "Integrations" },
       { href: "/dashboard/billing", icon: CreditCard, label: "Billing" },
       { href: "/dashboard/settings", icon: SettingsIcon, label: "Settings" },

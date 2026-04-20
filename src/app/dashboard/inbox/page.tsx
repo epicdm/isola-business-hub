@@ -150,7 +150,12 @@ const conversationAgent: Record<string, string> = {
   c4: "ag-receptionist",
   c5: "ag-aftersales",
   c6: "ag-receptionist",
+  c7: "ag-receptionist",
+  c8: "ag-receptionist",
+  c9: "ag-receptionist",
+  c10: "ag-receptionist",
 };
+
 
 type Qualification = "Lead" | "Customer" | "Blocked" | "Unknown";
 

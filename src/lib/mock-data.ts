@@ -1392,7 +1392,13 @@ export const conversationMeta: Record<string, ConversationMeta> = {
   c4: { status: "open", labels: ["lb-support"], hoursSinceLastInbound: 26 },
   c5: { status: "open", labels: ["lb-lead"], hoursSinceLastInbound: 0.5 },
   c6: { status: "open", labels: ["lb-vip", "lb-booking"], hoursSinceLastInbound: 0.08 },
+  // Turn 10 · Section 1 — IG / FB seeds
+  c7: { status: "open", labels: ["lb-lead"], hoursSinceLastInbound: 0.12 },
+  c8: { status: "resolved", labels: [], hoursSinceLastInbound: 0.05 },
+  c9: { status: "pending", labels: ["lb-customer"], hoursSinceLastInbound: 0.3 },
+  c10: { status: "resolved", labels: ["lb-support"], hoursSinceLastInbound: 0.4 },
 };
+
 
 export const statusMeta: Record<
   ConversationStatus,

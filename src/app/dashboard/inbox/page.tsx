@@ -796,6 +796,167 @@ export default function InboxPage() {
               </div>
             </div>
 
+            {/* Conversation meta row — status pill + label chips + assigned agent */}
+            <div className="flex flex-wrap items-center gap-2 border-b border-border/40 bg-card/20 px-6 py-2.5">
+              {/* Status pill + dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-opacity hover:opacity-80 ${statusMeta[activeMeta.status].pill}`}
+                  >
+                    <span className={`h-1.5 w-1.5 rounded-full ${statusMeta[activeMeta.status].dot}`} />
+                    {statusMeta[activeMeta.status].label}
+                    {activeMeta.status === "snoozed" && activeMeta.snoozeUntil && (
+                      <span className="opacity-70">· {format(new Date(activeMeta.snoozeUntil), "MMM d, p")}</span>
+                    )}
+                    <ChevronDown className="h-3 w-3 opacity-70" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-44">
+                  <DropdownMenuItem onClick={() => setStatusFor(active.id, "open")}>
+                    <span className="mr-2 h-1.5 w-1.5 rounded-full bg-emerald-400" /> Open
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFor(active.id, "pending")}>
+                    <span className="mr-2 h-1.5 w-1.5 rounded-full bg-amber-400" /> Pending
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setSnoozePopoverFor(active.id); setSnoozeCustomDate(undefined); }}>
+                    <Clock className="mr-1.5 h-3 w-3 text-violet" /> Snooze until…
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFor(active.id, "resolved")}>
+                    <span className="mr-2 h-1.5 w-1.5 rounded-full bg-slate-400" /> Resolved
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Snooze popover (controlled) */}
+              <Popover open={snoozePopoverFor === active.id} onOpenChange={(o) => !o && setSnoozePopoverFor(null)}>
+                <PopoverTrigger asChild><span className="sr-only">Snooze anchor</span></PopoverTrigger>
+                <PopoverContent className="w-auto p-3" align="start">
+                  <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Snooze until</div>
+                  <div className="flex flex-col gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="justify-start"
+                      onClick={() => {
+                        const d = addDays(new Date(), 1); d.setHours(9, 0, 0, 0);
+                        setStatusFor(active.id, "snoozed", d.toISOString());
+                        setSnoozePopoverFor(null);
+                      }}
+                    >
+                      Tomorrow 9am
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="justify-start"
+                      onClick={() => {
+                        const now = new Date();
+                        const day = now.getDay();
+                        const offset = (8 - day) % 7 || 7;
+                        const d = addDays(now, offset); d.setHours(9, 0, 0, 0);
+                        setStatusFor(active.id, "snoozed", d.toISOString());
+                        setSnoozePopoverFor(null);
+                      }}
+                    >
+                      Monday 9am
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="justify-start"
+                      onClick={() => {
+                        const d = addDays(new Date(), 7); d.setHours(9, 0, 0, 0);
+                        setStatusFor(active.id, "snoozed", d.toISOString());
+                        setSnoozePopoverFor(null);
+                      }}
+                    >
+                      Next week
+                    </Button>
+                  </div>
+                  <div className="mt-3 border-t border-border/40 pt-3">
+                    <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Custom</div>
+                    <Calendar
+                      mode="single"
+                      selected={snoozeCustomDate}
+                      onSelect={(d) => {
+                        setSnoozeCustomDate(d);
+                        if (d) {
+                          const dt = new Date(d); dt.setHours(9, 0, 0, 0);
+                          setStatusFor(active.id, "snoozed", dt.toISOString());
+                          setSnoozePopoverFor(null);
+                        }
+                      }}
+                      disabled={(d) => d < new Date(new Date().setHours(0,0,0,0))}
+                      className="pointer-events-auto rounded-md"
+                    />
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Label chips */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {activeMeta.labels.map((id) => {
+                  const lab = labelById[id];
+                  if (!lab) return null;
+                  const cls = labelColorClasses[lab.color];
+                  return (
+                    <span
+                      key={id}
+                      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${cls.chip}`}
+                    >
+                      {lab.name}
+                      <button
+                        onClick={() => toggleLabel(active.id, id)}
+                        aria-label={`Remove ${lab.name}`}
+                        className="-mr-0.5 rounded-full p-0.5 opacity-70 hover:bg-background/40 hover:opacity-100"
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                    </span>
+                  );
+                })}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="inline-flex items-center gap-1 rounded-full border border-dashed border-border/60 px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-accent">
+                      <Plus className="h-3 w-3" /> Add label
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="max-h-60 w-44 overflow-y-auto">
+                    {labelLibrary
+                      .filter((l) => !activeMeta.labels.includes(l.id))
+                      .map((l) => {
+                        const cls = labelColorClasses[l.color];
+                        return (
+                          <DropdownMenuItem key={l.id} onClick={() => toggleLabel(active.id, l.id)}>
+                            <span className={`mr-2 h-2.5 w-2.5 rounded-full ${cls.dot}`} />
+                            {l.name}
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    {labelLibrary.filter((l) => !activeMeta.labels.includes(l.id)).length === 0 && (
+                      <div className="px-2 py-1.5 text-[11px] text-muted-foreground">All labels applied</div>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              <div className="mx-1 h-4 w-px bg-border/60" />
+
+              {/* Assigned agent pill (read-only) */}
+              {(() => {
+                const aid = conversationAgent[active.id];
+                const ag = agents.find((a) => a.id === aid);
+                if (!ag) return null;
+                return (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/40 px-2.5 py-1 text-[11px] text-muted-foreground">
+                    <Bot className="h-3 w-3 text-primary" />
+                    <span className="font-medium text-foreground">{ag.name}</span>
+                  </span>
+                );
+              })()}
+            </div>
+
             {/* Manual-reply banner */}
             {!isAi && (
               <div className="flex items-center gap-2 border-b border-warning/30 bg-warning/10 px-6 py-2.5 text-xs text-warning">
@@ -812,8 +973,36 @@ export default function InboxPage() {
               </div>
             )}
 
+            {/* 24-hour template-only banner (Section 1) */}
+            {isStale24h && (
+              <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-amber-500/40 bg-amber-500/15 px-6 py-2.5 text-xs text-amber-200 backdrop-blur">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-400" />
+                <span className="flex-1">
+                  <span className="font-semibold">Outside the 24-hour window.</span>{" "}
+                  You can only send approved templates to this contact.
+                </span>
+                <button
+                  onClick={() => setComposerMode("template")}
+                  className="inline-flex items-center gap-1 rounded-md border border-amber-400/50 bg-amber-500/20 px-2.5 py-1 text-[11px] font-semibold text-amber-100 transition-colors hover:bg-amber-500/30"
+                >
+                  <LayoutTemplate className="h-3 w-3" /> Switch to Templates →
+                </button>
+              </div>
+            )}
+
             <div className="flex-1 space-y-4 overflow-y-auto px-6 py-6">
-              {[...(active.messages as ThreadMsg[]), ...(extraWhispers[active.id] ?? [])].map((m) => {
+              {(() => {
+                const baseMsgs = [...(active.messages as ThreadMsg[]), ...(extraWhispers[active.id] ?? [])];
+                const seedMedia = (conversationMedia[active.id] ?? []).map((mm) => ({
+                  id: mm.id,
+                  from: mm.from,
+                  text: mm.text ?? "",
+                  time: mm.time,
+                  media: mm.media,
+                })) as ThreadMsg[];
+                const extras = extraMedia[active.id] ?? [];
+                return [...baseMsgs, ...seedMedia, ...extras];
+              })().map((m) => {
                 if (m.from === "whisper") {
                   return (
                     <div key={m.id} className="w-full">
@@ -843,7 +1032,44 @@ export default function InboxPage() {
                           <Sparkles className="h-2.5 w-2.5 text-primary" /> AI replied
                         </div>
                       )}
-                      {m.card ? (
+                      {(m as ThreadMsg & { templateName?: string }).templateName && (
+                        <div className="mb-1 inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
+                          📋 Template: {(m as ThreadMsg & { templateName?: string }).templateName}
+                        </div>
+                      )}
+                      {m.media ? (
+                        <MediaBubble
+                          media={m.media}
+                          fromCustomer={m.from === "customer"}
+                          caption={m.text}
+                          messageId={String(m.id)}
+                          playingAudioId={playingAudioId}
+                          audioProgress={audioProgress}
+                          onPlayAudio={(id, dur) => {
+                            if (playingAudioId === id) {
+                              setPlayingAudioId(null);
+                              setAudioProgress(0);
+                              return;
+                            }
+                            setPlayingAudioId(id);
+                            setAudioProgress(0);
+                            const start = Date.now();
+                            const tick = () => {
+                              const elapsed = (Date.now() - start) / 1000;
+                              const p = Math.min(1, elapsed / dur);
+                              setAudioProgress(p);
+                              if (p < 1 && playingAudioId !== null) requestAnimationFrame(tick);
+                              else { setPlayingAudioId(null); setAudioProgress(0); }
+                            };
+                            requestAnimationFrame(tick);
+                          }}
+                          onOpenLightbox={(url, alt, caption) => {
+                            setLightboxUrl(url);
+                            setLightboxAlt(alt);
+                            setLightboxCaption(caption);
+                          }}
+                        />
+                      ) : m.card ? (
                         <RichCard card={m.card} fromCustomer={m.from === "customer"} />
                       ) : (
                         <Card
@@ -941,36 +1167,119 @@ export default function InboxPage() {
                 >
                   <StickyNote className="h-3 w-3" /> Whisper
                 </button>
+                <button
+                  type="button"
+                  onClick={() => { setComposerMode("template"); setActiveTemplateId(null); }}
+                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    composerMode === "template"
+                      ? "bg-emerald-500/20 text-emerald-300"
+                      : "text-muted-foreground hover:bg-accent/40"
+                  }`}
+                >
+                  <LayoutTemplate className="h-3 w-3" /> Template
+                </button>
               </div>
 
-              {composerMode === "reply" ? (
+              {composerMode === "reply" && (
                 <>
                   <div className={`flex items-end gap-2 rounded-xl border p-2 transition-colors ${isAi ? "border-border/40 bg-background/40 opacity-60" : "border-border/60 bg-background"}`}>
-                    <Button variant="ghost" size="icon" className="shrink-0" disabled={isAi}>
-                      <Paperclip className="h-4 w-4" />
-                    </Button>
+                    {/* Paperclip attachment menu */}
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className="shrink-0" disabled={isAi}>
+                          <Paperclip className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent align="start" className="w-44 p-1.5">
+                        {([
+                          { key: "photo", icon: Camera, label: "Photo" },
+                          { key: "doc", icon: FileText, label: "Document" },
+                          { key: "loc", icon: MapPin, label: "Location" },
+                        ] as const).map((opt) => {
+                          const Icon = opt.icon;
+                          return (
+                            <button
+                              key={opt.key}
+                              onClick={() => {
+                                const now = "just now";
+                                let media: MessageMedia;
+                                let text = "";
+                                if (opt.key === "photo") {
+                                  media = {
+                                    kind: "image",
+                                    url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=70",
+                                    alt: "Owner photo",
+                                    caption: "Sent from your phone",
+                                    width: 600,
+                                    height: 400,
+                                  };
+                                } else if (opt.key === "doc") {
+                                  media = {
+                                    kind: "document",
+                                    filename: "menu-april-2026.pdf",
+                                    ext: "pdf",
+                                    sizeKb: 312,
+                                  };
+                                  text = "Here's our latest menu";
+                                } else {
+                                  media = {
+                                    kind: "location",
+                                    address: "23 Castle St, Roseau · Coalpot Restaurant",
+                                    lat: 15.301,
+                                    lng: -61.388,
+                                  };
+                                }
+                                const id = `extra-${active.id}-${Date.now()}`;
+                                setExtraMedia((prev) => ({
+                                  ...prev,
+                                  [active.id]: [
+                                    ...(prev[active.id] ?? []),
+                                    { id, from: "owner", text, time: now, media } as ThreadMsg,
+                                  ],
+                                }));
+                                toast.success(`${opt.label} sent`);
+                              }}
+                              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-accent"
+                            >
+                              <Icon className="h-3.5 w-3.5 text-primary" /> {opt.label}
+                            </button>
+                          );
+                        })}
+                      </PopoverContent>
+                    </Popover>
                     <Input
                       value={draft}
                       onChange={(e) => setDraft(e.target.value)}
-                      placeholder={isAi ? "AI is handling this thread — take over to reply" : "Type your reply…"}
+                      placeholder={isAi ? "AI is handling this thread — take over to reply" : isStale24h ? "Outside 24h window — use a template" : "Type your reply…"}
                       disabled={isAi}
                       className="border-0 focus-visible:ring-0 disabled:cursor-not-allowed"
                     />
                     <Button variant="ghost" size="icon" className="shrink-0" disabled={isAi}>
                       <Smile className="h-4 w-4" />
                     </Button>
-                    <Button
-                      size="sm"
-                      className="shrink-0 bg-success text-success-foreground hover:bg-success/90"
-                      disabled={composerDisabled}
-                      onClick={() => {
-                        if (!draft.trim()) return;
-                        toast.success("Message sent");
-                        setDraft("");
-                      }}
-                    >
-                      <Send className="h-3.5 w-3.5" /> Send
-                    </Button>
+                    <TooltipProvider delayDuration={100}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>
+                            <Button
+                              size="sm"
+                              className="shrink-0 bg-success text-success-foreground hover:bg-success/90"
+                              disabled={composerDisabled || isStale24h}
+                              onClick={() => {
+                                if (!draft.trim()) return;
+                                toast.success("Message sent");
+                                setDraft("");
+                              }}
+                            >
+                              <Send className="h-3.5 w-3.5" /> Send
+                            </Button>
+                          </span>
+                        </TooltipTrigger>
+                        {isStale24h && (
+                          <TooltipContent>Templates only — outside 24h window.</TooltipContent>
+                        )}
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                   <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
                     <span className="flex items-center gap-1.5">
@@ -987,7 +1296,9 @@ export default function InboxPage() {
                     <span>Press ⌘⏎ to send</span>
                   </div>
                 </>
-              ) : (
+              )}
+
+              {composerMode === "whisper" && (
                 <>
                   <div className="rounded-xl border border-amber-500/40 bg-amber-950/30 p-2">
                     <div className="flex items-end gap-2">
@@ -1050,10 +1361,68 @@ export default function InboxPage() {
                   </label>
                 </>
               )}
+
+              {composerMode === "template" && (
+                <TemplateComposer
+                  templates={templates}
+                  search={templateSearch}
+                  onSearch={setTemplateSearch}
+                  activeTemplateId={activeTemplateId}
+                  onPickTemplate={(id) => {
+                    setActiveTemplateId(id);
+                    setTemplateValues({});
+                  }}
+                  values={templateValues}
+                  onChangeValues={setTemplateValues}
+                  onCancel={() => { setActiveTemplateId(null); setTemplateValues({}); }}
+                  onSend={(tpl, rendered) => {
+                    const id = `tpl-${active.id}-${Date.now()}`;
+                    setExtraMedia((prev) => ({
+                      ...prev,
+                      [active.id]: [
+                        ...(prev[active.id] ?? []),
+                        { id, from: "owner", text: rendered, time: "just now", templateName: tpl.name } as ThreadMsg & { templateName: string },
+                      ],
+                    }));
+                    setActiveTemplateId(null);
+                    setTemplateValues({});
+                    setComposerMode("reply");
+                    toast.success(`Template "${tpl.name}" sent`);
+                  }}
+                />
+              )}
             </div>
           </section>
         </div>
       </div>
+
+      {/* Image lightbox (Section 4) */}
+      <Dialog open={!!lightboxUrl} onOpenChange={(o) => !o && setLightboxUrl(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-sm">{lightboxAlt}</DialogTitle>
+          </DialogHeader>
+          {lightboxUrl && (
+            <div className="space-y-3">
+              <img src={lightboxUrl} alt={lightboxAlt} className="max-h-[70vh] w-full rounded-md object-contain" />
+              {lightboxCaption && (
+                <p className="text-sm text-muted-foreground">{lightboxCaption}</p>
+              )}
+              <DialogFooter>
+                <a
+                  href={lightboxUrl}
+                  download
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-card/40 px-3 py-1.5 text-xs font-medium hover:bg-accent"
+                >
+                  <Download className="h-3.5 w-3.5" /> Download
+                </a>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Take-over confirm dialog */}
       <AlertDialog open={!!confirmTakeOverFor} onOpenChange={(o) => !o && setConfirmTakeOverFor(null)}>

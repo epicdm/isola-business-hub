@@ -110,6 +110,7 @@ type ThreadMsg = {
   time: string;
   ownerName?: string;
   teachAi?: boolean;
+  card?: MessageCard;
 };
 
 // Mocked POST /api/inbox/conversations/[id]/whisper.
@@ -125,6 +126,32 @@ async function postWhisper(
     teachAi: body.teachAi,
     createdAt: new Date().toISOString(),
   };
+}
+
+// Mocked POST /api/ema/conversation-chat.
+// Returns Ema's reply and (optionally) a draft the owner can paste into the composer.
+async function postEmaConversationChat(
+  conversationId: string,
+  message: string,
+): Promise<{ id: string; text: string; draftReply?: string; createdAt: string }> {
+  await new Promise((r) => setTimeout(r, 350));
+  const reply = emaConversationReply(conversationId, message);
+  return {
+    id: `ema_${Date.now()}_${conversationId}`,
+    text: reply.text,
+    draftReply: reply.draftReply,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+// Mocked GET /api/inbox/conversations/[id]/suggestions.
+async function fetchSuggestions(
+  conversationId: string,
+  rotation: number,
+): Promise<{ suggestions: [string, string, string] }> {
+  await new Promise((r) => setTimeout(r, 200));
+  const s = getSuggestions(conversationId, rotation);
+  return { suggestions: [s[0], s[1], s[2]] as [string, string, string] };
 }
 
 const OWNER_NAME = "You";

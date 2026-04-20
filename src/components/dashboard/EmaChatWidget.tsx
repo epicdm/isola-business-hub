@@ -28,6 +28,28 @@ export default function EmaChatWidget() {
     if (v === "1") setOpen(true);
   }, []);
 
+  // Listen for "Ask Ema" requests dispatched from cards / alerts
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const ctx = (e as CustomEvent<{ cardTitle: string; summary: string; prompt: string }>).detail;
+      if (!ctx) return;
+      setOpen(true);
+      const now = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      setMessages((prev) => [
+        ...prev,
+        { id: `ctx${Date.now()}`, role: "owner", content: ctx.prompt, timestamp: now },
+        {
+          id: `er${Date.now() + 1}`,
+          role: "ema",
+          content: `Re: ${ctx.cardTitle} — ${ctx.summary} What would you like me to do next?`,
+          timestamp: now,
+        },
+      ]);
+    };
+    window.addEventListener("isola:ask-ema", handler as EventListener);
+    return () => window.removeEventListener("isola:ask-ema", handler as EventListener);
+  }, []);
+
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, open ? "1" : "0");
   }, [open]);

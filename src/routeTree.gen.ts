@@ -24,6 +24,7 @@ import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settin
 import { Route as DashboardOutboundRouteImport } from './routes/dashboard.outbound'
 import { Route as DashboardKnowledgeRouteImport } from './routes/dashboard.knowledge'
 import { Route as DashboardIntegrationsRouteImport } from './routes/dashboard.integrations'
+import { Route as DashboardInsightsRouteImport } from './routes/dashboard.insights'
 import { Route as DashboardInboxRouteImport } from './routes/dashboard.inbox'
 import { Route as DashboardHoursRouteImport } from './routes/dashboard.hours'
 import { Route as DashboardEmaRouteImport } from './routes/dashboard.ema'
@@ -113,6 +114,11 @@ const DashboardKnowledgeRoute = DashboardKnowledgeRouteImport.update({
 const DashboardIntegrationsRoute = DashboardIntegrationsRouteImport.update({
   id: '/dashboard/integrations',
   path: '/dashboard/integrations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardInsightsRoute = DashboardInsightsRouteImport.update({
+  id: '/dashboard/insights',
+  path: '/dashboard/insights',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardInboxRoute = DashboardInboxRouteImport.update({
@@ -207,6 +213,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/ema': typeof DashboardEmaRouteWithChildren
   '/dashboard/hours': typeof DashboardHoursRoute
   '/dashboard/inbox': typeof DashboardInboxRoute
+  '/dashboard/insights': typeof DashboardInsightsRoute
   '/dashboard/integrations': typeof DashboardIntegrationsRoute
   '/dashboard/knowledge': typeof DashboardKnowledgeRoute
   '/dashboard/outbound': typeof DashboardOutboundRoute
@@ -238,6 +245,7 @@ export interface FileRoutesByTo {
   '/dashboard/contacts': typeof DashboardContactsRoute
   '/dashboard/hours': typeof DashboardHoursRoute
   '/dashboard/inbox': typeof DashboardInboxRoute
+  '/dashboard/insights': typeof DashboardInsightsRoute
   '/dashboard/integrations': typeof DashboardIntegrationsRoute
   '/dashboard/knowledge': typeof DashboardKnowledgeRoute
   '/dashboard/outbound': typeof DashboardOutboundRoute
@@ -271,6 +279,7 @@ export interface FileRoutesById {
   '/dashboard/ema': typeof DashboardEmaRouteWithChildren
   '/dashboard/hours': typeof DashboardHoursRoute
   '/dashboard/inbox': typeof DashboardInboxRoute
+  '/dashboard/insights': typeof DashboardInsightsRoute
   '/dashboard/integrations': typeof DashboardIntegrationsRoute
   '/dashboard/knowledge': typeof DashboardKnowledgeRoute
   '/dashboard/outbound': typeof DashboardOutboundRoute
@@ -305,6 +314,7 @@ export interface FileRouteTypes {
     | '/dashboard/ema'
     | '/dashboard/hours'
     | '/dashboard/inbox'
+    | '/dashboard/insights'
     | '/dashboard/integrations'
     | '/dashboard/knowledge'
     | '/dashboard/outbound'
@@ -336,6 +346,7 @@ export interface FileRouteTypes {
     | '/dashboard/contacts'
     | '/dashboard/hours'
     | '/dashboard/inbox'
+    | '/dashboard/insights'
     | '/dashboard/integrations'
     | '/dashboard/knowledge'
     | '/dashboard/outbound'
@@ -368,6 +379,7 @@ export interface FileRouteTypes {
     | '/dashboard/ema'
     | '/dashboard/hours'
     | '/dashboard/inbox'
+    | '/dashboard/insights'
     | '/dashboard/integrations'
     | '/dashboard/knowledge'
     | '/dashboard/outbound'
@@ -401,6 +413,7 @@ export interface RootRouteChildren {
   DashboardEmaRoute: typeof DashboardEmaRouteWithChildren
   DashboardHoursRoute: typeof DashboardHoursRoute
   DashboardInboxRoute: typeof DashboardInboxRoute
+  DashboardInsightsRoute: typeof DashboardInsightsRoute
   DashboardIntegrationsRoute: typeof DashboardIntegrationsRoute
   DashboardKnowledgeRoute: typeof DashboardKnowledgeRoute
   DashboardOutboundRoute: typeof DashboardOutboundRoute
@@ -520,6 +533,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard/integrations'
       fullPath: '/dashboard/integrations'
       preLoaderRoute: typeof DashboardIntegrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/insights': {
+      id: '/dashboard/insights'
+      path: '/dashboard/insights'
+      fullPath: '/dashboard/insights'
+      preLoaderRoute: typeof DashboardInsightsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/inbox': {
@@ -662,6 +682,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardEmaRoute: DashboardEmaRouteWithChildren,
   DashboardHoursRoute: DashboardHoursRoute,
   DashboardInboxRoute: DashboardInboxRoute,
+  DashboardInsightsRoute: DashboardInsightsRoute,
   DashboardIntegrationsRoute: DashboardIntegrationsRoute,
   DashboardKnowledgeRoute: DashboardKnowledgeRoute,
   DashboardOutboundRoute: DashboardOutboundRoute,
@@ -678,3 +699,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

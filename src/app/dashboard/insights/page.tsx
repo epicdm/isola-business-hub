@@ -461,8 +461,14 @@ export default function InsightsPage() {
           </div>
         </div>
 
-        {/* 8-card grid */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* 8-card grid (locked behind Odoo connection) */}
+        <div className="relative">
+          <div
+            className={`grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 transition-all duration-300 ${
+              locked ? "pointer-events-none select-none blur-sm grayscale" : ""
+            }`}
+            aria-hidden={locked}
+          >
 
           {/* CARD 1 — Today's sales */}
           <InsightCardMenu
@@ -726,6 +732,37 @@ export default function InsightsPage() {
               </div>
             </CardShell>
           </InsightCardMenu>
+          </div>
+
+          {/* Soft paywall overlay */}
+          {locked && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center p-4">
+              <div className="max-w-md rounded-2xl border border-violet-500/30 bg-card/95 p-6 text-center shadow-2xl backdrop-blur">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-violet-500/15 text-violet-500">
+                  <Database className="h-6 w-6" />
+                </div>
+                <h2 className="font-display text-lg font-bold">Connect Odoo to unlock Insights</h2>
+                <p className="mt-1.5 text-sm text-muted-foreground">
+                  Today's sales, open tabs, outstanding invoices, low stock,
+                  staff tips and cash balance — all live, all in one pane.
+                </p>
+                <div className="mt-5 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
+                  <Button asChild className="gap-1.5">
+                    <Link to="/onboarding" search={{ step: 6 }}>
+                      <Database className="h-4 w-4" />
+                      Connect Odoo
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" asChild>
+                    <Link to="/dashboard/integrations">View integrations</Link>
+                  </Button>
+                </div>
+                <p className="mt-3 text-[11px] text-muted-foreground">
+                  ~2 min · We only read what's needed.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">

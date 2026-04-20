@@ -390,18 +390,19 @@ export default function InsightsPage() {
   const [synced, setSynced] = useState(insightsMockData.lastSyncedMinutesAgo);
   const [refreshing, setRefreshing] = useState(false);
   const [vertical, setVertical] = useState("Restaurants");
-  const [odooConnected, setOdooConnected] = useState<boolean | null>(null);
-
-  // Hydrate Odoo-connected flag from localStorage (SSR-safe)
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    setOdooConnected(window.localStorage.getItem("odooConnected") === "true");
-  }, []);
+  const { connected: odooConnected, setConnected } = useOdooConnection();
+  const [paywallDismissed, setPaywallDismissed] = useState(false);
 
   // Tick the "synced X min ago" pill
   useEffect(() => {
     const t = setInterval(() => setSynced((s) => s + 1), 60_000);
     return () => clearInterval(t);
+  }, []);
+
+  // Read session-only paywall dismissal
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setPaywallDismissed(window.sessionStorage.getItem("isola.insights.paywallDismissed") === "1");
   }, []);
 
   const refresh = () => {
@@ -413,8 +414,25 @@ export default function InsightsPage() {
     }, 1200);
   };
 
+  const dismissPaywall = () => {
+    setPaywallDismissed(true);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem("isola.insights.paywallDismissed", "1");
+    }
+  };
+
+  const tryReconnect = () => {
+    // Mock optimistic re-check
+    toast("Re-testing Odoo connection…");
+    setTimeout(() => {
+      // Just confirm it's still disconnected unless they actually configured it elsewhere
+      toast("Still disconnected — connect from setup.");
+    }, 900);
+  };
+
   const c = data;
-  const locked = odooConnected === false;
+  const locked = odooConnected === false && !paywallDismissed;
+  const blurred = odooConnected === false;
 
   return (
     <DashboardLayout currentPath="/dashboard/insights">

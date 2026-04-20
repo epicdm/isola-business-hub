@@ -138,6 +138,16 @@ const tabs: Array<{ key: "all" | Channel; label: string }> = [
   { key: "messenger", label: "Messenger" },
 ];
 
+// Mock — which agent handles which conversation. Read-only pill in header.
+const conversationAgent: Record<string, string> = {
+  c1: "ag-receptionist",
+  c2: "ag-receptionist",
+  c3: "ag-receptionist",
+  c4: "ag-receptionist",
+  c5: "ag-aftersales",
+  c6: "ag-receptionist",
+};
+
 type Qualification = "Lead" | "Customer" | "Blocked" | "Unknown";
 
 type ThreadMsg = {

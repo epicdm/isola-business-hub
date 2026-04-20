@@ -91,6 +91,10 @@ interface OnboardingData {
   greeting: string;
   whatsappNumber: string;
   notifyOnHandoff: boolean;
+  odooUrl: string;
+  odooDb: string;
+  odooApiKey: string;
+  odooUsername: string;
 }
 
 const defaultData: OnboardingData = {
@@ -113,6 +117,10 @@ const defaultData: OnboardingData = {
   greeting: "Hi! 👋 Thanks for reaching out — how can I help today?",
   whatsappNumber: "",
   notifyOnHandoff: true,
+  odooUrl: "",
+  odooDb: "",
+  odooApiKey: "",
+  odooUsername: "",
 };
 
 const step1Schema = z.object({

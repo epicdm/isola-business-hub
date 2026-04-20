@@ -122,6 +122,12 @@ export default function InboxPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   // Filter inbox by a specific contact (when "View all conversations" clicked)
   const [contactFilter, setContactFilter] = useState<string | null>(null);
+  // Composer mode: reply or whisper
+  const [composerMode, setComposerMode] = useState<"reply" | "whisper">("reply");
+  const [teachAi, setTeachAi] = useState(false);
+  // Whispers added at runtime, keyed by conversation id
+  const [extraWhispers, setExtraWhispers] = useState<Record<string, ThreadMsg[]>>({});
+  const [savingWhisper, setSavingWhisper] = useState(false);
   // Editable per-contact state (mock — local only)
   const [contactState, setContactState] = useState<
     Record<

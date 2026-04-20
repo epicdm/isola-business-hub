@@ -523,9 +523,10 @@ export default function OnboardingPage({ step, setStep, resumeMode = false, retu
                   </span>
                 </button>
               );
-            })}
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Step card */}
         <Card className="overflow-hidden border-border/60 shadow-sm">

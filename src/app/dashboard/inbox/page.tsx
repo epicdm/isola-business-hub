@@ -164,8 +164,8 @@ export default function InboxPage() {
                     <Card
                       className={`px-4 py-2.5 text-sm ${
                         m.from === "customer"
-                          ? "rounded-2xl rounded-tl-sm border-border/40 bg-card"
-                          : "rounded-2xl rounded-tr-sm border-primary/30 bg-primary/15 text-foreground"
+                          ? "rounded-2xl rounded-tl-sm border-transparent bg-bubble-in text-bubble-in-foreground"
+                          : "rounded-2xl rounded-tr-sm border-transparent bg-bubble-out text-bubble-out-foreground"
                       }`}
                     >
                       {m.text}

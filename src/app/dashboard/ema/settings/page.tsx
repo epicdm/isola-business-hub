@@ -86,7 +86,7 @@ export default function EmaSettingsPage() {
             <Section icon={MessageSquare} title="Personality" subtitle="How Ema sounds when she replies.">
               <Field label="Tone of voice">
                 <Select value={tone} onValueChange={setTone}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select tone" /></SelectTrigger>
                   <SelectContent>
                     {tones.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                   </SelectContent>

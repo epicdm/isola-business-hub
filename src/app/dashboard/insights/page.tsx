@@ -504,12 +504,6 @@ export default function InsightsPage() {
             }`}
             aria-hidden={blurred}
           >
-          <div
-            className={`grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 transition-all duration-300 ${
-              locked ? "pointer-events-none select-none blur-sm grayscale" : ""
-            }`}
-            aria-hidden={locked}
-          >
 
           {/* CARD 1 — Today's sales */}
           <InsightCardMenu

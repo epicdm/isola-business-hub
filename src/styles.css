@@ -5,9 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Isola Design System — Caribbean dark mode
- * Tropical-tech: deep ocean blacks, bioluminescent teal primary,
- * sunset coral accent for CTAs/Ema, golden hour highlights.
+ * Isola Design System — WhatsApp-native dark
+ * Deep green-black surfaces, signature WhatsApp green primary,
+ * warm coral Ema accent. Bubble tokens for chat.
  */
 
 @theme inline {
@@ -31,6 +31,7 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-glow: var(--primary-glow);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -49,6 +50,11 @@
   --color-ema-glow: var(--ema-glow);
   --color-success: var(--success);
   --color-warning: var(--warning);
+
+  --color-bubble-in: var(--bubble-in);
+  --color-bubble-in-foreground: var(--bubble-in-foreground);
+  --color-bubble-out: var(--bubble-out);
+  --color-bubble-out-foreground: var(--bubble-out-foreground);
 
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
@@ -70,86 +76,93 @@
 :root {
   --radius: 0.75rem;
 
-  /* Deep ocean / Caribbean midnight */
-  --background: oklch(0.18 0.025 230);
-  --foreground: oklch(0.97 0.01 220);
+  /* WhatsApp-native green-black surfaces */
+  --background: oklch(0.18 0.02 165);
+  --foreground: oklch(0.97 0.01 150);
 
-  --card: oklch(0.22 0.028 230);
-  --card-foreground: oklch(0.97 0.01 220);
+  --card: oklch(0.22 0.02 165);
+  --card-foreground: oklch(0.97 0.01 150);
 
-  --popover: oklch(0.22 0.028 230);
-  --popover-foreground: oklch(0.97 0.01 220);
+  --popover: oklch(0.22 0.02 165);
+  --popover-foreground: oklch(0.97 0.01 150);
 
-  /* Bioluminescent teal — Isola brand */
-  --primary: oklch(0.78 0.16 180);
-  --primary-foreground: oklch(0.18 0.025 230);
+  /* WhatsApp green */
+  --primary: oklch(0.78 0.17 152);
+  --primary-glow: oklch(0.85 0.18 150);
+  --primary-foreground: oklch(0.18 0.05 160);
 
-  --secondary: oklch(0.28 0.03 230);
-  --secondary-foreground: oklch(0.97 0.01 220);
+  --secondary: oklch(0.28 0.02 165);
+  --secondary-foreground: oklch(0.97 0.01 150);
 
-  --muted: oklch(0.26 0.025 230);
-  --muted-foreground: oklch(0.7 0.02 220);
+  --muted: oklch(0.26 0.015 165);
+  --muted-foreground: oklch(0.7 0.02 160);
 
-  --accent: oklch(0.32 0.04 230);
-  --accent-foreground: oklch(0.97 0.01 220);
+  --accent: oklch(0.32 0.04 165);
+  --accent-foreground: oklch(0.97 0.01 150);
 
-  --destructive: oklch(0.62 0.22 25);
-  --destructive-foreground: oklch(0.98 0.01 220);
+  --destructive: oklch(0.65 0.22 25);
+  --destructive-foreground: oklch(0.98 0.01 150);
 
-  --border: oklch(0.3 0.025 230);
-  --input: oklch(0.28 0.025 230);
-  --ring: oklch(0.78 0.16 180);
+  --border: oklch(0.3 0.015 165 / 60%);
+  --input: oklch(0.28 0.015 165);
+  --ring: oklch(0.78 0.17 152);
 
-  /* Ema — sunset coral, warm and personal */
-  --ema: oklch(0.74 0.18 35);
-  --ema-foreground: oklch(0.18 0.025 230);
-  --ema-glow: oklch(0.74 0.18 35 / 0.45);
+  /* Ema — warm coral accent, harmonizes with green */
+  --ema: oklch(0.7 0.18 25);
+  --ema-foreground: oklch(0.18 0.02 165);
+  --ema-glow: oklch(0.7 0.18 25 / 0.45);
 
-  --success: oklch(0.74 0.16 155);
-  --warning: oklch(0.82 0.16 80);
+  --success: oklch(0.78 0.17 152);
+  --warning: oklch(0.82 0.17 80);
 
-  --chart-1: oklch(0.78 0.16 180);
-  --chart-2: oklch(0.74 0.18 35);
-  --chart-3: oklch(0.82 0.16 80);
-  --chart-4: oklch(0.7 0.18 295);
-  --chart-5: oklch(0.74 0.16 155);
+  /* Chat bubbles */
+  --bubble-in: oklch(0.26 0.015 165);
+  --bubble-in-foreground: oklch(0.97 0.01 150);
+  --bubble-out: oklch(0.42 0.12 152);
+  --bubble-out-foreground: oklch(0.97 0.01 150);
 
-  --sidebar: oklch(0.16 0.025 230);
-  --sidebar-foreground: oklch(0.92 0.01 220);
-  --sidebar-primary: oklch(0.78 0.16 180);
-  --sidebar-primary-foreground: oklch(0.18 0.025 230);
-  --sidebar-accent: oklch(0.24 0.03 230);
-  --sidebar-accent-foreground: oklch(0.97 0.01 220);
-  --sidebar-border: oklch(0.26 0.025 230);
-  --sidebar-ring: oklch(0.78 0.16 180);
+  --chart-1: oklch(0.78 0.17 152);
+  --chart-2: oklch(0.72 0.14 200);
+  --chart-3: oklch(0.78 0.16 80);
+  --chart-4: oklch(0.7 0.18 25);
+  --chart-5: oklch(0.65 0.2 290);
+
+  --sidebar: oklch(0.16 0.02 165);
+  --sidebar-foreground: oklch(0.92 0.01 150);
+  --sidebar-primary: oklch(0.78 0.17 152);
+  --sidebar-primary-foreground: oklch(0.18 0.05 160);
+  --sidebar-accent: oklch(0.24 0.02 165);
+  --sidebar-accent-foreground: oklch(0.97 0.01 150);
+  --sidebar-border: oklch(0.26 0.015 165);
+  --sidebar-ring: oklch(0.78 0.17 152);
 
   /* Gradients & effects */
   --gradient-hero: radial-gradient(
       ellipse 80% 60% at 70% 20%,
-      oklch(0.78 0.16 180 / 0.18),
+      oklch(0.78 0.17 152 / 0.18),
       transparent 60%
     ),
-    radial-gradient(ellipse 70% 50% at 20% 80%, oklch(0.74 0.18 35 / 0.12), transparent 60%),
-    linear-gradient(180deg, oklch(0.18 0.025 230), oklch(0.16 0.025 230));
-  --gradient-primary: linear-gradient(135deg, oklch(0.78 0.16 180), oklch(0.7 0.16 200));
-  --gradient-ema: linear-gradient(135deg, oklch(0.74 0.18 35), oklch(0.78 0.16 50));
-  --shadow-glow: 0 0 40px -10px oklch(0.78 0.16 180 / 0.5);
-  --shadow-ema: 0 0 40px -10px oklch(0.74 0.18 35 / 0.5);
+    radial-gradient(ellipse 70% 50% at 20% 80%, oklch(0.7 0.18 25 / 0.1), transparent 60%),
+    linear-gradient(180deg, oklch(0.18 0.02 165), oklch(0.16 0.02 165));
+  --gradient-primary: linear-gradient(135deg, oklch(0.78 0.17 152), oklch(0.85 0.18 150));
+  --gradient-ema: linear-gradient(135deg, oklch(0.7 0.18 25), oklch(0.78 0.16 50));
+  --shadow-glow: 0 0 40px -10px oklch(0.78 0.17 152 / 0.5);
+  --shadow-ema: 0 0 40px -10px oklch(0.7 0.18 25 / 0.5);
   --shadow-card: 0 8px 32px -12px oklch(0 0 0 / 0.4);
 }
 
 /* Light fallback — not the default */
 .light {
-  --background: oklch(0.98 0.005 220);
-  --foreground: oklch(0.2 0.025 230);
+  --background: oklch(0.98 0.005 150);
+  --foreground: oklch(0.2 0.02 165);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.025 230);
-  --primary: oklch(0.55 0.15 195);
-  --primary-foreground: oklch(0.98 0.005 220);
-  --muted: oklch(0.94 0.01 220);
-  --muted-foreground: oklch(0.45 0.02 230);
-  --border: oklch(0.9 0.01 220);
-  --input: oklch(0.92 0.01 220);
+  --card-foreground: oklch(0.2 0.02 165);
+  --primary: oklch(0.6 0.16 152);
+  --primary-foreground: oklch(0.98 0.005 150);
+  --muted: oklch(0.94 0.01 150);
+  --muted-foreground: oklch(0.45 0.02 165);
+  --border: oklch(0.9 0.01 150);
+  --input: oklch(0.92 0.01 150);
 }
 
 @layer base {
@@ -211,8 +224,8 @@
   }
   .grid-bg {
     background-image:
-      linear-gradient(oklch(0.78 0.16 180 / 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, oklch(0.78 0.16 180 / 0.05) 1px, transparent 1px);
+      linear-gradient(oklch(0.78 0.17 152 / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(0.78 0.17 152 / 0.05) 1px, transparent 1px);
     background-size: 48px 48px;
   }
 }

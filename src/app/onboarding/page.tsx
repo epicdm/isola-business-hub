@@ -209,11 +209,13 @@ function evaluateOdooConnection(d: { odooUrl: string; odooDb: string; odooApiKey
 interface OnboardingPageProps {
   step: number;
   setStep: (n: number) => void;
+  resumeMode?: boolean;
+  returnTo?: string;
 }
 
 const STORAGE_KEY = "ema:onboarding:draft";
 
-export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
+export default function OnboardingPage({ step, setStep, resumeMode = false, returnTo = "/dashboard" }: OnboardingPageProps) {
   const navigate = useNavigate();
   const [data, setData] = useState<OnboardingData>(defaultData);
   const [errors, setErrors] = useState<Record<string, string>>({});

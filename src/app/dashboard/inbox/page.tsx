@@ -30,8 +30,19 @@ import {
   Clock,
   Pencil,
   Inbox as InboxIcon,
+  Tag,
+  FileText,
+  ImageIcon,
+  Play,
+  Pause,
+  Download,
+  MapPin,
+  ChevronDown,
+  Camera,
+  LayoutTemplate,
 } from "lucide-react";
 import { toast } from "sonner";
+import { format, addDays } from "date-fns";
 import DashboardLayout from "../layout";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -48,6 +59,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,10 +103,22 @@ import {
   emaConvQuickActions,
   emaConversationReply,
   getSuggestions,
+  conversationMeta as seedConvMeta,
+  tenantLabels as seedLabels,
+  statusMeta,
+  labelColorClasses,
+  conversationMedia,
+  messageTemplates,
+  renderTemplate,
   type Channel,
   type EmaConvChatMsg,
   type MessageCard,
+  type MessageMedia,
+  type MessageTemplate,
   type PendingDraft,
+  type ConversationStatus,
+  type ConversationMeta,
+  type LabelDef,
 } from "@/lib/mock-data";
 
 const channelMeta: Record<Channel, { icon: typeof Phone; label: string; color: string }> = {

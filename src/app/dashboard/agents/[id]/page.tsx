@@ -347,10 +347,28 @@ export default function AgentDetailPage() {
           )}
         </Card>
 
+        {/* Tier indicator (Turn 10 · Section 4) */}
+        <div className="mb-6 flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 text-xs">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <span className="text-muted-foreground">Current plan:</span>
+            <span className="font-semibold capitalize text-foreground">{tenantTier}</span>
+            <span className="text-muted-foreground">— all tool categories unlocked</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => toast("Upgrade flow coming soon")}
+            className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+          >
+            Upgrade to Business <ArrowRight className="h-3 w-3" />
+          </button>
+        </div>
+
         <Tabs defaultValue="persona">
           <TabsList>
             <TabsTrigger value="persona">Persona</TabsTrigger>
             <TabsTrigger value="channels">Channels</TabsTrigger>
+            <TabsTrigger value="tools">Tools</TabsTrigger>
             <TabsTrigger value="hours">Hours</TabsTrigger>
             <TabsTrigger value="routing">Routing</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>

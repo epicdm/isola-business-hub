@@ -180,10 +180,13 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
           return value.trim().length > 0;
         });
         if (hasMeaningfulDraft) {
+          console.log("[onboarding] firing resume toast");
           toast("Resumed your draft", {
             description: "We restored your previous answers.",
             duration: 3000,
           });
+        } else {
+          console.log("[onboarding] no meaningful draft, skipping toast");
         }
       }
     } catch {

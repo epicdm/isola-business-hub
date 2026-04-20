@@ -140,6 +140,25 @@ export default function AgentDetailPage() {
   const [igStories, setIgStories] = useState(true);
   // Review mode (Safety) — persisted to localStorage so /dashboard/inbox can read it
   const [reviewMode, setReviewMode] = useState<boolean>(false);
+  // Tools enabled — initialized per role template
+  const initialTools = useMemo(() => {
+    const role = roleForTemplate(original.template);
+    return new Set<string>(roleDefaultTools[role] ?? []);
+  }, [original]);
+  const [enabledTools, setEnabledTools] = useState<Set<string>>(initialTools);
+
+  useEffect(() => {
+    setEnabledTools(new Set(initialTools));
+  }, [initialTools]);
+
+  const toggleTool = (id: string) => {
+    setEnabledTools((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   useEffect(() => {
     setAgent(original);

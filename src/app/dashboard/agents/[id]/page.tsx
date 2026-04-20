@@ -53,7 +53,9 @@ import {
 import {
   agents as seedAgents,
   defaultHours,
+  getAgentActivity,
   type Agent,
+  type AgentActivityOutcome,
   type AgentChannel,
   type AgentRoutingRule,
 } from "@/lib/mock-data";

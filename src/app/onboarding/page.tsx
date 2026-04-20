@@ -274,6 +274,12 @@ export default function OnboardingPage({ step, setStep, resumeMode = false, retu
     };
   }, []);
 
+  // Force step 6 in resume mode
+  useEffect(() => {
+    if (resumeMode && step !== 6) setStep(6);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeMode]);
+
   const current = useMemo(
     () => STEPS.find((s) => s.id === step) ?? STEPS[0],
     [step],

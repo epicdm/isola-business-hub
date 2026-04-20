@@ -568,6 +568,56 @@ export default function InboxPage() {
               </button>
             )}
           </div>
+          {/* Status tab + filters row */}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="inline-flex rounded-md border border-border/60 bg-card/40 p-0.5">
+              <button
+                onClick={() => setStatusTab("active")}
+                className={`rounded px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                  statusTab === "active" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Active
+              </button>
+              <button
+                onClick={() => setStatusTab("snoozed")}
+                className={`inline-flex items-center gap-1 rounded px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                  statusTab === "snoozed" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Clock className="h-3 w-3" /> Snoozed
+                {snoozedCount > 0 && (
+                  <span className="ml-0.5 rounded-full bg-violet/20 px-1.5 text-[10px] font-bold text-violet">
+                    {snoozedCount}
+                  </span>
+                )}
+              </button>
+            </div>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
+              <SelectTrigger className="h-8 w-auto gap-1.5 border-border/60 bg-card/40 text-xs">
+                <Tag className="h-3 w-3 text-muted-foreground" />
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Any status</SelectItem>
+                <SelectItem value="open">Open</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="resolved">Resolved</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={labelFilter} onValueChange={setLabelFilter}>
+              <SelectTrigger className="h-8 w-auto gap-1.5 border-border/60 bg-card/40 text-xs">
+                <Tag className="h-3 w-3 text-muted-foreground" />
+                <SelectValue placeholder="Labels" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Any label</SelectItem>
+                {labelLibrary.map((l) => (
+                  <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Split pane */}

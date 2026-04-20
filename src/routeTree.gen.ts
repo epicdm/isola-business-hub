@@ -21,6 +21,7 @@ import { Route as ForClinicsRouteImport } from './routes/for.clinics'
 import { Route as DashboardInboxRouteImport } from './routes/dashboard.inbox'
 import { Route as DashboardEmaRouteImport } from './routes/dashboard.ema'
 import { Route as DashboardContactsRouteImport } from './routes/dashboard.contacts'
+import { Route as DashboardCatalogRouteImport } from './routes/dashboard.catalog'
 import { Route as DashboardBookingsRouteImport } from './routes/dashboard.bookings'
 import { Route as DashboardEmaIndexRouteImport } from './routes/dashboard.ema.index'
 import { Route as DashboardEmaSettingsRouteImport } from './routes/dashboard.ema.settings'
@@ -86,6 +87,11 @@ const DashboardContactsRoute = DashboardContactsRouteImport.update({
   path: '/dashboard/contacts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardCatalogRoute = DashboardCatalogRouteImport.update({
+  id: '/dashboard/catalog',
+  path: '/dashboard/catalog',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardBookingsRoute = DashboardBookingsRouteImport.update({
   id: '/dashboard/bookings',
   path: '/dashboard/bookings',
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
+  '/dashboard/catalog': typeof DashboardCatalogRoute
   '/dashboard/contacts': typeof DashboardContactsRoute
   '/dashboard/ema': typeof DashboardEmaRouteWithChildren
   '/dashboard/inbox': typeof DashboardInboxRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
+  '/dashboard/catalog': typeof DashboardCatalogRoute
   '/dashboard/contacts': typeof DashboardContactsRoute
   '/dashboard/inbox': typeof DashboardInboxRoute
   '/for/clinics': typeof ForClinicsRoute
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
+  '/dashboard/catalog': typeof DashboardCatalogRoute
   '/dashboard/contacts': typeof DashboardContactsRoute
   '/dashboard/ema': typeof DashboardEmaRouteWithChildren
   '/dashboard/inbox': typeof DashboardInboxRoute
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/terms'
     | '/dashboard/bookings'
+    | '/dashboard/catalog'
     | '/dashboard/contacts'
     | '/dashboard/ema'
     | '/dashboard/inbox'
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/terms'
     | '/dashboard/bookings'
+    | '/dashboard/catalog'
     | '/dashboard/contacts'
     | '/dashboard/inbox'
     | '/for/clinics'
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/terms'
     | '/dashboard/bookings'
+    | '/dashboard/catalog'
     | '/dashboard/contacts'
     | '/dashboard/ema'
     | '/dashboard/inbox'
@@ -224,6 +236,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
   DashboardBookingsRoute: typeof DashboardBookingsRoute
+  DashboardCatalogRoute: typeof DashboardCatalogRoute
   DashboardContactsRoute: typeof DashboardContactsRoute
   DashboardEmaRoute: typeof DashboardEmaRouteWithChildren
   DashboardInboxRoute: typeof DashboardInboxRoute
@@ -319,6 +332,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardContactsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/catalog': {
+      id: '/dashboard/catalog'
+      path: '/dashboard/catalog'
+      fullPath: '/dashboard/catalog'
+      preLoaderRoute: typeof DashboardCatalogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/bookings': {
       id: '/dashboard/bookings'
       path: '/dashboard/bookings'
@@ -373,6 +393,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
   DashboardBookingsRoute: DashboardBookingsRoute,
+  DashboardCatalogRoute: DashboardCatalogRoute,
   DashboardContactsRoute: DashboardContactsRoute,
   DashboardEmaRoute: DashboardEmaRouteWithChildren,
   DashboardInboxRoute: DashboardInboxRoute,
@@ -384,3 +405,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

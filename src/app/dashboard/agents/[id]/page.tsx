@@ -110,6 +110,7 @@ export default function AgentDetailPage() {
   const { id } = useParams({ from: "/dashboard/agents/$id" });
 
   const original = useMemo(() => seedAgents.find((a) => a.id === id) ?? seedAgents[0], [id]);
+  const activity = useMemo(() => getAgentActivity(original.id), [original.id]);
 
   const [agent, setAgent] = useState<Agent>(original);
   const [keywordDraft, setKeywordDraft] = useState("");

@@ -80,6 +80,31 @@ const ruleTypeMeta: Record<AgentRoutingRule["type"], { label: string; icon: type
   fallback: { label: "Fallback", icon: Workflow, color: "border-ema/30 bg-ema/10 text-ema" },
 };
 
+const outcomeMeta: Record<AgentActivityOutcome, { label: string; icon: typeof Tag; className: string }> = {
+  booked: {
+    label: "Booked",
+    icon: CalendarCheck,
+    className: "border-success/30 bg-success/10 text-success",
+  },
+  answered: {
+    label: "Answered",
+    icon: MessageSquare,
+    className: "border-border/60 bg-muted/40 text-muted-foreground",
+  },
+  escalated: {
+    label: "Escalated",
+    icon: AlertTriangle,
+    className: "border-warning/30 bg-warning/10 text-warning",
+  },
+};
+
+const activityChannelIcon: Record<AgentChannel, typeof Phone> = {
+  whatsapp: Phone,
+  voice: PhoneCall,
+  instagram: Instagram,
+  messenger: MessageCircle,
+};
+
 export default function AgentDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams({ from: "/dashboard/agents/$id" });

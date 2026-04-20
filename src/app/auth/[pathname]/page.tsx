@@ -273,6 +273,22 @@ function SignUpForm() {
     setErrors({});
     setLoading(true);
     await new Promise((r) => setTimeout(r, 950));
+    // Seed the onboarding draft with what they just told us so step 1 is prefilled.
+    if (typeof window !== "undefined") {
+      try {
+        const STORAGE_KEY = "ema:onboarding:draft";
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        const existing = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+        const merged = {
+          ...existing,
+          contactName: name.trim(),
+          businessName: business.trim(),
+        };
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+      } catch {
+        // ignore quota / parse errors — onboarding will still load with defaults
+      }
+    }
     toast.success("Account created — let's set up Isola");
     mockLogin(navigate, "/onboarding");
   };

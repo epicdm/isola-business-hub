@@ -160,7 +160,9 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
   const [data, setData] = useState<OnboardingData>(defaultData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [savedFlash, setSavedFlash] = useState(false);
   const hydrated = useRef(false);
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Hydrate from localStorage after mount (SSR-safe)
   useEffect(() => {
@@ -181,10 +183,19 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
     if (!hydrated.current) return;
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      setSavedFlash(true);
+      if (flashTimer.current) clearTimeout(flashTimer.current);
+      flashTimer.current = setTimeout(() => setSavedFlash(false), 1400);
     } catch {
       // ignore quota errors
     }
   }, [data]);
+
+  useEffect(() => {
+    return () => {
+      if (flashTimer.current) clearTimeout(flashTimer.current);
+    };
+  }, []);
 
   const current = useMemo(
     () => STEPS.find((s) => s.id === step) ?? STEPS[0],
@@ -317,9 +328,21 @@ export default function OnboardingPage({ step, setStep }: OnboardingPageProps) {
         {/* Progress */}
         <div className="mb-8">
           <div className="mb-2 flex items-center justify-between text-sm">
-            <span className="font-medium text-foreground">
-              Step {step} of {TOTAL_STEPS}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-foreground">
+                Step {step} of {TOTAL_STEPS}
+              </span>
+              <span
+                aria-live="polite"
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary transition-opacity duration-300",
+                  savedFlash ? "animate-fade-in opacity-100" : "pointer-events-none opacity-0",
+                )}
+              >
+                <Check className="h-3 w-3" />
+                Saved
+              </span>
+            </div>
             <span className="text-muted-foreground">{Math.round(progress)}% complete</span>
           </div>
           <Progress value={progress} className="h-2" />

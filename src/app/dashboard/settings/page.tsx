@@ -225,6 +225,9 @@ export default function SettingsPage() {
             <TabsTrigger value="notifications">
               <Bell className="h-3.5 w-3.5" /> Notifications
             </TabsTrigger>
+            <TabsTrigger value="labels">
+              <Tag className="h-3.5 w-3.5" /> Labels
+            </TabsTrigger>
             <TabsTrigger value="account">
               <User className="h-3.5 w-3.5" /> Account
             </TabsTrigger>

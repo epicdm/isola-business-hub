@@ -128,6 +128,121 @@ export const emaInitialMessages = [
 
 export const emaQuickActions = ["Today's digest", "How's this week?", "Launch campaign", "Show escalations"];
 
+// Past Ema conversations — for /dashboard/ema thread sidebar
+export const emaThreads = [
+  {
+    id: "t1",
+    title: "Today's digest",
+    preview: "14 messages, 3 bookings, 1 escalation needs you…",
+    time: "7:00 AM",
+    pinned: true,
+    messages: emaInitialMessages,
+  },
+  {
+    id: "t2",
+    title: "Friday forecast",
+    preview: "Friday is filling fast — only 2 tables left for 7pm.",
+    time: "Yesterday",
+    pinned: false,
+    messages: [
+      { id: "f1", role: "owner" as const, content: "What does Friday look like?", timestamp: "5:42 PM" },
+      { id: "f2", role: "ema" as const, content: "Friday: 22 covers booked across 14 reservations. Only 2 tables open at 7pm. Want me to push a 'last seats' WhatsApp blast to your VIP list?", timestamp: "5:42 PM" },
+      { id: "f3", role: "owner" as const, content: "Yes, but cap it at 8 people — don't want to overbook.", timestamp: "5:43 PM" },
+      { id: "f4", role: "ema" as const, content: "Sent to top 12 VIPs with a 2-hour expiry on the offer. I'll stop the blast the moment we hit 8 confirmations.", timestamp: "5:43 PM" },
+    ],
+  },
+  {
+    id: "t3",
+    title: "Launch Mother's Day menu",
+    preview: "Drafted a 3-message campaign for the regular list.",
+    time: "Mon",
+    pinned: false,
+    messages: [
+      { id: "m1", role: "owner" as const, content: "I want to launch the Mother's Day prix fixe to our regulars.", timestamp: "10:12 AM" },
+      { id: "m2", role: "ema" as const, content: "Got it. I drafted a 3-message sequence: tease (Wed), reveal + booking link (Fri), last-call (Sun). Want to preview?", timestamp: "10:12 AM" },
+    ],
+  },
+  {
+    id: "t4",
+    title: "Weekly recap",
+    preview: "+22% revenue, top channel was WhatsApp (78%).",
+    time: "Sun",
+    pinned: false,
+    messages: [
+      { id: "w1", role: "ema" as const, content: "Weekly recap is in your inbox. TL;DR: +22% revenue, 78% via WhatsApp, Aaliyah George visited 3 times this week.", timestamp: "8:00 AM" },
+    ],
+  },
+  {
+    id: "t5",
+    title: "Lapsed customers",
+    preview: "12 regulars haven't visited in 60+ days.",
+    time: "Apr 14",
+    pinned: false,
+    messages: [
+      { id: "l1", role: "owner" as const, content: "Who's gone quiet?", timestamp: "2:30 PM" },
+      { id: "l2", role: "ema" as const, content: "12 regulars haven't visited in 60+ days. Top 3 by lifetime spend: Wesley F. (EC$1,620), Antoinette R. (EC$3,150), Cherise Joseph (EC$2,180). Want me to draft a 'we miss you' message?", timestamp: "2:30 PM" },
+    ],
+  },
+];
+
+// Daily / weekly digest archive — for /dashboard/ema/reports
+export const emaReports = [
+  {
+    id: "r1",
+    type: "daily" as const,
+    date: "Today · Apr 20",
+    title: "Morning digest",
+    summary: "14 messages handled · 3 new bookings · 1 escalation",
+    highlights: ["Friday 7pm fully booked", "Kareem L. needs callback re: private dinner", "Revenue pacing +14%"],
+    metrics: { messages: 14, bookings: 3, revenue: 1240, escalations: 1 },
+  },
+  {
+    id: "r2",
+    type: "daily" as const,
+    date: "Yesterday · Apr 19",
+    title: "Morning digest",
+    summary: "22 messages handled · 5 bookings · 0 escalations",
+    highlights: ["Sunday brunch sold out", "3 new VIP signups via IG", "Avg response time 2.1s"],
+    metrics: { messages: 22, bookings: 5, revenue: 1820, escalations: 0 },
+  },
+  {
+    id: "r3",
+    type: "weekly" as const,
+    date: "Week of Apr 14",
+    title: "Weekly recap",
+    summary: "147 messages · 38 bookings · EC$8,420 revenue · +22% WoW",
+    highlights: ["WhatsApp = 78% of channel mix", "Top guest: Aaliyah George (3 visits)", "12 lapsed regulars identified"],
+    metrics: { messages: 147, bookings: 38, revenue: 8420, escalations: 4 },
+  },
+  {
+    id: "r4",
+    type: "daily" as const,
+    date: "Apr 18",
+    title: "Morning digest",
+    summary: "19 messages handled · 4 bookings · 1 escalation",
+    highlights: ["Solange P. booked tour group of 6", "1 cancellation recovered", "Revenue pacing flat"],
+    metrics: { messages: 19, bookings: 4, revenue: 1410, escalations: 1 },
+  },
+  {
+    id: "r5",
+    type: "campaign" as const,
+    date: "Apr 17",
+    title: "Mother's Day teaser results",
+    summary: "Sent to 84 regulars · 38 opens · 12 bookings captured",
+    highlights: ["45% open rate", "31% booking conversion", "EC$2,160 attributed revenue"],
+    metrics: { messages: 84, bookings: 12, revenue: 2160, escalations: 0 },
+  },
+  {
+    id: "r6",
+    type: "weekly" as const,
+    date: "Week of Apr 7",
+    title: "Weekly recap",
+    summary: "121 messages · 31 bookings · EC$6,890 revenue",
+    highlights: ["First full week with IG enabled", "2 escalations resolved <1hr", "Avg party size: 3.4"],
+    metrics: { messages: 121, bookings: 31, revenue: 6890, escalations: 2 },
+  },
+];
+
 export type Channel = "whatsapp" | "voice" | "instagram" | "messenger";
 
 // ---------- Inbox ----------

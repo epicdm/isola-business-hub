@@ -30,8 +30,19 @@ import {
   Clock,
   Pencil,
   Inbox as InboxIcon,
+  Tag,
+  FileText,
+  ImageIcon,
+  Play,
+  Pause,
+  Download,
+  MapPin,
+  ChevronDown,
+  Camera,
+  LayoutTemplate,
 } from "lucide-react";
 import { toast } from "sonner";
+import { format, addDays } from "date-fns";
 import DashboardLayout from "../layout";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -48,6 +59,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,10 +103,22 @@ import {
   emaConvQuickActions,
   emaConversationReply,
   getSuggestions,
+  conversationMeta as seedConvMeta,
+  tenantLabels as seedLabels,
+  statusMeta,
+  labelColorClasses,
+  conversationMedia,
+  messageTemplates,
+  renderTemplate,
   type Channel,
   type EmaConvChatMsg,
   type MessageCard,
+  type MessageMedia,
+  type MessageTemplate,
   type PendingDraft,
+  type ConversationStatus,
+  type ConversationMeta,
+  type LabelDef,
 } from "@/lib/mock-data";
 
 const channelMeta: Record<Channel, { icon: typeof Phone; label: string; color: string }> = {
@@ -111,6 +146,7 @@ type ThreadMsg = {
   ownerName?: string;
   teachAi?: boolean;
   card?: MessageCard;
+  media?: MessageMedia;
 };
 
 // Mocked POST /api/inbox/conversations/[id]/whisper.
@@ -154,6 +190,21 @@ async function fetchSuggestions(
   return { suggestions: [s[0], s[1], s[2]] as [string, string, string] };
 }
 
+// Mocked PATCH /api/inbox/conversations/[id]. Mutates the in-memory store via setState in caller.
+async function patchConversation(
+  conversationId: string,
+  body: Partial<{ status: ConversationStatus; snoozeUntil?: string; labels: string[] }>,
+): Promise<{ id: string } & Partial<ConversationMeta>> {
+  await new Promise((r) => setTimeout(r, 120));
+  return { id: conversationId, ...body };
+}
+
+// Mocked GET /api/labels + POST /api/labels — local-only here.
+async function fetchTemplates(): Promise<{ templates: MessageTemplate[] }> {
+  await new Promise((r) => setTimeout(r, 80));
+  return { templates: messageTemplates };
+}
+
 const OWNER_NAME = "You";
 
 function initials(name: string) {
@@ -167,6 +218,7 @@ function initials(name: string) {
 
 export default function InboxPage() {
   const [activeTab, setActiveTab] = useState<"all" | Channel>("all");
+  const [statusTab, setStatusTab] = useState<"active" | "snoozed">("active");
   const [activeId, setActiveId] = useState(conversations[0].id);
   const [search, setSearch] = useState("");
   const [draft, setDraft] = useState("");
@@ -179,8 +231,8 @@ export default function InboxPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   // Filter inbox by a specific contact (when "View all conversations" clicked)
   const [contactFilter, setContactFilter] = useState<string | null>(null);
-  // Composer mode: reply or whisper
-  const [composerMode, setComposerMode] = useState<"reply" | "whisper">("reply");
+  // Composer mode: reply / whisper / template
+  const [composerMode, setComposerMode] = useState<"reply" | "whisper" | "template">("reply");
   const [teachAi, setTeachAi] = useState(false);
   // Whispers added at runtime, keyed by conversation id
   const [extraWhispers, setExtraWhispers] = useState<Record<string, ThreadMsg[]>>({});
@@ -228,6 +280,85 @@ export default function InboxPage() {
   const [pendingQueue, setPendingQueue] = useState<PendingDraft[]>(seedPendingDrafts);
   const [rejectingDraft, setRejectingDraft] = useState<PendingDraft | null>(null);
   const [rejectNote, setRejectNote] = useState("");
+
+  // ---- Turn 8 · Feature 1: Status + labels ----
+  const [convMeta, setConvMeta] = useState<Record<string, ConversationMeta>>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = window.localStorage.getItem("isola.convMeta");
+        if (raw) return { ...seedConvMeta, ...(JSON.parse(raw) as Record<string, ConversationMeta>) };
+      } catch {
+        /* ignore */
+      }
+    }
+    return seedConvMeta;
+  });
+  const [labelLibrary, setLabelLibrary] = useState<LabelDef[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = window.localStorage.getItem("isola.labels");
+        if (raw) return JSON.parse(raw) as LabelDef[];
+      } catch {
+        /* ignore */
+      }
+    }
+    return seedLabels;
+  });
+  const [statusFilter, setStatusFilter] = useState<"all" | ConversationStatus>("all");
+  const [labelFilter, setLabelFilter] = useState<string>("all");
+  const [snoozePopoverFor, setSnoozePopoverFor] = useState<string | null>(null);
+  const [snoozeCustomDate, setSnoozeCustomDate] = useState<Date | undefined>(undefined);
+
+  // ---- Turn 8 · Feature 2: Templates ----
+  const [templates, setTemplates] = useState<MessageTemplate[]>([]);
+  const [templateSearch, setTemplateSearch] = useState("");
+  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
+  const [templateValues, setTemplateValues] = useState<Record<number, string>>({});
+
+  // ---- Turn 8 · Feature 3: Media (extras added at runtime) ----
+  const [extraMedia, setExtraMedia] = useState<Record<string, ThreadMsg[]>>({});
+
+  // Persist meta + labels
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("isola.convMeta", JSON.stringify(convMeta));
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [convMeta]);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("isola.labels", JSON.stringify(labelLibrary));
+      } catch {
+        /* ignore */
+      }
+      // Re-read on focus so changes from /dashboard/settings appear without reload
+      const reread = () => {
+        const raw = window.localStorage.getItem("isola.labels");
+        if (raw) {
+          try {
+            setLabelLibrary(JSON.parse(raw) as LabelDef[]);
+          } catch {
+            /* ignore */
+          }
+        }
+      };
+      window.addEventListener("focus", reread);
+      window.addEventListener("storage", reread);
+      return () => {
+        window.removeEventListener("focus", reread);
+        window.removeEventListener("storage", reread);
+      };
+    }
+  }, [labelLibrary]);
+
+  // Load templates once
+  useEffect(() => {
+    void fetchTemplates().then((r) => setTemplates(r.templates));
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -308,8 +439,30 @@ export default function InboxPage() {
     });
   };
 
+  const labelById = useMemo(
+    () => Object.fromEntries(labelLibrary.map((l) => [l.id, l])) as Record<string, LabelDef>,
+    [labelLibrary],
+  );
+
+  const getMeta = (id: string): ConversationMeta =>
+    convMeta[id] ?? { status: "open", labels: [], hoursSinceLastInbound: 0.5 };
+
+  const snoozedCount = useMemo(
+    () => conversations.filter((c) => getMeta(c.id).status === "snoozed").length,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [convMeta],
+  );
+
   const filtered = conversations.filter((c) => {
+    const m = getMeta(c.id);
+    if (statusTab === "snoozed") {
+      if (m.status !== "snoozed") return false;
+    } else if (m.status === "snoozed") {
+      return false;
+    }
     if (activeTab !== "all" && c.channel !== activeTab) return false;
+    if (statusFilter !== "all" && m.status !== statusFilter) return false;
+    if (labelFilter !== "all" && !m.labels.includes(labelFilter)) return false;
     if (search && !c.customer.toLowerCase().includes(search.toLowerCase())) return false;
     if (contactFilter && c.customer !== contactFilter) return false;
     return true;
@@ -317,8 +470,41 @@ export default function InboxPage() {
 
   const active = conversations.find((c) => c.id === activeId) ?? conversations[0];
   const ActiveChannelIcon = channelMeta[active.channel].icon;
+  const activeMeta = getMeta(active.id);
   const isAi = aiHandled[active.id];
   const composerDisabled = isAi || !draft.trim();
+  const isStale24h = activeMeta.hoursSinceLastInbound > 24;
+
+  const updateMeta = (id: string, patch: Partial<ConversationMeta>) => {
+    setConvMeta((prev) => ({
+      ...prev,
+      [id]: { ...getMeta(id), ...patch },
+    }));
+    void patchConversation(id, patch);
+  };
+
+  const setStatusFor = (id: string, status: ConversationStatus, snoozeUntil?: string) => {
+    updateMeta(id, { status, snoozeUntil: status === "snoozed" ? snoozeUntil : undefined });
+    toast.success(
+      status === "snoozed" && snoozeUntil
+        ? `Snoozed until ${format(new Date(snoozeUntil), "PPp")}`
+        : `Marked as ${statusMeta[status].label}`,
+    );
+  };
+
+  const toggleLabel = (id: string, labelId: string) => {
+    const cur = getMeta(id).labels;
+    const next = cur.includes(labelId) ? cur.filter((l) => l !== labelId) : [...cur, labelId];
+    updateMeta(id, { labels: next });
+  };
+
+  const snoozePresets = useMemo(
+    () => [
+      { key: "tomorrow", label: "Tomorrow 9am", date: (() => { const d = addDays(new Date(), 1); d.setHours(9, 0, 0, 0); return d; })() },
+      { key: "nextweek", label: "Next week", date: (() => { const d = addDays(new Date(), 7); d.setHours(9, 0, 0, 0); return d; })() },
+    ],
+    [],
+  );
 
   // Contact details for the drawer (look up by name; fall back to a synthetic record)
   const matchedContact = contacts.find((c) => c.name === active.customer);
@@ -382,6 +568,56 @@ export default function InboxPage() {
               </button>
             )}
           </div>
+          {/* Status tab + filters row */}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="inline-flex rounded-md border border-border/60 bg-card/40 p-0.5">
+              <button
+                onClick={() => setStatusTab("active")}
+                className={`rounded px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                  statusTab === "active" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Active
+              </button>
+              <button
+                onClick={() => setStatusTab("snoozed")}
+                className={`inline-flex items-center gap-1 rounded px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                  statusTab === "snoozed" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Clock className="h-3 w-3" /> Snoozed
+                {snoozedCount > 0 && (
+                  <span className="ml-0.5 rounded-full bg-violet/20 px-1.5 text-[10px] font-bold text-violet">
+                    {snoozedCount}
+                  </span>
+                )}
+              </button>
+            </div>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
+              <SelectTrigger className="h-8 w-auto gap-1.5 border-border/60 bg-card/40 text-xs">
+                <Tag className="h-3 w-3 text-muted-foreground" />
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Any status</SelectItem>
+                <SelectItem value="open">Open</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="resolved">Resolved</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={labelFilter} onValueChange={setLabelFilter}>
+              <SelectTrigger className="h-8 w-auto gap-1.5 border-border/60 bg-card/40 text-xs">
+                <Tag className="h-3 w-3 text-muted-foreground" />
+                <SelectValue placeholder="Labels" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Any label</SelectItem>
+                {labelLibrary.map((l) => (
+                  <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Split pane */}
@@ -406,6 +642,10 @@ export default function InboxPage() {
               {filtered.map((c) => {
                 const Icon = channelMeta[c.channel].icon;
                 const isActive = c.id === activeId;
+                const m = getMeta(c.id);
+                const sm = statusMeta[m.status];
+                const visibleLabels = m.labels.slice(0, 2);
+                const overflow = m.labels.length - visibleLabels.length;
                 return (
                   <li key={c.id}>
                     <button
@@ -421,14 +661,40 @@ export default function InboxPage() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline justify-between gap-2">
-                          <span className="truncate text-sm font-semibold">{c.customer}</span>
+                          <span className="inline-flex min-w-0 items-center gap-1.5">
+                            <span
+                              className={`h-1.5 w-1.5 shrink-0 rounded-full ${sm.dot}`}
+                              title={sm.label}
+                            />
+                            <span className="truncate text-sm font-semibold">{c.customer}</span>
+                          </span>
                           <span className="shrink-0 text-[10px] text-muted-foreground">{c.time}</span>
                         </div>
                         <p className="mt-0.5 truncate text-xs text-muted-foreground">{c.preview}</p>
-                        {c.status === "escalated" && (
-                          <Badge variant="outline" className="mt-1.5 border-warning/30 bg-warning/10 text-[10px] text-warning">
-                            <AlertCircle className="mr-1 h-2.5 w-2.5" /> Needs you
-                          </Badge>
+                        {(visibleLabels.length > 0 || c.status === "escalated") && (
+                          <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                            {visibleLabels.map((id) => {
+                              const lab = labelById[id];
+                              if (!lab) return null;
+                              const cls = labelColorClasses[lab.color];
+                              return (
+                                <span
+                                  key={id}
+                                  className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0 text-[9px] font-medium ${cls.chip}`}
+                                >
+                                  {lab.name}
+                                </span>
+                              );
+                            })}
+                            {overflow > 0 && (
+                              <span className="text-[9px] text-muted-foreground">+{overflow}</span>
+                            )}
+                            {c.status === "escalated" && (
+                              <Badge variant="outline" className="border-warning/30 bg-warning/10 px-1.5 py-0 text-[9px] text-warning">
+                                <AlertCircle className="mr-0.5 h-2 w-2" /> Needs you
+                              </Badge>
+                            )}
+                          </div>
                         )}
                       </div>
                       {c.unread > 0 && (

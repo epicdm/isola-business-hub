@@ -17,6 +17,10 @@ import {
   X,
   Plus,
   Ban,
+  Lock,
+  BookOpen,
+  StickyNote,
+  MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../layout";

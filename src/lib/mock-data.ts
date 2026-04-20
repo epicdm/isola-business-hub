@@ -367,3 +367,143 @@ export const contacts = [
   { id: "p9", name: "Antoinette R.", phone: "+1 767 622 9087", channel: "whatsapp" as Channel, visits: 14, lastSeen: "2d ago", spend: 3150, tags: ["vip"], notes: "Hosts annual anniversary dinner — table of 8." },
   { id: "p10", name: "Tania B.", phone: "@taniab", channel: "messenger" as Channel, visits: 1, lastSeen: "31m ago", spend: 0, tags: ["new"], notes: "Walked in after asking for directions." },
 ];
+
+// ---------- Catalog ----------
+
+export type CatalogCategory = "Starters" | "Mains" | "Sides" | "Desserts" | "Drinks";
+
+export const catalogCategories: CatalogCategory[] = ["Starters", "Mains", "Sides", "Desserts", "Drinks"];
+
+export const catalogItems = [
+  { id: "m1", name: "Callaloo soup", category: "Starters" as CatalogCategory, price: 18, available: true, desc: "Velvety dasheen-leaf soup, coconut, scotch bonnet whisper.", tags: ["vegetarian"] },
+  { id: "m2", name: "Saltfish accras", category: "Starters" as CatalogCategory, price: 22, available: true, desc: "Crisp salt-cod fritters, tamarind dip.", tags: [] },
+  { id: "m3", name: "Pan-seared snapper", category: "Mains" as CatalogCategory, price: 64, available: true, desc: "Whole snapper, creole sauce, breadfruit mash.", tags: ["signature"] },
+  { id: "m4", name: "Mountain chicken", category: "Mains" as CatalogCategory, price: 78, available: false, desc: "Seasonal — currently unavailable.", tags: ["seasonal"] },
+  { id: "m5", name: "Coalpot oxtail", category: "Mains" as CatalogCategory, price: 58, available: true, desc: "Slow-braised, butter beans, dumpling.", tags: ["signature"] },
+  { id: "m6", name: "Provision plate", category: "Sides" as CatalogCategory, price: 16, available: true, desc: "Yam, dasheen, breadfruit, plantain.", tags: ["vegetarian", "vegan"] },
+  { id: "m7", name: "Coconut rice", category: "Sides" as CatalogCategory, price: 12, available: true, desc: "Steamed jasmine, coconut milk, thyme.", tags: ["vegetarian"] },
+  { id: "m8", name: "Cassava pone", category: "Desserts" as CatalogCategory, price: 14, available: true, desc: "Spiced coconut-cassava cake, rum cream.", tags: [] },
+  { id: "m9", name: "Sea moss punch", category: "Drinks" as CatalogCategory, price: 10, available: true, desc: "House blend, vanilla, nutmeg.", tags: ["non-alcoholic"] },
+  { id: "m10", name: "Dominica rum flight", category: "Drinks" as CatalogCategory, price: 32, available: true, desc: "Macoucherie, Bois Bandé, Soca.", tags: [] },
+];
+
+// ---------- Hours ----------
+
+export const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+export const defaultHours = [
+  { day: "Monday", closed: false, open: "11:30", close: "22:00" },
+  { day: "Tuesday", closed: false, open: "11:30", close: "22:00" },
+  { day: "Wednesday", closed: false, open: "11:30", close: "22:00" },
+  { day: "Thursday", closed: false, open: "11:30", close: "22:30" },
+  { day: "Friday", closed: false, open: "11:30", close: "23:30" },
+  { day: "Saturday", closed: false, open: "12:00", close: "23:30" },
+  { day: "Sunday", closed: false, open: "11:00", close: "21:00" },
+];
+
+export const holidays = [
+  { id: "h1", date: "2026-05-04", label: "Carnival Monday", closed: true },
+  { id: "h2", date: "2026-11-03", label: "Independence Day", closed: false, open: "16:00", close: "23:00" },
+];
+
+// ---------- Knowledge ----------
+
+export type KnowledgeCategory = "Menu" | "Reservations" | "Location" | "Policies" | "Events";
+
+export const knowledgeCategories: KnowledgeCategory[] = ["Menu", "Reservations", "Location", "Policies", "Events"];
+
+export const knowledgeEntries = [
+  { id: "k1", category: "Reservations" as KnowledgeCategory, q: "What's your largest party size?", a: "We seat parties up to 10 in the main room. Anything larger is a private dinner — flag for chef.", uses: 142, lastUpdated: "Apr 12" },
+  { id: "k2", category: "Reservations" as KnowledgeCategory, q: "Do you take walk-ins?", a: "Yes, but Friday and Saturday after 7pm we strongly recommend a reservation.", uses: 98, lastUpdated: "Apr 8" },
+  { id: "k3", category: "Menu" as KnowledgeCategory, q: "Do you have vegetarian / vegan options?", a: "Yes — callaloo soup, provision plate, coconut rice, and we'll happily adapt most mains. Vegan options are marked on the menu.", uses: 76, lastUpdated: "Apr 14" },
+  { id: "k4", category: "Menu" as KnowledgeCategory, q: "Do you bake birthday cakes?", a: "We don't bake cakes in-house, but you're welcome to bring one — no plating fee.", uses: 54, lastUpdated: "Apr 2" },
+  { id: "k5", category: "Location" as KnowledgeCategory, q: "Where are you exactly?", a: "23 Castle St, Roseau — by the bay, opposite the cruise terminal. Parking on Bath Rd.", uses: 211, lastUpdated: "Mar 28" },
+  { id: "k6", category: "Policies" as KnowledgeCategory, q: "What's your cancellation policy?", a: "Free up to 4 hours before your reservation. Parties of 6+ require a deposit.", uses: 67, lastUpdated: "Apr 10" },
+  { id: "k7", category: "Policies" as KnowledgeCategory, q: "Is there a corkage fee?", a: "EC$50 per bottle, max 2 bottles per table.", uses: 23, lastUpdated: "Apr 1" },
+  { id: "k8", category: "Events" as KnowledgeCategory, q: "Do you do private events?", a: "Yes — full buyout from EC$3,500. Half-room from EC$1,800. Chef approves all menus.", uses: 41, lastUpdated: "Apr 6" },
+];
+
+// ---------- WhatsApp ----------
+
+export const whatsappStatus = {
+  number: "+1 767 555 0142",
+  displayName: "Coalpot Restaurant",
+  verified: true,
+  verifiedTier: "Green tick · Official Business Account",
+  qualityRating: "High" as const,
+  messagingLimit: "Tier 3 · 100K unique users / 24h",
+  conversations24h: 1284,
+  templatesApproved: 14,
+  templatesPending: 1,
+  webhookHealthy: true,
+  lastSync: "12s ago",
+};
+
+export const whatsappTemplates = [
+  { id: "t1", name: "booking_confirmed", category: "Utility", language: "en", status: "approved" as const },
+  { id: "t2", name: "booking_reminder", category: "Utility", language: "en", status: "approved" as const },
+  { id: "t3", name: "vip_birthday", category: "Marketing", language: "en", status: "approved" as const },
+  { id: "t4", name: "lapsed_reengage", category: "Marketing", language: "en", status: "pending" as const },
+];
+
+// ---------- Integrations ----------
+
+export const integrations = [
+  { id: "stripe", name: "Stripe", desc: "Take deposits and accept payments for bookings.", connected: true, account: "acct_1Q…J7", category: "Payments" },
+  { id: "instagram", name: "Instagram", desc: "Reply to DMs, story mentions, and post comments.", connected: true, account: "@coalpot_dom", category: "Social" },
+  { id: "messenger", name: "Facebook Messenger", desc: "Page messages handled automatically.", connected: true, account: "Coalpot Restaurant", category: "Social" },
+  { id: "google", name: "Google Business Profile", desc: "Sync hours, respond to Q&A and reviews.", connected: false, account: null, category: "Listings" },
+  { id: "opentable", name: "OpenTable", desc: "Push reservations to your OpenTable calendar.", connected: false, account: null, category: "Bookings" },
+  { id: "mailchimp", name: "Mailchimp", desc: "Sync VIP segments to email campaigns.", connected: false, account: null, category: "Marketing" },
+  { id: "zapier", name: "Zapier", desc: "Trigger 6,000+ apps from inbox events.", connected: false, account: null, category: "Automation" },
+  { id: "pos", name: "Square POS", desc: "Match WhatsApp bookings to in-store covers.", connected: false, account: null, category: "Operations" },
+];
+
+// ---------- Billing ----------
+
+export const billingPlan = {
+  name: "Pro",
+  price: 249,
+  currency: "USD",
+  interval: "month",
+  renewsOn: "May 12, 2026",
+  seats: 5,
+  features: [
+    "Unlimited WhatsApp conversations",
+    "Voice via WhatsApp Calling",
+    "Instagram + Messenger",
+    "Ema AI chief of staff",
+    "Priority support",
+  ],
+  usage: {
+    conversations: { used: 1284, limit: 5000 },
+    aiMessages: { used: 8420, limit: 20000 },
+    seats: { used: 3, limit: 5 },
+  },
+};
+
+export const invoices = [
+  { id: "INV-2026-04", date: "Apr 12, 2026", amount: 249, status: "paid" as const, period: "Apr 12 — May 12" },
+  { id: "INV-2026-03", date: "Mar 12, 2026", amount: 249, status: "paid" as const, period: "Mar 12 — Apr 12" },
+  { id: "INV-2026-02", date: "Feb 12, 2026", amount: 249, status: "paid" as const, period: "Feb 12 — Mar 12" },
+  { id: "INV-2026-01", date: "Jan 12, 2026", amount: 99, status: "paid" as const, period: "Jan 12 — Feb 12 (Starter)" },
+];
+
+// ---------- Settings (account) ----------
+
+export const accountDefaults = {
+  businessName: "Coalpot Restaurant",
+  ownerName: "Marcus Joseph",
+  email: "marcus@coalpot.dm",
+  phone: "+1 767 245 7811",
+  timezone: "America/Dominica (AST)",
+  currency: "XCD — East Caribbean Dollar",
+  toneOfVoice: "Warm & friendly",
+  brandVoice: "Caribbean hospitality, never stuffy. We use 'we' and 'our' — never 'the restaurant.'",
+};
+
+export const teamMembers = [
+  { id: "u1", name: "Marcus Joseph", email: "marcus@coalpot.dm", role: "Owner", avatar: "MJ" },
+  { id: "u2", name: "Cherise Joseph", email: "cherise@coalpot.dm", role: "Manager", avatar: "CJ" },
+  { id: "u3", name: "Devon Andrew", email: "devon@coalpot.dm", role: "Staff", avatar: "DA" },
+];

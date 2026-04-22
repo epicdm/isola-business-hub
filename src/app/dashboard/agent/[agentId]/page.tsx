@@ -54,6 +54,11 @@ import {
   type DraftCard,
   type KnowledgeEntry,
 } from "@/lib/mock-data";
+import {
+  fetchAgentSettings,
+  saveAgentSettings,
+  isAgentApiConfigured,
+} from "@/lib/agent-api";
 import { cn } from "@/lib/utils";
 
 const channelIcon: Record<AgentChannel, typeof Phone> = {
@@ -80,6 +85,11 @@ export default function AgentWorkspacePage() {
   const [newKSnippet, setNewKSnippet] = useState("");
   const [newDraftTitle, setNewDraftTitle] = useState("");
 
+  // ITER-15: settings persistence state
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [newKeyword, setNewKeyword] = useState("");
+  const apiConfigured = isAgentApiConfigured();
+
   const draftsRef = useRef<HTMLDivElement>(null);
 
   // First-win activation overlay (fires once after onboarding completes)
@@ -93,6 +103,86 @@ export default function AgentWorkspacePage() {
     setAgentKnowledge(original.agentKnowledge ?? []);
     setKnowledgeGaps(original.knowledgeGaps ?? []);
   }, [original]);
+
+  // ITER-15: hydrate from BFF when configured — overlay real settings on top
+  // of the mock seed so UI shows live values. Mock data stays as dev fallback.
+  useEffect(() => {
+    if (!apiConfigured || !agent.id) return;
+    let cancelled = false;
+    fetchAgentSettings(agent.id)
+      .then((s) => {
+        if (cancelled) return;
+        setAgent((a) => ({
+          ...a,
+          name: s.name || a.name,
+          welcome: s.welcome || a.welcome,
+          tone: (typeof s.tone === "number" ? s.tone : a.tone) as Agent["tone"],
+          escalationKeywords:
+            s.escalationKeywords.length > 0 ? s.escalationKeywords : a.escalationKeywords,
+          escalationContact: s.ownerPhone ?? a.escalationContact,
+          channels:
+            s.channels.length > 0 ? (s.channels as AgentChannel[]) : a.channels,
+          confidenceFloor: s.confidenceFloor,
+          status: (s.status as Agent["status"]) ?? a.status,
+        }));
+      })
+      .catch((err) => {
+        console.warn("[agent] BFF hydrate failed, using mock:", err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [agent.id, apiConfigured]);
+
+  const handleSaveSettings = async () => {
+    if (!apiConfigured) {
+      toast.error("Settings API not configured", {
+        description:
+          "Set VITE_BFF_API_URL + VITE_BFF_INTERNAL_SECRET in .env.local to persist changes.",
+      });
+      return;
+    }
+    setSavingSettings(true);
+    try {
+      await saveAgentSettings(agent.id, {
+        name: agent.name,
+        ownerPhone: agent.escalationContact || null,
+        welcome: agent.welcome,
+        tone: agent.tone,
+        confidenceFloor: agent.confidenceFloor,
+        escalationKeywords: agent.escalationKeywords,
+        channels: agent.channels,
+      });
+      toast.success("Settings saved", {
+        description: "Changes are live on your Isola now.",
+      });
+    } catch (err) {
+      toast.error("Save failed", {
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
+  const addKeyword = () => {
+    const k = newKeyword.trim().toLowerCase();
+    if (!k) return;
+    if (agent.escalationKeywords.includes(k)) {
+      setNewKeyword("");
+      return;
+    }
+    setAgent((a) => ({
+      ...a,
+      escalationKeywords: [...a.escalationKeywords, k],
+    }));
+    setNewKeyword("");
+  };
+  const removeKeyword = (k: string) =>
+    setAgent((a) => ({
+      ...a,
+      escalationKeywords: a.escalationKeywords.filter((x) => x !== k),
+    }));
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -809,18 +899,84 @@ export default function AgentWorkspacePage() {
               </div>
             </Card>
 
-            <Card className="border-border/40 bg-card/40 p-6">
-              <h3 className="mb-3 font-display text-lg font-semibold">Escalation rules</h3>
-              <div className="flex flex-wrap gap-1.5">
-                {agent.escalationKeywords.map((k) => (
-                  <Badge key={k} variant="outline" className="border-warning/30 bg-warning/10 text-warning">
-                    {k}
-                  </Badge>
-                ))}
+            <Card className="space-y-5 border-border/40 bg-card/40 p-6">
+              <h3 className="font-display text-lg font-semibold">Escalation rules</h3>
+
+              {/* Operator WhatsApp (ownerPhone) */}
+              <div className="grid gap-2">
+                <Label htmlFor="owner-phone">Operator WhatsApp (receives escalation pings)</Label>
+                <Input
+                  id="owner-phone"
+                  value={agent.escalationContact ?? ""}
+                  onChange={(e) =>
+                    setAgent((a) => ({ ...a, escalationContact: e.target.value }))
+                  }
+                  placeholder="+1 767 295 8382"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Digits only — any format works, we normalize on save. This is the number that
+                  receives a 🚨 WhatsApp ping when a customer message matches a keyword below.
+                </p>
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Escalates to {agent.escalationContact}.
-              </p>
+
+              {/* Editable keyword chips */}
+              <div className="grid gap-2">
+                <Label>Escalation keywords</Label>
+                {agent.escalationKeywords.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {agent.escalationKeywords.map((k) => (
+                      <Badge
+                        key={k}
+                        variant="outline"
+                        className="gap-1 border-warning/30 bg-warning/10 pl-2 pr-1 text-warning"
+                      >
+                        {k}
+                        <button
+                          type="button"
+                          onClick={() => removeKeyword(k)}
+                          className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full hover:bg-warning/20"
+                          aria-label={`Remove ${k}`}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs italic text-muted-foreground">
+                    No keywords yet. Without any, the global default list applies
+                    (complaint, refund, urgent, manager, supervisor, and similar).
+                  </p>
+                )}
+                <div className="flex gap-2">
+                  <Input
+                    value={newKeyword}
+                    onChange={(e) => setNewKeyword(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addKeyword();
+                      }
+                    }}
+                    placeholder="Add a keyword (e.g. refund, urgent, manager)"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addKeyword}
+                    disabled={!newKeyword.trim()}
+                    className="gap-1"
+                  >
+                    <Plus className="h-3 w-3" /> Add
+                  </Button>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Case-insensitive substring match on inbound customer messages. Press Enter or
+                  click Add to add a keyword.
+                </p>
+              </div>
             </Card>
 
             <Card className="border-border/40 bg-card/40 p-6">
@@ -836,6 +992,23 @@ export default function AgentWorkspacePage() {
                 </li>
               </ul>
             </Card>
+
+            {/* ITER-15: sticky save bar — persists Settings fields to BFF */}
+            <div className="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-md border border-primary/30 bg-primary/10 px-4 py-3 shadow-sm backdrop-blur">
+              <div className="text-xs">
+                <div className="font-medium">
+                  {apiConfigured
+                    ? "Changes go live on your Isola the moment you save."
+                    : "Demo mode — changes are local. Configure VITE_BFF_API_URL to go live."}
+                </div>
+                <div className="text-muted-foreground">
+                  Edits flow to Agent.ownerPhone · Agent.config.welcome · tone · probation.confidenceFloor · escalation.keywords · channels.
+                </div>
+              </div>
+              <Button onClick={handleSaveSettings} disabled={savingSettings} className="gap-1.5">
+                {savingSettings ? "Saving…" : "Save changes"}
+              </Button>
+            </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border/40 bg-card/30 px-4 py-3">
               <div className="text-xs text-muted-foreground">

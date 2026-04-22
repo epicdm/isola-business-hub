@@ -98,6 +98,10 @@ export default function AgentWorkspacePage() {
     if (window.localStorage.getItem("isola.firstWinPending") === "true") {
       const ind = window.localStorage.getItem("isola.firstWinIndustry");
       setFirstWinIndustry(pickIndustry(ind));
+      // Clear the flags immediately so the overlay never re-fires on refresh,
+      // tab switch, or remount — even if the user navigates away before dismissing.
+      window.localStorage.removeItem("isola.firstWinPending");
+      window.localStorage.removeItem("isola.firstWinIndustry");
       const t = setTimeout(() => setFirstWinOpen(true), 350);
       return () => clearTimeout(t);
     }
@@ -105,10 +109,6 @@ export default function AgentWorkspacePage() {
 
   const closeFirstWin = () => {
     setFirstWinOpen(false);
-    if (typeof window !== "undefined") {
-      window.localStorage.removeItem("isola.firstWinPending");
-      window.localStorage.removeItem("isola.firstWinIndustry");
-    }
   };
 
   const onProbation = agent.status === "on_probation";

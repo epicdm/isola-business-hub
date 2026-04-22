@@ -1130,7 +1130,7 @@ export const agents: Agent[] = [
     name: "Main Receptionist",
     template: "receptionist",
     templateLabel: "Receptionist",
-    status: "active",
+    status: "on_probation",
     channels: ["whatsapp", "voice"],
     schedule: "always",
     scheduleLabel: "Always on · 24/7",
@@ -1147,13 +1147,74 @@ export const agents: Agent[] = [
       { id: "r2", type: "fallback", label: "If Booking Assistant is busy, take over" },
     ],
     messagesThisWeek: 412,
+    messagesToday: 64,
+    heroKPI: {
+      label: "Auto-resolve rate",
+      value: "89%",
+      trend: [82, 85, 84, 87, 88, 89, 89],
+    },
+    budget: { spent: 42, cap: 149, currency: "EC$" },
+    confidenceFloor: 0.7,
+    standupSummary:
+      "Handled 64 messages today, 12 bookings, 1 escalation. Still in learning period — 3 drafts pending your review.",
+    probationDrafts: [
+      {
+        id: "d1",
+        customerName: "Naomi C.",
+        customerPhone: "+1 767 245 6612",
+        customerMessage: "Hi! Can you do a private dinner for 14 next Saturday?",
+        draftReply:
+          "Hi Naomi! Private dinners for 12+ are arranged personally by chef Marcus. Let me flag this and he'll be in touch within the hour with menu options and pricing.",
+        confidence: 0.62,
+        receivedAt: "12m ago",
+      },
+      {
+        id: "d2",
+        customerName: "Ravi P.",
+        customerPhone: "+1 767 819 0021",
+        customerMessage: "Do you have gluten free options?",
+        draftReply:
+          "Yes — we have GF mains every night, and full GF tasting menu with 24hr notice. Want me to flag your reservation as GF?",
+        confidence: 0.78,
+        receivedAt: "28m ago",
+      },
+      {
+        id: "d3",
+        customerName: "Sabine D.",
+        customerPhone: "+1 767 442 1180",
+        customerMessage: "Are children welcome at dinner?",
+        draftReply:
+          "Absolutely — we have a kids menu (EC$22) and high chairs. Best to book before 7pm for the calmer crowd. Want me to book you?",
+        confidence: 0.81,
+        receivedAt: "47m ago",
+      },
+      {
+        id: "d4",
+        customerName: "Theo K.",
+        customerPhone: "+1 767 612 7733",
+        customerMessage: "Do you validate parking?",
+        draftReply:
+          "We don't validate, but parking on Bath Rd opposite the cruise terminal is free in the evenings. Easy 2-min walk.",
+        confidence: 0.69,
+        receivedAt: "1h ago",
+      },
+    ],
+    knowledgeGaps: [
+      { id: "kg1", question: "Do you offer corkage on outside wine?", askedCount: 5, lastAsked: "2h ago" },
+      { id: "kg2", question: "Is there a dress code?", askedCount: 3, lastAsked: "Yesterday" },
+      { id: "kg3", question: "Can I bring my dog to the patio?", askedCount: 2, lastAsked: "2d ago" },
+    ],
+    agentKnowledge: [
+      { id: "ak1", title: "Greeting style", snippet: "Open with 🌴 emoji and customer first name when known." },
+      { id: "ak2", title: "VIP recognition", snippet: "If customer is in VIP list, mention chef will swing by personally." },
+    ],
   },
   {
     id: "ag-aftersales",
     name: "After-hours Sales",
     template: "sales",
     templateLabel: "Sales",
-    status: "active",
+    status: "on_shift",
     channels: ["whatsapp"],
     schedule: "after",
     scheduleLabel: "9pm – 9am",
@@ -1169,6 +1230,24 @@ export const agents: Agent[] = [
       { id: "r1", type: "time", label: "Only handle messages between 9pm and 9am" },
     ],
     messagesThisWeek: 87,
+    messagesToday: 18,
+    heroKPI: {
+      label: "Pipeline value",
+      value: "EC$4,820",
+      trend: [3100, 3400, 3600, 3900, 4200, 4500, 4820],
+    },
+    budget: { spent: 28, cap: 149, currency: "EC$" },
+    confidenceFloor: 0.65,
+    standupSummary:
+      "Held the night shift solo — 18 conversations, EC$4,820 in late-night pipeline. Locked in 6 next-day bookings.",
+    knowledgeGaps: [
+      { id: "kg1", question: "Do you do gift cards?", askedCount: 4, lastAsked: "Yesterday" },
+      { id: "kg2", question: "Can I order delivery overnight?", askedCount: 2, lastAsked: "Today" },
+      { id: "kg3", question: "What's the corkage fee?", askedCount: 2, lastAsked: "2d ago" },
+    ],
+    agentKnowledge: [
+      { id: "ak1", title: "Late-night tone", snippet: "Casual, low-pressure. Lead with empathy ('long night?')." },
+    ],
   },
   {
     id: "ag-booking",
@@ -1192,6 +1271,24 @@ export const agents: Agent[] = [
       { id: "r2", type: "tag", label: "Anything tagged #booking comes here" },
     ],
     messagesThisWeek: 134,
+    messagesToday: 0,
+    heroKPI: {
+      label: "Bookings confirmed",
+      value: "47",
+      trend: [38, 41, 42, 44, 46, 47, 47],
+    },
+    budget: { spent: 12, cap: 149, currency: "EC$" },
+    confidenceFloor: 0.75,
+    standupSummary:
+      "Currently paused — Marcus took over reservations manually this week. 47 bookings confirmed before the pause.",
+    knowledgeGaps: [
+      { id: "kg1", question: "Can you book groups of 20+?", askedCount: 3, lastAsked: "2d ago" },
+      { id: "kg2", question: "Do you take walk-ins on Fridays?", askedCount: 2, lastAsked: "3d ago" },
+      { id: "kg3", question: "Can I hold without a deposit?", askedCount: 1, lastAsked: "5d ago" },
+    ],
+    agentKnowledge: [
+      { id: "ak1", title: "Deposit threshold", snippet: "Parties of 6+ require EC$50 refundable deposit." },
+    ],
   },
 ];
 

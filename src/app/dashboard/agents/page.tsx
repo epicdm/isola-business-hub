@@ -41,9 +41,11 @@ const channelLabel: Record<AgentChannel, string> = {
 };
 
 const statusMeta: Record<AgentStatus, { label: string; color: string; icon: typeof CheckCircle2 }> = {
-  active: { label: "Active", color: "border-success/30 bg-success/10 text-success", icon: CheckCircle2 },
+  active: { label: "On Shift", color: "border-success/30 bg-success/10 text-success", icon: CheckCircle2 },
+  on_shift: { label: "On Shift", color: "border-success/30 bg-success/10 text-success", icon: CheckCircle2 },
   paused: { label: "Paused", color: "border-warning/30 bg-warning/10 text-warning", icon: PauseCircle },
-  error: { label: "Error", color: "border-destructive/30 bg-destructive/10 text-destructive", icon: AlertTriangle },
+  on_probation: { label: "On Probation", color: "border-amber-400/40 bg-amber-400/10 text-amber-500", icon: AlertTriangle },
+  error: { label: "Needs Attention", color: "border-destructive/30 bg-destructive/10 text-destructive", icon: AlertTriangle },
 };
 
 export default function AgentsPage() {

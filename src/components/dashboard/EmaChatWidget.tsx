@@ -120,10 +120,13 @@ export default function EmaChatWidget() {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             onClick={() => setOpen(true)}
-            className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-ema shadow-ema transition-transform hover:scale-110"
-            aria-label="Open Ema chat"
+            className="group fixed bottom-6 right-6 z-50 flex h-14 items-center gap-2 overflow-hidden rounded-full bg-gradient-ema pl-4 pr-5 shadow-ema transition-all hover:scale-105 sm:h-12"
+            aria-label="Ask Ema"
           >
-            <Sparkles className="h-6 w-6 text-ema-foreground" />
+            <Sparkles className="h-5 w-5 shrink-0 text-ema-foreground" />
+            <span className="hidden text-sm font-semibold text-ema-foreground sm:inline">
+              Ask Ema
+            </span>
             <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
               1
             </span>

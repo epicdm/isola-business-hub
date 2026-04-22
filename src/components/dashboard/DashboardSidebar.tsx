@@ -1,81 +1,99 @@
 import {
   Home,
-  Inbox,
+  Users2,
+  ShieldCheck,
+  Package,
   Calendar,
   Users,
-  Sparkles,
-  FileText,
-  Settings as SettingsIcon,
-  BookOpen,
   Clock,
+  BookOpen,
   Antenna,
   Plug,
   CreditCard,
-  Package,
+  Settings as SettingsIcon,
+  Sparkles,
   LogOut,
-  UsersRound,
-  PhoneOutgoing,
-  BarChart3,
 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { clearProfile, getInitials, readProfile } from "@/lib/profile";
-import { accountDefaults } from "@/lib/mock-data";
+import { accountDefaults, agents } from "@/lib/mock-data";
 import logoEpic from "@/assets/logo-epic.png";
 
-const sections = [
-  {
-    label: "Overview",
-    items: [
-      { href: "/dashboard", icon: Home, label: "Home" },
-      { href: "/dashboard/inbox", icon: Inbox, label: "Inbox" },
-      { href: "/dashboard/outbound", icon: PhoneOutgoing, label: "Outbound" },
-      { href: "/dashboard/insights", icon: BarChart3, label: "Insights" },
-      { href: "/dashboard/bookings", icon: Calendar, label: "Bookings" },
-      { href: "/dashboard/contacts", icon: Users, label: "Contacts" },
-      { href: "/dashboard/agents", icon: UsersRound, label: "Agents" },
-    ],
-  },
-  {
-    label: "Ema",
-    items: [
-      { href: "/dashboard/ema", icon: Sparkles, label: "Chat with Ema" },
-      { href: "/dashboard/ema/reports", icon: FileText, label: "Reports" },
-      { href: "/dashboard/ema/settings", icon: SettingsIcon, label: "Configure" },
-    ],
-  },
-  {
-    label: "Business",
-    items: [
-      { href: "/dashboard/catalog", icon: Package, label: "Catalog" },
-      { href: "/dashboard/hours", icon: Clock, label: "Hours" },
-      { href: "/dashboard/knowledge", icon: BookOpen, label: "Knowledge" },
-    ],
-  },
-  {
-    label: "Account",
-    items: [
-      { href: "/dashboard/channels", icon: Antenna, label: "Channels" },
-      { href: "/dashboard/integrations", icon: Plug, label: "Integrations" },
-      { href: "/dashboard/billing", icon: CreditCard, label: "Billing" },
-      { href: "/dashboard/settings", icon: SettingsIcon, label: "Settings" },
-    ],
-  },
-];
+const MOCK_MODE_KEY = "isola.mockMode";
+
+type MockMode = "solo" | "team";
+
+function readMockMode(): MockMode {
+  if (typeof window === "undefined") return "solo";
+  const v = window.localStorage.getItem(MOCK_MODE_KEY);
+  return v === "team" ? "team" : "solo";
+}
 
 export default function DashboardSidebar({ currentPath = "/dashboard" }: { currentPath?: string }) {
   const navigate = useNavigate();
-
   const [profile, setProfile] = useState<{ contactName?: string; businessName?: string }>({});
+  const [mode, setMode] = useState<MockMode>("solo");
 
   useEffect(() => {
     setProfile(readProfile());
+    setMode(readMockMode());
   }, []);
 
   const contactName = profile.contactName?.trim() || accountDefaults.ownerName;
   const businessName = profile.businessName?.trim() || accountDefaults.businessName;
   const initials = getInitials(contactName);
+
+  const firstAgentId = agents[0]?.id;
+  const pendingDrafts = useMemo(
+    () =>
+      agents
+        .filter((a) => a.status === "on_probation")
+        .reduce((sum, a) => sum + (a.probationDrafts?.length ?? 0), 0),
+    [],
+  );
+
+  const sections = useMemo(
+    () => [
+      {
+        label: mode === "team" ? "Your Team" : "Your Agent",
+        items: [
+          {
+            href: mode === "team" ? "/dashboard/team" : `/dashboard/agent/${firstAgentId}`,
+            icon: mode === "team" ? Users2 : Home,
+            label: "Home",
+          },
+          {
+            href: "/dashboard/drafts",
+            icon: ShieldCheck,
+            label: "Drafts on probation",
+            badge: pendingDrafts > 0 ? pendingDrafts : undefined,
+          },
+        ],
+      },
+      {
+        label: "Workspace",
+        items: [
+          { href: "/dashboard/catalog", icon: Package, label: "Catalog" },
+          { href: "/dashboard/bookings", icon: Calendar, label: "Bookings" },
+          { href: "/dashboard/contacts", icon: Users, label: "Contacts" },
+          { href: "/dashboard/hours", icon: Clock, label: "Hours" },
+          { href: "/dashboard/knowledge", icon: BookOpen, label: "Knowledge" },
+        ],
+      },
+      {
+        label: "Account",
+        items: [
+          { href: "/dashboard/channels", icon: Antenna, label: "Channels" },
+          { href: "/dashboard/integrations", icon: Plug, label: "Integrations" },
+          { href: "/dashboard/billing", icon: CreditCard, label: "Billing" },
+          { href: "/dashboard/settings", icon: SettingsIcon, label: "Settings" },
+        ],
+      },
+    ],
+    [mode, firstAgentId, pendingDrafts],
+  );
 
   const handleSignOut = () => {
     if (typeof window !== "undefined") {
@@ -103,7 +121,11 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
               </div>
               <ul className="space-y-0.5">
                 {section.items.map((item) => {
-                  const active = currentPath === item.href;
+                  const active =
+                    currentPath === item.href ||
+                    (item.label === "Home" &&
+                      mode === "solo" &&
+                      currentPath.startsWith("/dashboard/agent/"));
                   const Icon = item.icon;
                   return (
                     <li key={item.href}>
@@ -116,7 +138,12 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
                         }`}
                       >
                         <Icon className="h-4 w-4" />
-                        {item.label}
+                        <span className="flex-1">{item.label}</span>
+                        {"badge" in item && item.badge !== undefined && (
+                          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-bold text-destructive-foreground">
+                            {item.badge}
+                          </span>
+                        )}
                       </a>
                     </li>
                   );

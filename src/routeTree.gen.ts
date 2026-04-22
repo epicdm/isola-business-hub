@@ -20,6 +20,7 @@ import { Route as ForRestaurantsRouteImport } from './routes/for.restaurants'
 import { Route as ForHotelsRouteImport } from './routes/for.hotels'
 import { Route as ForClinicsRouteImport } from './routes/for.clinics'
 import { Route as DashboardWhatsappRouteImport } from './routes/dashboard.whatsapp'
+import { Route as DashboardTeamRouteImport } from './routes/dashboard.team'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
 import { Route as DashboardOutboundRouteImport } from './routes/dashboard.outbound'
 import { Route as DashboardKnowledgeRouteImport } from './routes/dashboard.knowledge'
@@ -28,6 +29,7 @@ import { Route as DashboardInsightsRouteImport } from './routes/dashboard.insigh
 import { Route as DashboardInboxRouteImport } from './routes/dashboard.inbox'
 import { Route as DashboardHoursRouteImport } from './routes/dashboard.hours'
 import { Route as DashboardEmaRouteImport } from './routes/dashboard.ema'
+import { Route as DashboardDraftsRouteImport } from './routes/dashboard.drafts'
 import { Route as DashboardContactsRouteImport } from './routes/dashboard.contacts'
 import { Route as DashboardChannelsRouteImport } from './routes/dashboard.channels'
 import { Route as DashboardCatalogRouteImport } from './routes/dashboard.catalog'
@@ -40,6 +42,7 @@ import { Route as DashboardEmaSettingsRouteImport } from './routes/dashboard.ema
 import { Route as DashboardEmaReportsRouteImport } from './routes/dashboard.ema.reports'
 import { Route as DashboardAgentsNewRouteImport } from './routes/dashboard.agents.new'
 import { Route as DashboardAgentsIdRouteImport } from './routes/dashboard.agents.$id'
+import { Route as DashboardAgentAgentIdRouteImport } from './routes/dashboard.agent.$agentId'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -96,6 +99,11 @@ const DashboardWhatsappRoute = DashboardWhatsappRouteImport.update({
   path: '/dashboard/whatsapp',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardTeamRoute = DashboardTeamRouteImport.update({
+  id: '/dashboard/team',
+  path: '/dashboard/team',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
   id: '/dashboard/settings',
   path: '/dashboard/settings',
@@ -134,6 +142,11 @@ const DashboardHoursRoute = DashboardHoursRouteImport.update({
 const DashboardEmaRoute = DashboardEmaRouteImport.update({
   id: '/dashboard/ema',
   path: '/dashboard/ema',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardDraftsRoute = DashboardDraftsRouteImport.update({
+  id: '/dashboard/drafts',
+  path: '/dashboard/drafts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardContactsRoute = DashboardContactsRouteImport.update({
@@ -196,6 +209,11 @@ const DashboardAgentsIdRoute = DashboardAgentsIdRouteImport.update({
   path: '/dashboard/agents/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardAgentAgentIdRoute = DashboardAgentAgentIdRouteImport.update({
+  id: '/dashboard/agent/$agentId',
+  path: '/dashboard/agent/$agentId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -210,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/catalog': typeof DashboardCatalogRoute
   '/dashboard/channels': typeof DashboardChannelsRoute
   '/dashboard/contacts': typeof DashboardContactsRoute
+  '/dashboard/drafts': typeof DashboardDraftsRoute
   '/dashboard/ema': typeof DashboardEmaRouteWithChildren
   '/dashboard/hours': typeof DashboardHoursRoute
   '/dashboard/inbox': typeof DashboardInboxRoute
@@ -218,11 +237,13 @@ export interface FileRoutesByFullPath {
   '/dashboard/knowledge': typeof DashboardKnowledgeRoute
   '/dashboard/outbound': typeof DashboardOutboundRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
+  '/dashboard/team': typeof DashboardTeamRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/for/clinics': typeof ForClinicsRoute
   '/for/hotels': typeof ForHotelsRoute
   '/for/restaurants': typeof ForRestaurantsRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/agent/$agentId': typeof DashboardAgentAgentIdRoute
   '/dashboard/agents/$id': typeof DashboardAgentsIdRoute
   '/dashboard/agents/new': typeof DashboardAgentsNewRoute
   '/dashboard/ema/reports': typeof DashboardEmaReportsRoute
@@ -243,6 +264,7 @@ export interface FileRoutesByTo {
   '/dashboard/catalog': typeof DashboardCatalogRoute
   '/dashboard/channels': typeof DashboardChannelsRoute
   '/dashboard/contacts': typeof DashboardContactsRoute
+  '/dashboard/drafts': typeof DashboardDraftsRoute
   '/dashboard/hours': typeof DashboardHoursRoute
   '/dashboard/inbox': typeof DashboardInboxRoute
   '/dashboard/insights': typeof DashboardInsightsRoute
@@ -250,11 +272,13 @@ export interface FileRoutesByTo {
   '/dashboard/knowledge': typeof DashboardKnowledgeRoute
   '/dashboard/outbound': typeof DashboardOutboundRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
+  '/dashboard/team': typeof DashboardTeamRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/for/clinics': typeof ForClinicsRoute
   '/for/hotels': typeof ForHotelsRoute
   '/for/restaurants': typeof ForRestaurantsRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/dashboard/agent/$agentId': typeof DashboardAgentAgentIdRoute
   '/dashboard/agents/$id': typeof DashboardAgentsIdRoute
   '/dashboard/agents/new': typeof DashboardAgentsNewRoute
   '/dashboard/ema/reports': typeof DashboardEmaReportsRoute
@@ -276,6 +300,7 @@ export interface FileRoutesById {
   '/dashboard/catalog': typeof DashboardCatalogRoute
   '/dashboard/channels': typeof DashboardChannelsRoute
   '/dashboard/contacts': typeof DashboardContactsRoute
+  '/dashboard/drafts': typeof DashboardDraftsRoute
   '/dashboard/ema': typeof DashboardEmaRouteWithChildren
   '/dashboard/hours': typeof DashboardHoursRoute
   '/dashboard/inbox': typeof DashboardInboxRoute
@@ -284,11 +309,13 @@ export interface FileRoutesById {
   '/dashboard/knowledge': typeof DashboardKnowledgeRoute
   '/dashboard/outbound': typeof DashboardOutboundRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
+  '/dashboard/team': typeof DashboardTeamRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/for/clinics': typeof ForClinicsRoute
   '/for/hotels': typeof ForHotelsRoute
   '/for/restaurants': typeof ForRestaurantsRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/agent/$agentId': typeof DashboardAgentAgentIdRoute
   '/dashboard/agents/$id': typeof DashboardAgentsIdRoute
   '/dashboard/agents/new': typeof DashboardAgentsNewRoute
   '/dashboard/ema/reports': typeof DashboardEmaReportsRoute
@@ -311,6 +338,7 @@ export interface FileRouteTypes {
     | '/dashboard/catalog'
     | '/dashboard/channels'
     | '/dashboard/contacts'
+    | '/dashboard/drafts'
     | '/dashboard/ema'
     | '/dashboard/hours'
     | '/dashboard/inbox'
@@ -319,11 +347,13 @@ export interface FileRouteTypes {
     | '/dashboard/knowledge'
     | '/dashboard/outbound'
     | '/dashboard/settings'
+    | '/dashboard/team'
     | '/dashboard/whatsapp'
     | '/for/clinics'
     | '/for/hotels'
     | '/for/restaurants'
     | '/dashboard/'
+    | '/dashboard/agent/$agentId'
     | '/dashboard/agents/$id'
     | '/dashboard/agents/new'
     | '/dashboard/ema/reports'
@@ -344,6 +374,7 @@ export interface FileRouteTypes {
     | '/dashboard/catalog'
     | '/dashboard/channels'
     | '/dashboard/contacts'
+    | '/dashboard/drafts'
     | '/dashboard/hours'
     | '/dashboard/inbox'
     | '/dashboard/insights'
@@ -351,11 +382,13 @@ export interface FileRouteTypes {
     | '/dashboard/knowledge'
     | '/dashboard/outbound'
     | '/dashboard/settings'
+    | '/dashboard/team'
     | '/dashboard/whatsapp'
     | '/for/clinics'
     | '/for/hotels'
     | '/for/restaurants'
     | '/dashboard'
+    | '/dashboard/agent/$agentId'
     | '/dashboard/agents/$id'
     | '/dashboard/agents/new'
     | '/dashboard/ema/reports'
@@ -376,6 +409,7 @@ export interface FileRouteTypes {
     | '/dashboard/catalog'
     | '/dashboard/channels'
     | '/dashboard/contacts'
+    | '/dashboard/drafts'
     | '/dashboard/ema'
     | '/dashboard/hours'
     | '/dashboard/inbox'
@@ -384,11 +418,13 @@ export interface FileRouteTypes {
     | '/dashboard/knowledge'
     | '/dashboard/outbound'
     | '/dashboard/settings'
+    | '/dashboard/team'
     | '/dashboard/whatsapp'
     | '/for/clinics'
     | '/for/hotels'
     | '/for/restaurants'
     | '/dashboard/'
+    | '/dashboard/agent/$agentId'
     | '/dashboard/agents/$id'
     | '/dashboard/agents/new'
     | '/dashboard/ema/reports'
@@ -410,6 +446,7 @@ export interface RootRouteChildren {
   DashboardCatalogRoute: typeof DashboardCatalogRoute
   DashboardChannelsRoute: typeof DashboardChannelsRoute
   DashboardContactsRoute: typeof DashboardContactsRoute
+  DashboardDraftsRoute: typeof DashboardDraftsRoute
   DashboardEmaRoute: typeof DashboardEmaRouteWithChildren
   DashboardHoursRoute: typeof DashboardHoursRoute
   DashboardInboxRoute: typeof DashboardInboxRoute
@@ -418,11 +455,13 @@ export interface RootRouteChildren {
   DashboardKnowledgeRoute: typeof DashboardKnowledgeRoute
   DashboardOutboundRoute: typeof DashboardOutboundRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
+  DashboardTeamRoute: typeof DashboardTeamRoute
   DashboardWhatsappRoute: typeof DashboardWhatsappRoute
   ForClinicsRoute: typeof ForClinicsRoute
   ForHotelsRoute: typeof ForHotelsRoute
   ForRestaurantsRoute: typeof ForRestaurantsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardAgentAgentIdRoute: typeof DashboardAgentAgentIdRoute
   DashboardAgentsIdRoute: typeof DashboardAgentsIdRoute
   DashboardAgentsNewRoute: typeof DashboardAgentsNewRoute
   DashboardAgentsIndexRoute: typeof DashboardAgentsIndexRoute
@@ -507,6 +546,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardWhatsappRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/team': {
+      id: '/dashboard/team'
+      path: '/dashboard/team'
+      fullPath: '/dashboard/team'
+      preLoaderRoute: typeof DashboardTeamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/settings': {
       id: '/dashboard/settings'
       path: '/dashboard/settings'
@@ -561,6 +607,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard/ema'
       fullPath: '/dashboard/ema'
       preLoaderRoute: typeof DashboardEmaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/drafts': {
+      id: '/dashboard/drafts'
+      path: '/dashboard/drafts'
+      fullPath: '/dashboard/drafts'
+      preLoaderRoute: typeof DashboardDraftsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/contacts': {
@@ -647,6 +700,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAgentsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/agent/$agentId': {
+      id: '/dashboard/agent/$agentId'
+      path: '/dashboard/agent/$agentId'
+      fullPath: '/dashboard/agent/$agentId'
+      preLoaderRoute: typeof DashboardAgentAgentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -679,6 +739,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardCatalogRoute: DashboardCatalogRoute,
   DashboardChannelsRoute: DashboardChannelsRoute,
   DashboardContactsRoute: DashboardContactsRoute,
+  DashboardDraftsRoute: DashboardDraftsRoute,
   DashboardEmaRoute: DashboardEmaRouteWithChildren,
   DashboardHoursRoute: DashboardHoursRoute,
   DashboardInboxRoute: DashboardInboxRoute,
@@ -687,11 +748,13 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardKnowledgeRoute: DashboardKnowledgeRoute,
   DashboardOutboundRoute: DashboardOutboundRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
+  DashboardTeamRoute: DashboardTeamRoute,
   DashboardWhatsappRoute: DashboardWhatsappRoute,
   ForClinicsRoute: ForClinicsRoute,
   ForHotelsRoute: ForHotelsRoute,
   ForRestaurantsRoute: ForRestaurantsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardAgentAgentIdRoute: DashboardAgentAgentIdRoute,
   DashboardAgentsIdRoute: DashboardAgentsIdRoute,
   DashboardAgentsNewRoute: DashboardAgentsNewRoute,
   DashboardAgentsIndexRoute: DashboardAgentsIndexRoute,

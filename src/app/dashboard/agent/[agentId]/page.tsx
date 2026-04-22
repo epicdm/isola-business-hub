@@ -256,6 +256,17 @@ export default function AgentWorkspacePage() {
 
           {/* INBOX */}
           <TabsContent value="inbox" className="mt-6 space-y-5">
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={replayFirstWin}
+                className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-ema" />
+                Replay first customer moment
+              </Button>
+            </div>
             {onProbation && drafts.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: -6 }}

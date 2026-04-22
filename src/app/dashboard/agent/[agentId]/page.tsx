@@ -82,12 +82,34 @@ export default function AgentWorkspacePage() {
 
   const draftsRef = useRef<HTMLDivElement>(null);
 
+  // First-win activation overlay (fires once after onboarding completes)
+  const [firstWinOpen, setFirstWinOpen] = useState(false);
+  const [firstWinIndustry, setFirstWinIndustry] = useState<ReturnType<typeof pickIndustry>>("default");
+
   useEffect(() => {
     setAgent(original);
     setDrafts(original.probationDrafts ?? []);
     setAgentKnowledge(original.agentKnowledge ?? []);
     setKnowledgeGaps(original.knowledgeGaps ?? []);
   }, [original]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.localStorage.getItem("isola.firstWinPending") === "true") {
+      const ind = window.localStorage.getItem("isola.firstWinIndustry");
+      setFirstWinIndustry(pickIndustry(ind));
+      const t = setTimeout(() => setFirstWinOpen(true), 350);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
+  const closeFirstWin = () => {
+    setFirstWinOpen(false);
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem("isola.firstWinPending");
+      window.localStorage.removeItem("isola.firstWinIndustry");
+    }
+  };
 
   const onProbation = agent.status === "on_probation";
   const activity = useMemo(() => getAgentActivity(agent.id), [agent.id]);

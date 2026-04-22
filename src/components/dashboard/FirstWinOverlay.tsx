@@ -71,9 +71,10 @@ interface Props {
   open: boolean;
   industry: Industry;
   onClose: () => void;
+  suppressConfetti?: boolean;
 }
 
-export default function FirstWinOverlay({ open, industry, onClose }: Props) {
+export default function FirstWinOverlay({ open, industry, onClose, suppressConfetti = false }: Props) {
   const script = SCRIPTS[industry] ?? SCRIPTS.default;
   const [visibleCount, setVisibleCount] = useState(0);
 
@@ -91,15 +92,17 @@ export default function FirstWinOverlay({ open, industry, onClose }: Props) {
 
   const particles = useMemo(
     () =>
-      Array.from({ length: 36 }, (_, i) => ({
-        id: i,
-        emoji: ["🎉", "✨", "🎊", "💜", "⭐"][i % 5],
-        left: Math.random() * 100,
-        delay: Math.random() * 0.4,
-        duration: 1.8 + Math.random() * 1.0,
-        rotate: Math.random() * 540 - 270,
-      })),
-    [open],
+      suppressConfetti
+        ? []
+        : Array.from({ length: 36 }, (_, i) => ({
+            id: i,
+            emoji: ["🎉", "✨", "🎊", "💜", "⭐"][i % 5],
+            left: Math.random() * 100,
+            delay: Math.random() * 0.4,
+            duration: 1.8 + Math.random() * 1.0,
+            rotate: Math.random() * 540 - 270,
+          })),
+    [open, suppressConfetti],
   );
 
   return (

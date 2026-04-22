@@ -85,6 +85,7 @@ export default function AgentWorkspacePage() {
   // First-win activation overlay (fires once after onboarding completes)
   const [firstWinOpen, setFirstWinOpen] = useState(false);
   const [firstWinIndustry, setFirstWinIndustry] = useState<ReturnType<typeof pickIndustry>>("default");
+  const [firstWinReplay, setFirstWinReplay] = useState(false);
 
   useEffect(() => {
     setAgent(original);
@@ -102,13 +103,25 @@ export default function AgentWorkspacePage() {
       // tab switch, or remount — even if the user navigates away before dismissing.
       window.localStorage.removeItem("isola.firstWinPending");
       window.localStorage.removeItem("isola.firstWinIndustry");
-      const t = setTimeout(() => setFirstWinOpen(true), 350);
+      const t = setTimeout(() => {
+        setFirstWinReplay(false);
+        setFirstWinOpen(true);
+      }, 350);
       return () => clearTimeout(t);
     }
   }, []);
 
   const closeFirstWin = () => {
     setFirstWinOpen(false);
+  };
+
+  const replayFirstWin = () => {
+    if (typeof window !== "undefined") {
+      const ind = window.localStorage.getItem("isola.firstWinIndustry");
+      setFirstWinIndustry(pickIndustry(ind));
+    }
+    setFirstWinReplay(true);
+    setFirstWinOpen(true);
   };
 
   const onProbation = agent.status === "on_probation";
@@ -207,7 +220,12 @@ export default function AgentWorkspacePage() {
 
   return (
     <DashboardLayout currentPath={`/dashboard/agent/${agent.id}`}>
-      <FirstWinOverlay open={firstWinOpen} industry={firstWinIndustry} onClose={closeFirstWin} />
+      <FirstWinOverlay
+        open={firstWinOpen}
+        industry={firstWinIndustry}
+        onClose={closeFirstWin}
+        suppressConfetti={firstWinReplay}
+      />
       <div className="mx-auto max-w-6xl space-y-6 p-6 lg:p-8">
         <AgentHeroHeader
           agent={agent}
@@ -238,6 +256,17 @@ export default function AgentWorkspacePage() {
 
           {/* INBOX */}
           <TabsContent value="inbox" className="mt-6 space-y-5">
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={replayFirstWin}
+                className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-ema" />
+                Replay first customer moment
+              </Button>
+            </div>
             {onProbation && drafts.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: -6 }}

@@ -910,7 +910,7 @@ export type AgentTemplateKey =
   | "booking"
   | "custom";
 
-export type AgentStatus = "active" | "paused" | "error";
+export type AgentStatus = "on_shift" | "paused" | "on_probation" | "active" | "error";
 export type AgentChannel = "whatsapp" | "voice" | "instagram" | "messenger";
 export type AgentSchedule = "always" | "business" | "after" | "custom";
 
@@ -918,6 +918,41 @@ export type AgentRoutingRule = {
   id: string;
   type: "tag" | "time" | "fallback";
   label: string;
+};
+
+export type AgentHeroKPI = {
+  label: string;
+  value: string;
+  trend: number[];
+};
+
+export type AgentBudget = {
+  spent: number;
+  cap: number;
+  currency: string;
+};
+
+export type DraftCard = {
+  id: string;
+  customerName: string;
+  customerPhone: string;
+  customerMessage: string;
+  draftReply: string;
+  confidence: number;
+  receivedAt: string;
+};
+
+export type KnowledgeGap = {
+  id: string;
+  question: string;
+  askedCount: number;
+  lastAsked: string;
+};
+
+export type KnowledgeEntry = {
+  id: string;
+  title: string;
+  snippet: string;
 };
 
 export type Agent = {
@@ -936,7 +971,58 @@ export type Agent = {
   examples: { question: string; answer: string }[];
   routing: AgentRoutingRule[];
   messagesThisWeek: number;
+  messagesToday?: number;
+  heroKPI?: AgentHeroKPI;
+  budget?: AgentBudget;
+  probationDrafts?: DraftCard[];
+  knowledgeGaps?: KnowledgeGap[];
+  agentKnowledge?: KnowledgeEntry[];
+  standupSummary?: string;
+  confidenceFloor?: number;
 };
+
+// Status → display metadata, used across workspace, team, drafts, sidebar.
+export const agentStatusMeta: Record<
+  AgentStatus,
+  { label: string; pillClass: string; dotClass: string; emoji?: string }
+> = {
+  on_shift: {
+    label: "On Shift",
+    pillClass: "border-success/30 bg-success/10 text-success",
+    dotClass: "bg-success",
+  },
+  paused: {
+    label: "Paused",
+    pillClass: "border-warning/30 bg-warning/10 text-warning",
+    dotClass: "bg-warning",
+  },
+  on_probation: {
+    label: "On Probation",
+    pillClass: "border-amber-400/40 bg-amber-400/10 text-amber-500",
+    dotClass: "bg-amber-400",
+    emoji: "🟡",
+  },
+  // Legacy fallbacks so older pages still render.
+  active: {
+    label: "On Shift",
+    pillClass: "border-success/30 bg-success/10 text-success",
+    dotClass: "bg-success",
+  },
+  error: {
+    label: "Needs Attention",
+    pillClass: "border-destructive/30 bg-destructive/10 text-destructive",
+    dotClass: "bg-destructive",
+  },
+};
+
+// Tenant-wide knowledge base (read-only, shared across agents).
+export const tenantKnowledge: KnowledgeEntry[] = [
+  { id: "tk1", title: "Opening hours", snippet: "Tue–Sun 5pm–10:30pm. Closed Mondays. Last seating 9:45pm." },
+  { id: "tk2", title: "Location & parking", snippet: "23 Castle St, Roseau. Free parking on Bath Rd opposite cruise terminal." },
+  { id: "tk3", title: "Payments accepted", snippet: "EC$ + USD. Visa, Mastercard, Fiserv, cash. No Amex." },
+  { id: "tk4", title: "Cancellation policy", snippet: "Free up to 4 hours before. Deposits refundable up to 4hr prior." },
+  { id: "tk5", title: "Dietary options", snippet: "Vegetarian + vegan options on every menu. GF on request 24hr ahead." },
+];
 
 export const agentTemplates: Array<{
   key: AgentTemplateKey;

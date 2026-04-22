@@ -45,6 +45,12 @@ export const Route = createRootRoute({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Isola — Your AI business team on WhatsApp" },
+      { name: "description", content: "Isola Business Hub is a SaaS operating system for Caribbean small businesses, powered by AI." },
+      { property: "og:description", content: "Isola Business Hub is a SaaS operating system for Caribbean small businesses, powered by AI." },
+      { name: "twitter:description", content: "Isola Business Hub is a SaaS operating system for Caribbean small businesses, powered by AI." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/6bb42196-162c-4826-94a6-7ea14eae7dca/id-preview-4bf8702c--46aaf56b-ca98-4207-800b-7979d6d7f6d2.lovable.app-1776886834656.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/6bb42196-162c-4826-94a6-7ea14eae7dca/id-preview-4bf8702c--46aaf56b-ca98-4207-800b-7979d6d7f6d2.lovable.app-1776886834656.png" },
     ],
     links: [
       {

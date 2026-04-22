@@ -220,7 +220,12 @@ export default function AgentWorkspacePage() {
 
   return (
     <DashboardLayout currentPath={`/dashboard/agent/${agent.id}`}>
-      <FirstWinOverlay open={firstWinOpen} industry={firstWinIndustry} onClose={closeFirstWin} />
+      <FirstWinOverlay
+        open={firstWinOpen}
+        industry={firstWinIndustry}
+        onClose={closeFirstWin}
+        suppressConfetti={firstWinReplay}
+      />
       <div className="mx-auto max-w-6xl space-y-6 p-6 lg:p-8">
         <AgentHeroHeader
           agent={agent}

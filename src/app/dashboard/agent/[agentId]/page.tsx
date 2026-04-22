@@ -85,6 +85,7 @@ export default function AgentWorkspacePage() {
   // First-win activation overlay (fires once after onboarding completes)
   const [firstWinOpen, setFirstWinOpen] = useState(false);
   const [firstWinIndustry, setFirstWinIndustry] = useState<ReturnType<typeof pickIndustry>>("default");
+  const [firstWinReplay, setFirstWinReplay] = useState(false);
 
   useEffect(() => {
     setAgent(original);
@@ -102,13 +103,25 @@ export default function AgentWorkspacePage() {
       // tab switch, or remount — even if the user navigates away before dismissing.
       window.localStorage.removeItem("isola.firstWinPending");
       window.localStorage.removeItem("isola.firstWinIndustry");
-      const t = setTimeout(() => setFirstWinOpen(true), 350);
+      const t = setTimeout(() => {
+        setFirstWinReplay(false);
+        setFirstWinOpen(true);
+      }, 350);
       return () => clearTimeout(t);
     }
   }, []);
 
   const closeFirstWin = () => {
     setFirstWinOpen(false);
+  };
+
+  const replayFirstWin = () => {
+    if (typeof window !== "undefined") {
+      const ind = window.localStorage.getItem("isola.firstWinIndustry");
+      setFirstWinIndustry(pickIndustry(ind));
+    }
+    setFirstWinReplay(true);
+    setFirstWinOpen(true);
   };
 
   const onProbation = agent.status === "on_probation";

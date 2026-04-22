@@ -90,6 +90,12 @@ export default function AgentWorkspacePage() {
   const [newKeyword, setNewKeyword] = useState("");
   const apiConfigured = isAgentApiConfigured();
 
+  // ITER-16: Tier-2 settings
+  const [signatureLine, setSignatureLine] = useState<string>("");
+  const [paperclipAgentId, setPaperclipAgentId] = useState<string | null>(null);
+  const paperclipIssueUrl =
+    (import.meta.env.VITE_PAPERCLIP_URL as string | undefined) ?? "https://paperclip.epic.dm";
+
   const draftsRef = useRef<HTMLDivElement>(null);
 
   // First-win activation overlay (fires once after onboarding completes)
@@ -125,6 +131,8 @@ export default function AgentWorkspacePage() {
           confidenceFloor: s.confidenceFloor,
           status: (s.status as Agent["status"]) ?? a.status,
         }));
+        setSignatureLine(s.signatureLine || "");
+        setPaperclipAgentId(s.paperclipAgentId ?? null);
       })
       .catch((err) => {
         console.warn("[agent] BFF hydrate failed, using mock:", err);
@@ -152,6 +160,8 @@ export default function AgentWorkspacePage() {
         confidenceFloor: agent.confidenceFloor,
         escalationKeywords: agent.escalationKeywords,
         channels: agent.channels,
+        signatureLine,
+        status: agent.status,
       });
       toast.success("Settings saved", {
         description: "Changes are live on your Isola now.",
@@ -817,44 +827,86 @@ export default function AgentWorkspacePage() {
                   onChange={(e) => setAgent((a) => ({ ...a, welcome: e.target.value }))}
                 />
               </div>
+              {/* ITER-16: signature line */}
+              <div className="grid gap-2">
+                <Label htmlFor="signature-line">Signature line</Label>
+                <Input
+                  id="signature-line"
+                  value={signatureLine}
+                  onChange={(e) => setSignatureLine(e.target.value)}
+                  placeholder="— Sent by {agent.name}, your Isola assistant"
+                  maxLength={240}
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Appended to outbound replies. Keep it short — one line is enough.
+                </p>
+              </div>
             </Card>
 
-            {/* Probation controls */}
-            {onProbation && (
-              <Card className="border-amber-400/40 bg-amber-400/5 p-6">
-                <div className="mb-3 flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-amber-500" />
-                  <h3 className="font-display text-lg font-semibold">Probation controls</h3>
-                  <Badge variant="outline" className="border-amber-400/40 bg-amber-400/10 text-[10px] text-amber-500">
-                    Learning period
-                  </Badge>
+            {/* Probation controls — visible always, content varies by status */}
+            <Card className={cn(
+              "p-6",
+              onProbation
+                ? "border-amber-400/40 bg-amber-400/5"
+                : "border-border/40 bg-card/40",
+            )}>
+              <div className="mb-3 flex items-center gap-2">
+                <ShieldCheck className={cn("h-4 w-4", onProbation ? "text-amber-500" : "text-muted-foreground")} />
+                <h3 className="font-display text-lg font-semibold">Probation controls</h3>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "text-[10px]",
+                    onProbation
+                      ? "border-amber-400/40 bg-amber-400/10 text-amber-500"
+                      : "border-success/40 bg-success/10 text-success",
+                  )}
+                >
+                  {onProbation ? "Learning period" : "On shift"}
+                </Badge>
+              </div>
+              <p className="mb-4 text-xs text-muted-foreground">
+                {onProbation
+                  ? `${agent.name} is still calibrating. Drafts queue for your approval until you end the learning period or it reaches the confidence floor on its own.`
+                  : `${agent.name} is sending replies autonomously. If quality slips, put them back on probation — drafts will queue for your approval again.`}
+              </p>
+              <div className="mb-4 grid gap-2 rounded-md border border-border/40 bg-background/40 p-3">
+                <div className="flex items-center justify-between text-xs">
+                  <Label>Confidence floor</Label>
+                  <span className="font-medium">{Math.round((agent.confidenceFloor ?? 0.7) * 100)}%</span>
                 </div>
-                <p className="mb-4 text-xs text-muted-foreground">
-                  {agent.name} is still calibrating. Drafts queue for your approval until you end the learning period or it reaches the confidence floor on its own.
+                <Slider
+                  value={[Math.round((agent.confidenceFloor ?? 0.7) * 100)]}
+                  min={50}
+                  max={95}
+                  step={5}
+                  onValueChange={(v) =>
+                    setAgent((a) => ({ ...a, confidenceFloor: v[0] / 100 }))
+                  }
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Drafts above this threshold auto-send once probation ends.
                 </p>
-                <div className="mb-4 grid gap-2 rounded-md border border-border/40 bg-background/40 p-3">
-                  <div className="flex items-center justify-between text-xs">
-                    <Label>Confidence floor</Label>
-                    <span className="font-medium">{Math.round((agent.confidenceFloor ?? 0.7) * 100)}%</span>
-                  </div>
-                  <Slider
-                    value={[Math.round((agent.confidenceFloor ?? 0.7) * 100)]}
-                    min={50}
-                    max={95}
-                    step={5}
-                    onValueChange={(v) =>
-                      setAgent((a) => ({ ...a, confidenceFloor: v[0] / 100 }))
-                    }
-                  />
-                  <p className="text-[11px] text-muted-foreground">
-                    Drafts above this threshold auto-send once probation ends.
-                  </p>
-                </div>
+              </div>
+              {onProbation ? (
                 <Button onClick={endProbation} className="bg-success text-success-foreground hover:opacity-90">
                   End learning period
                 </Button>
-              </Card>
-            )}
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setAgent((a) => ({ ...a, status: "on_probation" }));
+                    toast.info(`${agent.name} is back on probation`, {
+                      description: "Drafts will queue for your approval again.",
+                    });
+                  }}
+                  className="border-amber-400/40 text-amber-600 hover:bg-amber-400/10"
+                >
+                  Put back on probation
+                </Button>
+              )}
+            </Card>
 
             <Card className="border-border/40 bg-card/40 p-6">
               <h3 className="mb-3 font-display text-lg font-semibold">Channels</h3>
@@ -1010,18 +1062,39 @@ export default function AgentWorkspacePage() {
               </Button>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border/40 bg-card/30 px-4 py-3">
-              <div className="text-xs text-muted-foreground">
-                Need the deep-config view (rich tools, examples, advanced routing)?
+            <Card className="border-border/40 bg-card/30 p-6">
+              <h3 className="mb-3 font-display text-lg font-semibold">Advanced</h3>
+              <div className="grid gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border/40 bg-background/40 px-4 py-2.5">
+                  <div className="text-xs text-muted-foreground">
+                    Deep-config view (rich tools, examples, routing rules)
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate({ to: "/dashboard/agents/$id", params: { id: agent.id } })}
+                  >
+                    Open full config <ArrowRight className="h-3 w-3" />
+                  </Button>
+                </div>
+                {/* ITER-16: Open in Paperclip */}
+                {paperclipAgentId && (
+                  <a
+                    href={`${paperclipIssueUrl}/agents/${paperclipAgentId}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border/40 bg-background/40 px-4 py-2.5 transition-colors hover:border-primary/40 hover:bg-primary/5"
+                  >
+                    <div className="text-xs text-muted-foreground">
+                      Power-user management plane (Paperclip agents &amp; issues)
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
+                      Open in Paperclip <ArrowUpRight className="h-3 w-3" />
+                    </span>
+                  </a>
+                )}
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate({ to: "/dashboard/agents/$id", params: { id: agent.id } })}
-              >
-                Open full config <ArrowRight className="h-3 w-3" />
-              </Button>
-            </div>
+            </Card>
 
             {newDraftTitle && <span className="hidden">{newDraftTitle}</span>}
             <button type="button" onClick={() => setNewDraftTitle("")} className="hidden" />

@@ -46,7 +46,9 @@ export type AgentSettingsPatch = Partial<
     | "escalationKeywords"
     | "channels"
   >
->;
+> & {
+  status?: string;
+};
 
 function assertConfigured() {
   if (!BFF_API_URL || !BFF_INTERNAL_SECRET) {

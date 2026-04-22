@@ -6,4 +6,28 @@
 // You can pass additional config via defineConfig({ vite: { ... } }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-export default defineConfig();
+// ITER-15 ops note: when self-hosting the Vite dev server behind nginx at a
+// real domain (e.g. staging.isola.epic.dm on 66.118.37.12:3011), Vite blocks
+// proxied hosts by default with a "not allowed" error. The allowedHosts list
+// below whitelists our hosted domains. Safe to leave here — the Lovable
+// preview and Cloudflare Pages deploy don't need this, they just ignore it.
+export default defineConfig({
+  vite: {
+    server: {
+      allowedHosts: [
+        "staging.isola.epic.dm",
+        "isola.epic.dm",
+        "hub.epic.dm",
+        "bff.epic.dm",
+      ],
+    },
+    preview: {
+      allowedHosts: [
+        "staging.isola.epic.dm",
+        "isola.epic.dm",
+        "hub.epic.dm",
+        "bff.epic.dm",
+      ],
+    },
+  },
+});

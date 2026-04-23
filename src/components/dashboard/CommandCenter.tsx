@@ -286,6 +286,8 @@ type TrackProps = {
   accent: string;
   ctaLabel?: string;
   onCta?: () => void;
+  /** When true, the accent chip pulses to flag urgency (e.g. SLA <15min). */
+  pulse?: boolean;
   children?: React.ReactNode;
 };
 
@@ -299,6 +301,7 @@ function TrackCard({
   accent,
   ctaLabel,
   onCta,
+  pulse,
   children,
 }: TrackProps) {
   // Tone-specific styling — the visual signal that separates AI/human/escalation.

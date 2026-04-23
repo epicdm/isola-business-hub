@@ -98,6 +98,24 @@ const tagMeta: Record<
  * "Solène is driving 60% of bookings, Jules is overloaded, Marcus is paused."
  */
 export default function AgentsOverview({ snapshots }: Props) {
+  const [dnd, setDnd] = useState(false);
+  useEffect(() => {
+    setDnd(readDnd());
+    const onDnd = () => setDnd(readDnd());
+    window.addEventListener(DND_EVENT, onDnd);
+    return () => window.removeEventListener(DND_EVENT, onDnd);
+  }, []);
+
+  // Resolve a "last action" line per agent from their first activity entry.
+  const lastActionByAgent = useMemo(() => {
+    const map = new Map<string, { customer: string; time: string }>();
+    for (const s of snapshots) {
+      const first = getAgentActivity(s.agent.id)[0];
+      if (first) map.set(s.agent.id, { customer: first.customer, time: first.time });
+    }
+    return map;
+  }, [snapshots]);
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 8 }}

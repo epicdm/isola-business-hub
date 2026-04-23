@@ -57,12 +57,17 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
   const sections = useMemo(
     () => [
       {
-        label: mode === "team" ? "Your Team" : "Your Agent",
+        label: "Command center",
         items: [
           {
-            href: mode === "team" ? "/dashboard/team" : `/dashboard/agent/${firstAgentId}`,
-            icon: mode === "team" ? Users2 : Home,
+            href: "/dashboard/home",
+            icon: Home,
             label: "Home",
+          },
+          {
+            href: mode === "team" ? "/dashboard/team" : `/dashboard/agent/${firstAgentId}`,
+            icon: Users2,
+            label: mode === "team" ? "Team" : "Agent workspace",
           },
           {
             href: "/dashboard/drafts",
@@ -122,7 +127,7 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
                 {section.items.map((item) => {
                   const active =
                     currentPath === item.href ||
-                    (item.label === "Home" &&
+                    (item.label === "Agent workspace" &&
                       mode === "solo" &&
                       currentPath.startsWith("/dashboard/agent/"));
                   const Icon = item.icon;

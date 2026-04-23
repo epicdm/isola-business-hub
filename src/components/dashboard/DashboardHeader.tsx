@@ -29,10 +29,14 @@ export default function DashboardHeader() {
 
   const path = location.pathname;
   let pageTitle: string | null = null;
-  if (path.startsWith("/dashboard/agent/")) {
+  let pageEyebrow = "Workspace";
+  if (path === "/dashboard/home" || path === "/dashboard" || path === "/dashboard/") {
+    pageTitle = "Command center";
+    pageEyebrow = "Isola";
+  } else if (path.startsWith("/dashboard/agent/")) {
     const id = path.split("/")[3];
     const agent = agents.find((a) => a.id === id);
-    if (agent) pageTitle = `${agent.name} — your Isola`;
+    if (agent) pageTitle = `${agent.name} — workspace`;
   } else if (path === "/dashboard/team") {
     pageTitle = "Your team";
   } else if (path === "/dashboard/drafts") {
@@ -51,7 +55,7 @@ export default function DashboardHeader() {
       {pageTitle ? (
         <div className="min-w-0 flex-1">
           <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            Workspace
+            {pageEyebrow}
           </div>
           <h1 className="mt-0.5 truncate font-display text-base font-semibold leading-tight">
             {pageTitle}

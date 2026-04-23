@@ -613,7 +613,7 @@ const LAST_VISIT_KEY = "isola.lastVisitAt";
 const CURRENT_VISIT_KEY = "isola.currentVisitAt";
 
 /** Idle gap that triggers a baseline roll. Anything shorter is "same session". */
-const REBASE_AFTER_MIN = 10;
+export const REBASE_AFTER_MIN = 10;
 
 export type SinceLastVisit = {
   /** Human-readable label for the window, e.g. "Since you stepped away 2h ago". */

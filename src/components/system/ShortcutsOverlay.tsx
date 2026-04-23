@@ -137,12 +137,15 @@ export default function ShortcutsOverlay() {
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setActiveIndex((i) => (i - 1 + flatRowsCount) % flatRowsCount);
+      focusInput();
     } else if (e.key === "Home") {
       e.preventDefault();
       setActiveIndex(0);
+      focusInput();
     } else if (e.key === "End") {
       e.preventDefault();
       setActiveIndex(flatRowsCount - 1);
+      focusInput();
     } else if (e.key === "Enter") {
       // Close the overlay so the user can actually press the shortcut they
       // just looked up. The selection is informational, not actionable.

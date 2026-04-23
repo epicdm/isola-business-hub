@@ -2,32 +2,20 @@
 
 import { useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { agents } from "@/lib/mock-data";
 
-const MOCK_MODE_KEY = "isola.mockMode";
-
+/**
+ * /dashboard → /dashboard/home
+ *
+ * The home command center is the new default first destination after login.
+ * It sits ABOVE individual agents and gives a business-wide view first.
+ * Drill-down into a specific agent workspace happens from the Agents
+ * Overview block on /dashboard/home.
+ */
 export default function DashboardIndexPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    let mode = window.localStorage.getItem(MOCK_MODE_KEY);
-    if (mode !== "solo" && mode !== "team") {
-      mode = "solo";
-      window.localStorage.setItem(MOCK_MODE_KEY, mode);
-    }
-    if (mode === "solo") {
-      const first = agents[0];
-      if (first) {
-        navigate({
-          to: "/dashboard/agent/$agentId",
-          params: { agentId: first.id },
-          replace: true,
-        });
-        return;
-      }
-    }
-    navigate({ to: "/dashboard/team", replace: true });
+    navigate({ to: "/dashboard/home", replace: true });
   }, [navigate]);
 
   return (

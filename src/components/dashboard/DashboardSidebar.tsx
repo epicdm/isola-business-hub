@@ -57,12 +57,17 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
   const sections = useMemo(
     () => [
       {
-        label: mode === "team" ? "Your Team" : "Your Agent",
+        label: "Command center",
         items: [
           {
-            href: mode === "team" ? "/dashboard/team" : `/dashboard/agent/${firstAgentId}`,
-            icon: mode === "team" ? Users2 : Home,
+            href: "/dashboard/home",
+            icon: Home,
             label: "Home",
+          },
+          {
+            href: mode === "team" ? "/dashboard/team" : `/dashboard/agent/${firstAgentId}`,
+            icon: Users2,
+            label: mode === "team" ? "Team" : "Agent workspace",
           },
           {
             href: "/dashboard/drafts",
@@ -108,7 +113,7 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
     <aside className="hidden w-64 shrink-0 border-r border-sidebar-border bg-sidebar lg:block">
       <div className="sticky top-0 flex h-screen flex-col">
         <div className="flex h-16 items-center border-b border-sidebar-border px-5">
-          <a href="/dashboard" className="flex items-center">
+          <a href="/dashboard/home" className="flex items-center">
             <IsolaWordmark size={30} showSub />
           </a>
         </div>
@@ -122,7 +127,7 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
                 {section.items.map((item) => {
                   const active =
                     currentPath === item.href ||
-                    (item.label === "Home" &&
+                    (item.label === "Agent workspace" &&
                       mode === "solo" &&
                       currentPath.startsWith("/dashboard/agent/"));
                   const Icon = item.icon;

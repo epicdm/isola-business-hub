@@ -28,6 +28,7 @@ import { Route as DashboardIntegrationsRouteImport } from './routes/dashboard.in
 import { Route as DashboardInsightsRouteImport } from './routes/dashboard.insights'
 import { Route as DashboardInboxRouteImport } from './routes/dashboard.inbox'
 import { Route as DashboardHoursRouteImport } from './routes/dashboard.hours'
+import { Route as DashboardHomeRouteImport } from './routes/dashboard.home'
 import { Route as DashboardEmaRouteImport } from './routes/dashboard.ema'
 import { Route as DashboardDraftsRouteImport } from './routes/dashboard.drafts'
 import { Route as DashboardContactsRouteImport } from './routes/dashboard.contacts'
@@ -139,6 +140,11 @@ const DashboardHoursRoute = DashboardHoursRouteImport.update({
   path: '/dashboard/hours',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardHomeRoute = DashboardHomeRouteImport.update({
+  id: '/dashboard/home',
+  path: '/dashboard/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardEmaRoute = DashboardEmaRouteImport.update({
   id: '/dashboard/ema',
   path: '/dashboard/ema',
@@ -230,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/contacts': typeof DashboardContactsRoute
   '/dashboard/drafts': typeof DashboardDraftsRoute
   '/dashboard/ema': typeof DashboardEmaRouteWithChildren
+  '/dashboard/home': typeof DashboardHomeRoute
   '/dashboard/hours': typeof DashboardHoursRoute
   '/dashboard/inbox': typeof DashboardInboxRoute
   '/dashboard/insights': typeof DashboardInsightsRoute
@@ -265,6 +272,7 @@ export interface FileRoutesByTo {
   '/dashboard/channels': typeof DashboardChannelsRoute
   '/dashboard/contacts': typeof DashboardContactsRoute
   '/dashboard/drafts': typeof DashboardDraftsRoute
+  '/dashboard/home': typeof DashboardHomeRoute
   '/dashboard/hours': typeof DashboardHoursRoute
   '/dashboard/inbox': typeof DashboardInboxRoute
   '/dashboard/insights': typeof DashboardInsightsRoute
@@ -302,6 +310,7 @@ export interface FileRoutesById {
   '/dashboard/contacts': typeof DashboardContactsRoute
   '/dashboard/drafts': typeof DashboardDraftsRoute
   '/dashboard/ema': typeof DashboardEmaRouteWithChildren
+  '/dashboard/home': typeof DashboardHomeRoute
   '/dashboard/hours': typeof DashboardHoursRoute
   '/dashboard/inbox': typeof DashboardInboxRoute
   '/dashboard/insights': typeof DashboardInsightsRoute
@@ -340,6 +349,7 @@ export interface FileRouteTypes {
     | '/dashboard/contacts'
     | '/dashboard/drafts'
     | '/dashboard/ema'
+    | '/dashboard/home'
     | '/dashboard/hours'
     | '/dashboard/inbox'
     | '/dashboard/insights'
@@ -375,6 +385,7 @@ export interface FileRouteTypes {
     | '/dashboard/channels'
     | '/dashboard/contacts'
     | '/dashboard/drafts'
+    | '/dashboard/home'
     | '/dashboard/hours'
     | '/dashboard/inbox'
     | '/dashboard/insights'
@@ -411,6 +422,7 @@ export interface FileRouteTypes {
     | '/dashboard/contacts'
     | '/dashboard/drafts'
     | '/dashboard/ema'
+    | '/dashboard/home'
     | '/dashboard/hours'
     | '/dashboard/inbox'
     | '/dashboard/insights'
@@ -448,6 +460,7 @@ export interface RootRouteChildren {
   DashboardContactsRoute: typeof DashboardContactsRoute
   DashboardDraftsRoute: typeof DashboardDraftsRoute
   DashboardEmaRoute: typeof DashboardEmaRouteWithChildren
+  DashboardHomeRoute: typeof DashboardHomeRoute
   DashboardHoursRoute: typeof DashboardHoursRoute
   DashboardInboxRoute: typeof DashboardInboxRoute
   DashboardInsightsRoute: typeof DashboardInsightsRoute
@@ -602,6 +615,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardHoursRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/home': {
+      id: '/dashboard/home'
+      path: '/dashboard/home'
+      fullPath: '/dashboard/home'
+      preLoaderRoute: typeof DashboardHomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/ema': {
       id: '/dashboard/ema'
       path: '/dashboard/ema'
@@ -741,6 +761,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardContactsRoute: DashboardContactsRoute,
   DashboardDraftsRoute: DashboardDraftsRoute,
   DashboardEmaRoute: DashboardEmaRouteWithChildren,
+  DashboardHomeRoute: DashboardHomeRoute,
   DashboardHoursRoute: DashboardHoursRoute,
   DashboardInboxRoute: DashboardInboxRoute,
   DashboardInsightsRoute: DashboardInsightsRoute,

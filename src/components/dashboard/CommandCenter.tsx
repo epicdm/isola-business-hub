@@ -462,19 +462,38 @@ function MetricSpark({
 }
 
 /**
- * Countdown — renders the time remaining until `deadlineAt` in mm:ss for the
- * final 10 minutes, otherwise Xm. Past-due deadlines render as "OVERDUE".
+ * Urgency threshold scales with the SLA so it stays meaningful at every
+ * window — 25% of the SLA, clamped to [2min, 30min]. With a 1h SLA this
+ * yields the previous 15-minute warning; with 30m it gives ~7m; with 4h
+ * it caps at 30m so we don't scream too early.
+ */
+function urgentThresholdMs(slaMinutes: number): number {
+  const ms = slaMinutes * 60_000 * 0.25;
+  return Math.min(Math.max(ms, 2 * 60_000), 30 * 60_000);
+}
+
+/**
+ * Countdown — renders the time remaining until `deadlineAt`. Switches to
+ * mm:ss inside the urgency window, otherwise Xm. Past-due → "OVERDUE".
  * The `now` prop is owned by the parent so all timers tick in sync.
  */
-function Countdown({ deadlineAt, now }: { deadlineAt: number; now: number }) {
+function Countdown({
+  deadlineAt,
+  now,
+  urgentMs,
+}: {
+  deadlineAt: number;
+  now: number;
+  urgentMs: number;
+}) {
   const remainingMs = deadlineAt - now;
   const overdue = remainingMs <= 0;
-  const urgent = !overdue && remainingMs <= 15 * 60_000;
+  const urgent = !overdue && remainingMs <= urgentMs;
 
   let display: string;
   if (overdue) {
     display = "OVERDUE";
-  } else if (remainingMs <= 10 * 60_000) {
+  } else if (urgent) {
     const totalSec = Math.floor(remainingMs / 1000);
     const m = Math.floor(totalSec / 60);
     const s = totalSec % 60;

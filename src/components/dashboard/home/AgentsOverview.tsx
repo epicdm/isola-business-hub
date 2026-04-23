@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   CalendarCheck,
@@ -16,9 +17,37 @@ import {
   GraduationCap,
   Activity,
 } from "lucide-react";
-import { agentStatusMeta } from "@/lib/mock-data";
+import { agentStatusMeta, getAgentActivity, type AgentStatus } from "@/lib/mock-data";
 import type { AgentSnapshot, AgentTag } from "@/lib/home-data";
 import { cn } from "@/lib/utils";
+import { DND_EVENT, readDnd } from "@/lib/system-flags";
+
+// Map raw agent.status → presence state used by the dot in the card corner.
+type Presence = "on" | "busy" | "paused" | "off";
+
+function presenceFor(status: AgentStatus): Presence {
+  switch (status) {
+    case "active":
+    case "on_shift":
+      return "on";
+    case "on_probation":
+      return "busy";
+    case "paused":
+      return "paused";
+    default:
+      return "off";
+  }
+}
+
+const presenceMeta: Record<
+  Presence,
+  { label: string; dot: string; ring: string; pulse: "breathe" | "ping" | "slow" | "none" }
+> = {
+  on: { label: "On shift", dot: "bg-success", ring: "ring-success/40", pulse: "breathe" },
+  busy: { label: "Working through drafts", dot: "bg-success", ring: "ring-success/50", pulse: "ping" },
+  paused: { label: "Paused", dot: "bg-warning", ring: "ring-warning/30", pulse: "slow" },
+  off: { label: "Off duty", dot: "bg-muted-foreground/40", ring: "ring-muted/40", pulse: "none" },
+};
 
 type Props = {
   snapshots: AgentSnapshot[];
@@ -69,6 +98,24 @@ const tagMeta: Record<
  * "Solène is driving 60% of bookings, Jules is overloaded, Marcus is paused."
  */
 export default function AgentsOverview({ snapshots }: Props) {
+  const [dnd, setDnd] = useState(false);
+  useEffect(() => {
+    setDnd(readDnd());
+    const onDnd = () => setDnd(readDnd());
+    window.addEventListener(DND_EVENT, onDnd);
+    return () => window.removeEventListener(DND_EVENT, onDnd);
+  }, []);
+
+  // Resolve a "last action" line per agent from their first activity entry.
+  const lastActionByAgent = useMemo(() => {
+    const map = new Map<string, { customer: string; time: string }>();
+    for (const s of snapshots) {
+      const first = getAgentActivity(s.agent.id)[0];
+      if (first) map.set(s.agent.id, { customer: first.customer, time: first.time });
+    }
+    return map;
+  }, [snapshots]);
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 8 }}
@@ -104,6 +151,12 @@ export default function AgentsOverview({ snapshots }: Props) {
             .join("")
             .slice(0, 2);
           const primaryTag = s.tags[0];
+          const presence = presenceFor(s.agent.status);
+          const pm = presenceMeta[presence];
+          const lastAction = lastActionByAgent.get(s.agent.id);
+          // DnD globally dims presence dots — operating system hint that the
+          // human has muted everything intentionally.
+          const dotOpacity = dnd ? "opacity-40" : "opacity-100";
           return (
             <Link
               key={s.agent.id}
@@ -134,6 +187,30 @@ export default function AgentsOverview({ snapshots }: Props) {
                   />
                 )}
 
+                {/* Presence dot — ambient liveness in top-right of the card. */}
+                <span
+                  aria-label={pm.label}
+                  title={pm.label}
+                  className={cn(
+                    "absolute right-2.5 top-2.5 flex h-2 w-2 transition-opacity",
+                    dotOpacity,
+                  )}
+                >
+                  {pm.pulse === "ping" && (
+                    <span className={cn("absolute inset-0 animate-ping rounded-full", pm.dot, "opacity-60")} />
+                  )}
+                  {pm.pulse === "breathe" && (
+                    <span className={cn("absolute inset-0 animate-pulse rounded-full", pm.dot, "opacity-60")} />
+                  )}
+                  {pm.pulse === "slow" && (
+                    <span
+                      className={cn("absolute inset-0 rounded-full", pm.dot, "opacity-50")}
+                      style={{ animation: "pulse 3.6s cubic-bezier(0.4,0,0.6,1) infinite" }}
+                    />
+                  )}
+                  <span className={cn("relative inline-flex h-2 w-2 rounded-full ring-2", pm.dot, pm.ring)} />
+                </span>
+
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-aurora text-[11px] font-semibold text-foreground shadow-glow">
@@ -148,11 +225,18 @@ export default function AgentsOverview({ snapshots }: Props) {
                       <div className="mt-0.5 truncate text-[10px] uppercase tracking-wider text-muted-foreground">
                         {s.agent.templateLabel} · {s.agent.scheduleLabel}
                       </div>
+                      {lastAction && (
+                        <div className="mt-1 truncate text-[11px] text-muted-foreground tabular-nums">
+                          {presence === "off" || presence === "paused"
+                            ? `Last action · ${lastAction.time}`
+                            : `Answered ${lastAction.customer} · ${lastAction.time}`}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <span
                     className={cn(
-                      "flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+                      "mt-4 flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
                       meta.pillClass,
                     )}
                   >

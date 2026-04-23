@@ -19,8 +19,7 @@ import {
   getEmaBriefing,
   getAgentSnapshots,
   getSinceLastVisit,
-  readLastVisit,
-  stampLastVisit,
+  touchVisit,
 } from "@/lib/home-data";
 import { readSlaMinutes } from "@/lib/escalation-sla";
 import { accountDefaults, bookings as allBookings } from "@/lib/mock-data";

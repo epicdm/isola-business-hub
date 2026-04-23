@@ -94,11 +94,14 @@ export default function ShortcutsOverlay() {
     })).filter((g) => g.rows.length > 0);
   }, [query]);
 
-  // Flat list mirrors visual order, used for arrow-key navigation.
-  const flatRowsCount = useMemo(
-    () => filteredGroups.reduce((n, g) => n + g.rows.length, 0),
+  // Flat list mirrors visual order, used for arrow-key navigation and to
+  // resolve the currently highlighted row for the details strip.
+  const flatRows = useMemo(
+    () => filteredGroups.flatMap((g) => g.rows.map((row) => ({ group: g.title, row }))),
     [filteredGroups],
   );
+  const flatRowsCount = flatRows.length;
+  const activeRow = flatRows[activeIndex];
 
   // Clamp + reset the active index when results change.
   useEffect(() => {
@@ -259,7 +262,49 @@ export default function ShortcutsOverlay() {
           ))}
         </div>
 
-        <div className="mt-4 shrink-0 border-t border-border/40 pt-3 text-[11px] text-muted-foreground">
+        {/* Details strip — full label + group for the currently highlighted row. */}
+        <div
+          aria-live="polite"
+          className="mt-3 shrink-0 rounded-md border border-border/40 bg-background/30 px-3 py-2 text-sm"
+        >
+          {activeRow ? (
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
+                  {activeRow.group}
+                </div>
+                <div className="mt-0.5 truncate text-foreground">
+                  {activeRow.row.description}
+                </div>
+              </div>
+              <span className="flex shrink-0 items-center gap-1">
+                {activeRow.row.keys.map((k, i) =>
+                  k === "then" ? (
+                    <span
+                      key={i}
+                      className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground/70"
+                    >
+                      then
+                    </span>
+                  ) : (
+                    <kbd
+                      key={i}
+                      className="rounded border border-border/60 bg-background/40 px-1.5 py-0.5 text-[11px] font-mono text-foreground/80"
+                    >
+                      {k}
+                    </kbd>
+                  ),
+                )}
+              </span>
+            </div>
+          ) : (
+            <div className="text-muted-foreground">
+              No shortcut selected — type to search or press ↓ to start.
+            </div>
+          )}
+        </div>
+
+        <div className="mt-3 shrink-0 border-t border-border/40 pt-3 text-[11px] text-muted-foreground">
           <span className="hidden sm:inline">↑↓ navigate · Enter / Esc close · </span>
           Tip: shortcuts are disabled while you're typing in an input.
         </div>

@@ -56,6 +56,21 @@ export default function ShortcutsOverlay() {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const rowRefs = useRef<Array<HTMLLIElement | null>>([]);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // Place the cursor at the end of the existing query (preserved across opens)
+  // so the user can keep typing without re-selecting text.
+  const focusInput = () => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.focus();
+    const len = el.value.length;
+    try {
+      el.setSelectionRange(len, len);
+    } catch {
+      // Some input types don't support selection — safe to ignore.
+    }
+  };
 
   useEffect(() => {
     const handler = () => setOpen((v) => !v);

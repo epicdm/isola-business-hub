@@ -1,0 +1,367 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { Link } from "@tanstack/react-router";
+import {
+  Sparkles,
+  ShieldCheck,
+  AlertTriangle,
+  ArrowUpRight,
+  MessageSquare,
+  CalendarCheck,
+  Clock,
+  Zap,
+} from "lucide-react";
+import Sparkline from "./Sparkline";
+import { cn } from "@/lib/utils";
+import type { Agent, AgentActivityEntry } from "@/lib/mock-data";
+
+type Props = {
+  agent: Agent;
+  activity: AgentActivityEntry[];
+  pendingDrafts: number;
+  escalations: number;
+  onReviewDrafts?: () => void;
+  onJumpEscalations?: () => void;
+};
+
+/**
+ * CommandCenter — the signature first-screen "AI command center" for the
+ * agent workspace. Three colour-coded tracks make AI vs human vs escalation
+ * activity instantly distinguishable, with a 24h metrics strip + sparkline.
+ *
+ * Track palette (intentional):
+ *   • Aurora violet  → AI activity (autonomous)
+ *   • WhatsApp green → Human actions (drafts awaiting approval)
+ *   • Sunset coral   → Escalations (needs you now)
+ */
+export default function CommandCenter({
+  agent,
+  activity,
+  pendingDrafts,
+  escalations,
+  onReviewDrafts,
+  onJumpEscalations,
+}: Props) {
+  // ---- 24h slice -----------------------------------------------------------
+  const last24 = activity.slice(0, 24);
+  const messages = last24.length;
+  const bookings = last24.filter((a) => a.outcome === "booked").length;
+  const answered = last24.filter((a) => a.outcome === "answered").length;
+  const autoPct = messages
+    ? Math.round(((answered + bookings) / messages) * 100)
+    : 100;
+
+  // Build a per-hour volume sparkline (12 buckets).
+  const buckets = Array.from({ length: 12 }, (_, i) => {
+    const slice = activity.slice(i * 2, i * 2 + 2);
+    return slice.length;
+  });
+
+  const recentAi = activity
+    .filter((a) => a.outcome !== "escalated")
+    .slice(0, 3);
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+      aria-label="Command center"
+      className="relative"
+    >
+      {/* Eyebrow */}
+      <div className="mb-3 flex items-end justify-between">
+        <div>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+            Command center
+          </div>
+          <h2 className="mt-1 font-display text-xl font-semibold leading-tight">
+            What {agent.name.split(" ")[0]} is doing right now
+          </h2>
+        </div>
+        <div className="hidden items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground sm:flex">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
+          </span>
+          Live · last 24h
+        </div>
+      </div>
+
+      {/* TRACKS — 3 columns, distinct accent per surface */}
+      <div className="grid gap-3 lg:grid-cols-3">
+        {/* AI activity (autonomous) */}
+        <TrackCard
+          tone="ai"
+          icon={Sparkles}
+          eyebrow="AI activity"
+          title="Autonomous"
+          metric={messages}
+          metricLabel="handled"
+          accent={`${autoPct}% no-touch`}
+        >
+          <ul className="mt-3 space-y-1.5">
+            {recentAi.length === 0 && (
+              <li className="text-xs text-muted-foreground">Quiet hour. No new AI activity.</li>
+            )}
+            {recentAi.map((a) => (
+              <li key={a.id} className="flex items-center gap-2 text-xs">
+                <span
+                  className={cn(
+                    "inline-flex h-1.5 w-1.5 shrink-0 rounded-full",
+                    a.outcome === "booked" ? "bg-success" : "bg-violet",
+                  )}
+                />
+                <span className="min-w-0 flex-1 truncate text-foreground/90">
+                  {a.preview}
+                </span>
+                <span className="shrink-0 text-muted-foreground">{a.time}</span>
+              </li>
+            ))}
+          </ul>
+        </TrackCard>
+
+        {/* Human queue (probation drafts) */}
+        <TrackCard
+          tone="human"
+          icon={ShieldCheck}
+          eyebrow="Needs your touch"
+          title="Drafts to approve"
+          metric={pendingDrafts}
+          metricLabel={pendingDrafts === 1 ? "draft" : "drafts"}
+          accent={pendingDrafts === 0 ? "All clear" : "Tap to review"}
+          ctaLabel={pendingDrafts > 0 ? "Review drafts" : undefined}
+          onCta={onReviewDrafts}
+        >
+          <p className="mt-3 text-xs text-muted-foreground">
+            {pendingDrafts === 0
+              ? "Nothing pending. Every recent reply went out automatically."
+              : `${agent.name.split(" ")[0]} held back ${pendingDrafts} repl${pendingDrafts === 1 ? "y" : "ies"} for your judgment. Approving teaches future replies.`}
+          </p>
+        </TrackCard>
+
+        {/* Escalations (needs you NOW) */}
+        <TrackCard
+          tone="escalation"
+          icon={AlertTriangle}
+          eyebrow="Escalations"
+          title={escalations > 0 ? "Needs you now" : "All handled"}
+          metric={escalations}
+          metricLabel={escalations === 1 ? "open" : "open"}
+          accent={escalations > 0 ? "Reply within 1h" : "0 unresolved"}
+          ctaLabel={escalations > 0 ? "Open" : undefined}
+          onCta={onJumpEscalations}
+        >
+          <p className="mt-3 text-xs text-muted-foreground">
+            {escalations === 0
+              ? "No customers waiting on a human reply. Great signal."
+              : "Customers explicitly asked for a human, or hit a confidence floor."}
+          </p>
+        </TrackCard>
+      </div>
+
+      {/* 24h METRICS STRIP — passive info, hairline-divided */}
+      <div className="mt-3 overflow-hidden rounded-2xl border border-border/40 bg-gradient-card backdrop-blur-sm">
+        <div className="flex items-center justify-between border-b border-border/30 px-5 py-3">
+          <div className="flex items-center gap-2">
+            <Zap className="h-3.5 w-3.5 text-aqua" />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              Last 24 hours · at a glance
+            </span>
+          </div>
+          <Link
+            to="/dashboard/insights"
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-aqua"
+          >
+            Full insights <ArrowUpRight className="h-3 w-3" />
+          </Link>
+        </div>
+
+        <div className="grid divide-y divide-border/30 sm:grid-cols-4 sm:divide-x sm:divide-y-0">
+          <Metric
+            icon={MessageSquare}
+            label="Messages"
+            value={messages}
+            sub={`${autoPct}% auto-resolved`}
+          />
+          <Metric
+            icon={CalendarCheck}
+            label="Bookings"
+            value={bookings}
+            sub="confirmed in 24h"
+          />
+          <Metric
+            icon={Sparkles}
+            label="Auto-replies"
+            value={answered + bookings}
+            sub="no human touch"
+          />
+          <MetricSpark
+            icon={Clock}
+            label="Volume"
+            sub="hourly trend"
+            values={buckets}
+          />
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
+// ---------- subcomponents ----------------------------------------------------
+
+type TrackTone = "ai" | "human" | "escalation";
+
+type TrackProps = {
+  tone: TrackTone;
+  icon: typeof Sparkles;
+  eyebrow: string;
+  title: string;
+  metric: number;
+  metricLabel: string;
+  accent: string;
+  ctaLabel?: string;
+  onCta?: () => void;
+  children?: React.ReactNode;
+};
+
+function TrackCard({
+  tone,
+  icon: Icon,
+  eyebrow,
+  title,
+  metric,
+  metricLabel,
+  accent,
+  ctaLabel,
+  onCta,
+  children,
+}: TrackProps) {
+  // Tone-specific styling — the visual signal that separates AI/human/escalation.
+  const styles =
+    tone === "ai"
+      ? {
+          ring: "border-violet/30",
+          glow: "bg-[radial-gradient(ellipse_70%_60%_at_15%_0%,oklch(0.7_0.22_295/0.18),transparent_70%)]",
+          chipBg: "bg-violet/15 text-violet",
+          accentText: "text-violet",
+          number: "text-gradient-aurora",
+        }
+      : tone === "human"
+        ? {
+            ring: "border-primary/30",
+            glow: "bg-[radial-gradient(ellipse_70%_60%_at_15%_0%,oklch(0.78_0.17_152/0.18),transparent_70%)]",
+            chipBg: "bg-primary/15 text-primary",
+            accentText: "text-primary",
+            number: "text-gradient-primary",
+          }
+        : {
+            ring: "border-ema/30",
+            glow: "bg-[radial-gradient(ellipse_70%_60%_at_15%_0%,oklch(0.72_0.19_30/0.22),transparent_70%)]",
+            chipBg: "bg-ema/15 text-ema",
+            accentText: "text-ema",
+            number: "text-gradient-ema",
+          };
+
+  return (
+    <div
+      className={cn(
+        "group relative flex flex-col overflow-hidden rounded-2xl border bg-card/50 p-5 backdrop-blur-sm transition-all hover:bg-card/70 hover:shadow-elegant",
+        styles.ring,
+      )}
+    >
+      <div aria-hidden className={cn("absolute inset-0 -z-10", styles.glow)} />
+
+      <div className="flex items-center justify-between">
+        <span
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em]",
+            styles.chipBg,
+          )}
+        >
+          <Icon className="h-3 w-3" /> {eyebrow}
+        </span>
+        <span className={cn("text-[10px] font-medium uppercase tracking-[0.14em]", styles.accentText)}>
+          {accent}
+        </span>
+      </div>
+
+      <div className="mt-4 flex items-baseline gap-2">
+        <span className={cn("font-display text-5xl font-bold leading-none tabular-nums", styles.number)}>
+          {metric}
+        </span>
+        <span className="text-xs text-muted-foreground">{metricLabel}</span>
+      </div>
+      <div className="mt-1 text-sm font-medium">{title}</div>
+
+      {children}
+
+      {ctaLabel && (
+        <button
+          type="button"
+          onClick={onCta}
+          className={cn(
+            "mt-4 inline-flex w-fit items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-80",
+            styles.accentText,
+          )}
+        >
+          {ctaLabel} <ArrowUpRight className="h-3 w-3" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function Metric({
+  icon: Icon,
+  label,
+  value,
+  sub,
+}: {
+  icon: typeof Sparkles;
+  label: string;
+  value: number;
+  sub: string;
+}) {
+  return (
+    <div className="px-5 py-4">
+      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        <Icon className="h-3 w-3" /> {label}
+      </div>
+      <div className="mt-1.5 font-display text-2xl font-bold tabular-nums">{value}</div>
+      <div className="mt-0.5 text-[11px] text-muted-foreground">{sub}</div>
+    </div>
+  );
+}
+
+function MetricSpark({
+  icon: Icon,
+  label,
+  sub,
+  values,
+}: {
+  icon: typeof Sparkles;
+  label: string;
+  sub: string;
+  values: number[];
+}) {
+  return (
+    <div className="px-5 py-4">
+      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        <Icon className="h-3 w-3" /> {label}
+      </div>
+      <div className="mt-2 h-9 w-full">
+        <Sparkline
+          values={values}
+          variant="bars"
+          height={36}
+          className="h-9 w-full"
+          fill="var(--color-aqua)"
+          stroke="var(--color-aqua)"
+        />
+      </div>
+      <div className="mt-0.5 text-[11px] text-muted-foreground">{sub}</div>
+    </div>
+  );
+}

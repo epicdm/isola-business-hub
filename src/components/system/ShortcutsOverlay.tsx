@@ -161,6 +161,13 @@ export default function ShortcutsOverlay() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
         onKeyDown={handleKeyDown}
+        // Radix tries to focus the first focusable element; we override so
+        // the search input always wins, even with the close button present.
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          // rAF lets the dialog finish mounting before we steal focus.
+          requestAnimationFrame(focusInput);
+        }}
         className="flex max-h-[90vh] w-[calc(100vw-2rem)] max-w-[560px] flex-col gap-0 overflow-hidden border-border/40 bg-card p-4 shadow-float sm:p-6"
       >
         <DialogTitle className="pr-8 font-display text-base font-semibold">

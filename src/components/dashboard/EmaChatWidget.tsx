@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Sparkles, X, Send, ExternalLink, Plug } from "lucide-react";
+import { X, Send, ExternalLink, Plug } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/tooltip";
 import { emaInitialMessages, emaQuickActions } from "@/lib/mock-data";
 import { useOdooConnection, requiresOdoo } from "@/hooks/use-odoo-connection";
+import { EmaOrb } from "@/components/brand/IsolaBrand";
 
 type Msg = {
   id: string;

@@ -131,13 +131,17 @@ export default function AttentionQueue({ items, slaMinutes }: Props) {
                   <Icon className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em]">
+                  <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em]">
                     <span className={sevText}>{kindLabel[item.kind]}</span>
-                    <span className="text-muted-foreground/60">·</span>
+                    <span className="text-muted-foreground/50">·</span>
+                    <span className="rounded bg-muted/40 px-1.5 py-0.5 text-[9px] font-semibold text-muted-foreground">
+                      {item.area}
+                    </span>
+                    <span className="text-muted-foreground/50">·</span>
                     <span className="text-muted-foreground">
                       {item.agentName}
                     </span>
-                    <span className="text-muted-foreground/60">·</span>
+                    <span className="text-muted-foreground/50">·</span>
                     <span className="inline-flex items-center gap-1 text-muted-foreground">
                       <Clock className="h-2.5 w-2.5" />
                       {formatAge(item.ageMin)}
@@ -153,6 +157,13 @@ export default function AttentionQueue({ items, slaMinutes }: Props) {
                   </div>
                   <div className="mt-0.5 truncate text-xs text-muted-foreground">
                     {item.why}
+                  </div>
+                  <div className="mt-1.5 flex items-start gap-1.5 text-[11px] leading-snug text-foreground/70">
+                    <span className="mt-[3px] inline-block h-1 w-1 shrink-0 rounded-full bg-ema/60" />
+                    <span>
+                      <span className="font-semibold text-ema/90">If ignored: </span>
+                      {item.riskIfIgnored}
+                    </span>
                   </div>
                 </div>
                 <Link

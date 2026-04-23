@@ -68,12 +68,33 @@ export type DailyOutcomes = {
   revenueInfluenced: number;
   /** Approximate avg response time in seconds (mock anchor). */
   avgResponseSec: number;
+  /** Yesterday's snapshot for comparison rendering. */
+  yesterday: {
+    messages: number;
+    bookings: number;
+    autoPct: number;
+    revenueInfluenced: number;
+    avgResponseSec: number;
+  };
+  /** Pre-computed deltas vs. yesterday — UI renders directly. */
+  deltas: {
+    messagesPct: number;
+    bookingsPct: number;
+    autoPctDelta: number;
+    revenuePct: number;
+    responseDeltaSec: number;
+  };
 };
 
 const AVG_TICKET_XCD = 95;
 
 export function getDailyOutcomes(activity: AgentActivityEntry[]): DailyOutcomes {
   const today = activity.filter((a) => parseAgo(a.time) <= 24 * 60);
+  const yest = activity.filter((a) => {
+    const ago = parseAgo(a.time);
+    return ago > 24 * 60 && ago <= 48 * 60;
+  });
+
   const messages = today.length;
   const bookings = today.filter((a) => a.outcome === "booked").length;
   const autoResolved = today.filter((a) => a.outcome === "answered").length;
@@ -81,6 +102,13 @@ export function getDailyOutcomes(activity: AgentActivityEntry[]): DailyOutcomes 
   const autoPct = messages
     ? Math.round(((autoResolved + bookings) / messages) * 100)
     : 100;
+
+  const yMessages = yest.length;
+  const yBookings = yest.filter((a) => a.outcome === "booked").length;
+  const yAutoOk = yest.filter((a) => a.outcome !== "escalated").length;
+  const yAutoPct = yMessages ? Math.round((yAutoOk / yMessages) * 100) : 100;
+  const yRevenue = yBookings * AVG_TICKET_XCD;
+  const yAvgResponseSec = 2.7;
 
   // 12 hourly buckets, oldest → newest left → right
   const hourlyVolume = Array.from({ length: 12 }, (_, i) => {
@@ -92,6 +120,11 @@ export function getDailyOutcomes(activity: AgentActivityEntry[]): DailyOutcomes 
     }).length;
   });
 
+  const pctChange = (now: number, then: number): number => {
+    if (then === 0) return now > 0 ? 100 : 0;
+    return Math.round(((now - then) / then) * 100);
+  };
+
   return {
     messages,
     bookings,
@@ -101,6 +134,20 @@ export function getDailyOutcomes(activity: AgentActivityEntry[]): DailyOutcomes 
     hourlyVolume,
     revenueInfluenced: bookings * AVG_TICKET_XCD,
     avgResponseSec: 2.4,
+    yesterday: {
+      messages: yMessages,
+      bookings: yBookings,
+      autoPct: yAutoPct,
+      revenueInfluenced: yRevenue,
+      avgResponseSec: yAvgResponseSec,
+    },
+    deltas: {
+      messagesPct: pctChange(messages, yMessages),
+      bookingsPct: pctChange(bookings, yBookings),
+      autoPctDelta: autoPct - yAutoPct,
+      revenuePct: pctChange(bookings * AVG_TICKET_XCD, yRevenue),
+      responseDeltaSec: +(2.4 - yAvgResponseSec).toFixed(1),
+    },
   };
 }
 
@@ -120,6 +167,10 @@ export type AttentionItem = {
   kind: AttentionItemKind;
   title: string;
   why: string;
+  /** Concrete consequence if ignored — drives owner judgment. */
+  riskIfIgnored: string;
+  /** Business area affected: Reservations, VIP, Revenue, Knowledge, Operations. */
+  area: string;
   agentName: string;
   agentId: string;
   ageMin: number;
@@ -140,11 +191,18 @@ export function getAttentionQueue(slaMinutes: number): AttentionItem[] {
   for (const c of conversations.filter((x) => x.status === "escalated")) {
     const ageMin = parseAgo(c.time);
     const overSla = ageMin >= slaMinutes;
+    const isVip = /vip|complaint|refund|manager/i.test(c.preview);
     items.push({
       id: `esc-${c.id}`,
       kind: "escalation",
       title: `${c.customer} — needs human reply`,
       why: c.preview,
+      riskIfIgnored: overSla
+        ? "SLA already breached — high churn risk on next reply"
+        : isVip
+          ? "Repeat-customer dissatisfaction; reputation exposure"
+          : "Customer disengagement; likely lost conversation",
+      area: isVip ? "VIP" : "Reservations",
       agentName: agents[0]?.name ?? "Agent",
       agentId: agents[0]?.id ?? "",
       ageMin,
@@ -162,6 +220,8 @@ export function getAttentionQueue(slaMinutes: number): AttentionItem[] {
         kind: "draft",
         title: `Approve draft to ${d.customerName}`,
         why: d.customerMessage,
+        riskIfIgnored: `Customer waiting on ${a.name}'s reply — blocking next interaction`,
+        area: "Approvals",
         agentName: a.name,
         agentId: a.id,
         ageMin,
@@ -176,11 +236,9 @@ export function getAttentionQueue(slaMinutes: number): AttentionItem[] {
   }
 
   // 3. Overdue follow-ups — pending bookings older than 2h still awaiting
-  //    a deposit, owner approval, or other manual nudge. These are the
-  //    booking-flow items that quietly slip if no one chases them.
+  //    a deposit, owner approval, or other manual nudge.
   const FOLLOW_UP_AGE_MIN = 120;
   const pendingBookings = bookings.filter((b) => b.status === "pending");
-  // Mock-data ages for follow-ups (deterministic so the queue is stable).
   const ageBuckets = [180, 240, 360, 480, 720];
   pendingBookings.forEach((b, idx) => {
     const ageMin = ageBuckets[idx % ageBuckets.length];
@@ -192,6 +250,8 @@ export function getAttentionQueue(slaMinutes: number): AttentionItem[] {
       kind: "follow_up",
       title: `Chase ${b.guest} — ${reason.toLowerCase()}`,
       why: `Booking for ${b.party} on ${b.date} ${b.time} via ${labelForChannel(b.channel)} — no movement in ${formatHours(ageMin)}.`,
+      riskIfIgnored: `Likely no-show — ~EC$${AVG_TICKET_XCD * b.party} of revenue at risk`,
+      area: "Revenue",
       agentName: agents[0]?.name ?? "Agent",
       agentId: agents[0]?.id ?? "",
       ageMin,
@@ -207,6 +267,8 @@ export function getAttentionQueue(slaMinutes: number): AttentionItem[] {
       kind: "agent_paused",
       title: `${a.name} is paused`,
       why: a.standupSummary ?? "Off duty — no replies will go out.",
+      riskIfIgnored: `${a.templateLabel} channel is silent — incoming messages will queue up`,
+      area: "Operations",
       agentName: a.name,
       agentId: a.id,
       ageMin: 60 * 6,
@@ -219,7 +281,7 @@ export function getAttentionQueue(slaMinutes: number): AttentionItem[] {
     });
   }
 
-  // 4. Top recurring knowledge gaps (highest askedCount, surface 1)
+  // 5. Top recurring knowledge gaps (highest askedCount, surface 1)
   const allGaps = agents.flatMap((a) =>
     (a.knowledgeGaps ?? []).map((g) => ({ ...g, agent: a })),
   );
@@ -230,6 +292,8 @@ export function getAttentionQueue(slaMinutes: number): AttentionItem[] {
       kind: "knowledge_gap",
       title: `Asked ${topGap.askedCount}× this week — no answer`,
       why: `"${topGap.question}"`,
+      riskIfIgnored: `${topGap.askedCount} customers got an "I don't know" — eroding trust`,
+      area: "Knowledge",
       agentName: topGap.agent.name,
       agentId: topGap.agent.id,
       ageMin: parseAgo(topGap.lastAsked),
@@ -280,11 +344,31 @@ export function getChannelMix(activity: AgentActivityEntry[]): ChannelSlice[] {
 // Ema briefing — natural-language summary tied to the data
 // ---------------------------------------------------------------------------
 
+export type EmaInsight = {
+  /** Plain-language statement, e.g. "Bookings up 22% vs yesterday." */
+  text: string;
+  /** Short causal explanation: "Driven by Friday dinner demand." */
+  driver?: string;
+  /** Optional drill-down route. */
+  cta?: { label: string; to: string };
+};
+
 export type EmaBriefing = {
   greeting: string;
+  /** One-sentence executive summary. */
   headline: string;
-  bullets: string[];
-  recommendation: { text: string; cta?: { label: string; to: string } } | null;
+  /** Biggest positive movement Ema noticed. */
+  win: EmaInsight | null;
+  /** Biggest threat Ema noticed. */
+  risk: EmaInsight | null;
+  /** The single highest-leverage action right now, with reasoning. */
+  recommendation: {
+    text: string;
+    reason: string;
+    cta?: { label: string; to: string };
+  } | null;
+  /** What can safely wait — reduces noise, builds trust. */
+  canWait: string | null;
 };
 
 export function getEmaBriefing(
@@ -295,58 +379,104 @@ export function getEmaBriefing(
 ): EmaBriefing {
   const greeting = `${timeGreeting()}, ${ownerFirstName}.`;
   const top = channels.reduce((a, b) => (b.count > a.count ? b : a), channels[0]);
+  const escCount = attention.filter((a) => a.kind === "escalation").length;
+  const draftCount = attention.filter((a) => a.kind === "draft").length;
+  const vipCount = attention.filter((a) => a.area === "VIP").length;
+  const highCount = attention.filter((a) => a.severity === "high").length;
+  const lowCount = attention.filter((a) => a.severity === "low").length;
 
   const headline = outcomes.messages
-    ? `Your AI team handled ${outcomes.messages} conversations, confirmed ${outcomes.bookings} bookings, and surfaced ${attention.filter((a) => a.severity !== "low").length} item${attention.filter((a) => a.severity !== "low").length === 1 ? "" : "s"} that need you.`
+    ? `Your AI team handled ${outcomes.messages} conversations and confirmed ${outcomes.bookings} booking${outcomes.bookings === 1 ? "" : "s"}. ${highCount > 0 ? `${highCount} item${highCount === 1 ? "" : "s"} need your judgment.` : `Nothing urgent on your desk.`}`
     : `Quiet morning. The system is on standby and ready.`;
 
-  const bullets: string[] = [];
-  if (outcomes.autoPct >= 80) {
-    bullets.push(
-      `Auto-resolution is at ${outcomes.autoPct}% — the team is running on rails.`,
-    );
-  } else if (outcomes.messages > 0) {
-    bullets.push(
-      `Auto-resolution dipped to ${outcomes.autoPct}% — a few replies needed your judgment.`,
-    );
-  }
-  const escCount = attention.filter((a) => a.kind === "escalation").length;
-  if (escCount > 0) {
-    bullets.push(
-      `${escCount} escalation${escCount === 1 ? "" : "s"} waiting on owner judgment.`,
-    );
-  }
-  if (top && top.count > 0) {
-    bullets.push(
-      `${labelForChannel(top.channel)} is your busiest channel today (${top.pct}%).`,
-    );
-  }
-  if (outcomes.revenueInfluenced > 0) {
-    bullets.push(
-      `~EC$${outcomes.revenueInfluenced.toLocaleString()} in bookings influenced in the last 24h.`,
-    );
+  // BIGGEST WIN — interpret deltas, not just numbers.
+  let win: EmaInsight | null = null;
+  if (outcomes.deltas.bookingsPct >= 15 && outcomes.bookings > 0) {
+    win = {
+      text: `Bookings up ${outcomes.deltas.bookingsPct}% vs yesterday (${outcomes.bookings} confirmed).`,
+      driver: top?.count
+        ? `Most of the lift is coming through ${labelForChannel(top.channel)}.`
+        : undefined,
+      cta: { label: "See bookings", to: "/dashboard/bookings" },
+    };
+  } else if (outcomes.autoPct >= 85 && outcomes.messages >= 10) {
+    win = {
+      text: `Auto-resolution at ${outcomes.autoPct}% — your team is running on rails.`,
+      driver: `Only ${escCount} escalation${escCount === 1 ? "" : "s"} surfaced from ${outcomes.messages} conversations.`,
+    };
+  } else if (outcomes.deltas.responseDeltaSec < 0) {
+    win = {
+      text: `Response time improved by ${Math.abs(outcomes.deltas.responseDeltaSec)}s vs yesterday.`,
+      driver: `Now averaging ${outcomes.avgResponseSec}s across all channels.`,
+    };
   }
 
-  const draftCount = attention.filter((a) => a.kind === "draft").length;
+  // BIGGEST RISK — what could quietly go wrong.
+  let risk: EmaInsight | null = null;
+  if (vipCount > 0) {
+    risk = {
+      text: `${vipCount} VIP issue${vipCount === 1 ? "" : "s"} unresolved — repeat-customer reputation exposure.`,
+      driver: `These tend to convert into negative reviews if they cross the 1-hour mark.`,
+      cta: { label: "Open VIP", to: "/dashboard/inbox" },
+    };
+  } else if (highCount > 0) {
+    risk = {
+      text: `${highCount} item${highCount === 1 ? "" : "s"} past SLA — likely to churn if they wait another hour.`,
+      driver: `Escalations and follow-ups are the highest-leverage place to spend the next 10 minutes.`,
+      cta: { label: "Triage now", to: "/dashboard/inbox" },
+    };
+  } else if (outcomes.deltas.autoPctDelta <= -10 && outcomes.messages >= 10) {
+    risk = {
+      text: `Auto-resolution dropped ${Math.abs(outcomes.deltas.autoPctDelta)} pts vs yesterday.`,
+      driver: `Likely caused by a spike in escalations — worth a quick scan.`,
+      cta: { label: "See drafts", to: "/dashboard/drafts" },
+    };
+  }
+
+  // RECOMMENDATION — single most-leveraged next action.
   let recommendation: EmaBriefing["recommendation"] = null;
-  if (escCount > 0) {
+  if (vipCount > 0) {
     recommendation = {
-      text: `Open the highest-severity escalation first — it's the one most likely to churn if it waits another hour.`,
+      text: `Reply to the VIP escalation first.`,
+      reason: `One unhappy regular costs more than ten quiet wins. The rest can wait 30 minutes.`,
+      cta: { label: "Open inbox", to: "/dashboard/inbox" },
+    };
+  } else if (highCount > 0) {
+    const oldest = attention.find((a) => a.severity === "high");
+    recommendation = {
+      text: `Handle the ${oldest?.area.toLowerCase() ?? "open"} escalation that's been waiting longest.`,
+      reason: `${oldest?.riskIfIgnored ?? "It's the closest to breaching SLA"} — clearing it improves the whole queue's health.`,
       cta: { label: "Open inbox", to: "/dashboard/inbox" },
     };
   } else if (draftCount > 0) {
     recommendation = {
-      text: `${draftCount} probation draft${draftCount === 1 ? "" : "s"} are waiting. Approving them teaches the next reply.`,
+      text: `Approve the ${draftCount} held draft${draftCount === 1 ? "" : "s"}.`,
+      reason: `Each approval teaches the agent — the next reply will go out without you.`,
       cta: { label: "Review drafts", to: "/dashboard/drafts" },
+    };
+  } else if (outcomes.bookings > 0) {
+    recommendation = {
+      text: `Launch a follow-up campaign for today's confirmed bookings.`,
+      reason: `Confirmation messages from happy customers convert into reviews ~3× more often.`,
+      cta: { label: "Open campaigns", to: "/dashboard/outbound" },
     };
   } else {
     recommendation = {
-      text: `Nothing urgent. A good moment to review insights or launch a campaign.`,
+      text: `Use this calm window to review insights.`,
+      reason: `Nothing urgent. A good moment to spot trends before tomorrow's volume.`,
       cta: { label: "Open insights", to: "/dashboard/insights" },
     };
   }
 
-  return { greeting, headline, bullets, recommendation };
+  // CAN WAIT — explicit reassurance.
+  let canWait: string | null = null;
+  if (lowCount > 0 && highCount > 0) {
+    canWait = `${lowCount} lower-priority item${lowCount === 1 ? "" : "s"} (knowledge gaps, paused agents) can wait until tomorrow morning.`;
+  } else if (outcomes.autoPct >= 80 && highCount === 0) {
+    canWait = `You can safely ignore inbox volume right now. Auto-resolution is healthy and conversion quality is strong.`;
+  }
+
+  return { greeting, headline, win, risk, recommendation, canWait };
 }
 
 function timeGreeting(): string {
@@ -376,16 +506,28 @@ export function labelForChannel(c: AgentChannel | Channel): string {
 // Per-agent quick stats for the Agents Overview block
 // ---------------------------------------------------------------------------
 
+export type AgentTag =
+  | "best_performer"
+  | "rising_escalations"
+  | "overloaded"
+  | "strong_conversion"
+  | "off_duty"
+  | "in_training";
+
 export type AgentSnapshot = {
   agent: Agent;
   messagesToday: number;
   bookingsToday: number;
   escalationsToday: number;
   autoPct: number;
+  /** Strategic tags — drive the badges on the agent overview cards. */
+  tags: AgentTag[];
+  /** One-line strategic note: "Driving 60% of today's bookings." */
+  note?: string;
 };
 
 export function getAgentSnapshots(): AgentSnapshot[] {
-  return agents.map((agent) => {
+  const raw = agents.map((agent) => {
     const act = getAgentActivity(agent.id);
     const today = act.filter((a) => parseAgo(a.time) <= 24 * 60);
     const messagesToday = today.length;
@@ -398,4 +540,174 @@ export function getAgentSnapshots(): AgentSnapshot[] {
     const autoPct = messagesToday ? Math.round((autoOk / messagesToday) * 100) : 100;
     return { agent, messagesToday, bookingsToday, escalationsToday, autoPct };
   });
+
+  const totalBookings = raw.reduce((s, r) => s + r.bookingsToday, 0) || 1;
+  const totalMessages = raw.reduce((s, r) => s + r.messagesToday, 0) || 1;
+  const avgMessages = totalMessages / raw.length;
+  const topAgent = [...raw].sort((a, b) => b.bookingsToday - a.bookingsToday)[0];
+
+  return raw.map((r): AgentSnapshot => {
+    const tags: AgentTag[] = [];
+    let note: string | undefined;
+
+    if (r.agent.status === "paused") {
+      tags.push("off_duty");
+      note = "Currently paused — channel is silent.";
+    } else if (r.agent.status === "on_probation") {
+      tags.push("in_training");
+      note = "On probation — drafts pending your approval.";
+    } else {
+      // Best performer: most bookings AND >= 25% of total
+      if (
+        topAgent &&
+        r.agent.id === topAgent.agent.id &&
+        r.bookingsToday > 0 &&
+        r.bookingsToday / totalBookings >= 0.25
+      ) {
+        tags.push("best_performer");
+        note = `Driving ${Math.round((r.bookingsToday / totalBookings) * 100)}% of today's bookings.`;
+      }
+      // Overloaded: >40% above team average
+      if (r.messagesToday > avgMessages * 1.4 && r.messagesToday >= 10) {
+        tags.push("overloaded");
+        note = note ?? `Handling ${Math.round((r.messagesToday / avgMessages - 1) * 100)}% above team average.`;
+      }
+      // Rising escalations: escalations >= 20% of messages
+      if (r.escalationsToday >= 2 && r.escalationsToday / Math.max(r.messagesToday, 1) >= 0.2) {
+        tags.push("rising_escalations");
+        note = note ?? `Escalation rate climbing — ${r.escalationsToday} of ${r.messagesToday} today.`;
+      }
+      // Strong conversion: bookings >= 30% of messages
+      if (r.bookingsToday >= 3 && r.bookingsToday / Math.max(r.messagesToday, 1) >= 0.3) {
+        tags.push("strong_conversion");
+        note = note ?? `Strong conversion — ${Math.round((r.bookingsToday / r.messagesToday) * 100)}% of replies booked.`;
+      }
+    }
+
+    return { ...r, tags, note };
+  });
+}
+
+// ---------------------------------------------------------------------------
+// "Since you last checked in" — temporal delta layer
+// ---------------------------------------------------------------------------
+
+const LAST_VISIT_KEY = "isola.lastVisitAt";
+
+export type SinceLastVisit = {
+  /** Human-readable "27 minutes ago" / "since this morning". */
+  label: string;
+  /** Compact movement chips. */
+  changes: Array<{
+    kind: "positive" | "neutral" | "negative" | "info";
+    text: string;
+  }>;
+  /** True if this is the very first visit (no baseline). */
+  firstVisit: boolean;
+};
+
+/** Read the last visit timestamp without mutating it. */
+export function readLastVisit(): number | null {
+  if (typeof window === "undefined") return null;
+  const raw = window.localStorage.getItem(LAST_VISIT_KEY);
+  if (!raw) return null;
+  const n = parseInt(raw, 10);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Stamp the current moment as the most recent visit. */
+export function stampLastVisit(): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(LAST_VISIT_KEY, String(Date.now()));
+}
+
+/**
+ * Build the "since you last checked in" strip. Compares the slice of activity
+ * that occurred AFTER the last visit timestamp to give the owner a felt sense
+ * of motion. Falls back gracefully on first visit.
+ */
+export function getSinceLastVisit(
+  activity: AgentActivityEntry[],
+  outcomes: DailyOutcomes,
+  attention: AttentionItem[],
+  lastVisitAt: number | null,
+): SinceLastVisit {
+  const now = Date.now();
+  const firstVisit = lastVisitAt === null;
+  // Default window: 4 hours back if first visit, otherwise actual gap.
+  const windowMin = firstVisit
+    ? 4 * 60
+    : Math.max(5, Math.round((now - (lastVisitAt as number)) / 60_000));
+
+  const sinceActivity = activity.filter((a) => parseAgo(a.time) <= windowMin);
+  const newBookings = sinceActivity.filter((a) => a.outcome === "booked").length;
+  const newAnswered = sinceActivity.filter((a) => a.outcome === "answered").length;
+  const newEscalated = sinceActivity.filter((a) => a.outcome === "escalated").length;
+  const newDrafts = attention.filter(
+    (a) => a.kind === "draft" && a.ageMin <= windowMin,
+  ).length;
+  const newHigh = attention.filter(
+    (a) => a.severity === "high" && a.ageMin <= windowMin,
+  ).length;
+
+  const label = firstVisit
+    ? "In the last 4 hours"
+    : windowMin < 60
+      ? `Since you stepped away ${windowMin}m ago`
+      : windowMin < 24 * 60
+        ? `Since you stepped away ${Math.round(windowMin / 60)}h ago`
+        : "Since yesterday";
+
+  const changes: SinceLastVisit["changes"] = [];
+
+  if (newBookings > 0) {
+    changes.push({
+      kind: "positive",
+      text: `${newBookings} booking${newBookings === 1 ? "" : "s"} confirmed`,
+    });
+  }
+  if (newAnswered > 0) {
+    changes.push({
+      kind: "neutral",
+      text: `${newAnswered} conversation${newAnswered === 1 ? "" : "s"} auto-resolved`,
+    });
+  }
+  if (newEscalated > 0) {
+    changes.push({
+      kind: "negative",
+      text: `${newEscalated} new escalation${newEscalated === 1 ? "" : "s"}`,
+    });
+  }
+  if (newHigh > 0) {
+    changes.push({
+      kind: "negative",
+      text: `${newHigh} item${newHigh === 1 ? "" : "s"} crossed SLA`,
+    });
+  }
+  if (newDrafts > 0) {
+    changes.push({
+      kind: "info",
+      text: `${newDrafts} new draft${newDrafts === 1 ? "" : "s"} held for review`,
+    });
+  }
+  if (outcomes.deltas.responseDeltaSec < 0) {
+    changes.push({
+      kind: "positive",
+      text: `Response time improved ${Math.abs(outcomes.deltas.responseDeltaSec)}s`,
+    });
+  } else if (outcomes.deltas.bookingsPct >= 15 && outcomes.bookings > 0) {
+    changes.push({
+      kind: "positive",
+      text: `Bookings trending +${outcomes.deltas.bookingsPct}% vs yesterday`,
+    });
+  }
+
+  if (changes.length === 0) {
+    changes.push({
+      kind: "neutral",
+      text: "Quiet stretch — nothing material moved while you were away",
+    });
+  }
+
+  return { label, changes: changes.slice(0, 5), firstVisit };
 }

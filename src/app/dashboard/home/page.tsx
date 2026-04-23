@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import DashboardLayout from "../layout";
 import ExecutiveHeader from "@/components/dashboard/home/ExecutiveHeader";
+import SinceLastVisit from "@/components/dashboard/home/SinceLastVisit";
 import EmaBriefingCard from "@/components/dashboard/home/EmaBriefingCard";
 import AttentionQueue from "@/components/dashboard/home/AttentionQueue";
 import AutonomousFeed from "@/components/dashboard/home/AutonomousFeed";
@@ -17,37 +18,36 @@ import {
   getChannelMix,
   getEmaBriefing,
   getAgentSnapshots,
+  getSinceLastVisit,
+  readLastVisit,
+  stampLastVisit,
 } from "@/lib/home-data";
 import { readSlaMinutes } from "@/lib/escalation-sla";
-import { accountDefaults } from "@/lib/mock-data";
+import { accountDefaults, bookings as allBookings } from "@/lib/mock-data";
 import { readProfile } from "@/lib/profile";
 
 /**
  * /dashboard/home — Isola business command center.
  *
- * This page is the new default destination after login. It expresses the
- * operating-system mental model on one screen:
+ * The page expresses the operating-system mental model on one screen:
  *
  *   Owner (you)
- *     → Ema (briefing)
- *       → Agents (working the floor)
+ *     → Ema (briefing & decisions)
+ *       → Agents (working the floor, with strategic tags)
  *         → Events (conversations, bookings, escalations, approvals)
  *
  * Layout rhythm (top → bottom, importance-weighted):
- *   1. Executive header   — arrival moment, system-state strip
- *   2. Ema briefing       — natural-language summary + recommendation
- *   3. Needs you / feed   — split: human queue + autonomous proof
- *   4. Outcomes           — what was produced (revenue, response time)
- *   5. System flow        — channels in → AI → outcomes out
- *   6. Agents overview    — the team roster
- *   7. Quick actions      — control bar
- *
- * We deliberately do NOT mirror the old "agent workspace" layout — the home
- * sits ABOVE individual agents. Drill into a specific agent only via the
- * Agents Overview block.
+ *   1. Executive header        — arrival moment, system-state strip
+ *   2. Since you last visited  — temporal delta strip (movement signal)
+ *   3. Ema decision briefing   — win / risk / recommendation / can-wait
+ *   4. Needs you / feed        — split: human queue + autonomous proof
+ *   5. Outcomes (comparative)  — vs yesterday, with drivers
+ *   6. System flow             — channels in → AI → outcomes out
+ *   7. Agents overview         — strategic tags + one-line operator note
+ *   8. Quick actions           — live-state operational launcher
  */
 export default function HomePage() {
-  // SLA preference is owned client-side (see /src/lib/escalation-sla.ts)
+  // SLA preference (see /src/lib/escalation-sla.ts)
   const [slaMinutes, setSlaMinutes] = useState<number>(60);
   useEffect(() => {
     setSlaMinutes(readSlaMinutes());
@@ -72,7 +72,15 @@ export default function HomePage() {
     setBusinessName(p.businessName?.trim() || accountDefaults.businessName);
   }, []);
 
-  // All derived data is memoized — pure functions over deterministic mock data.
+  // "Since you last visited" — read the timestamp on first render, then stamp
+  // the visit so subsequent navigations within the session don't re-trigger.
+  const [lastVisitAt, setLastVisitAt] = useState<number | null>(null);
+  useEffect(() => {
+    setLastVisitAt(readLastVisit());
+    stampLastVisit();
+  }, []);
+
+  // Pure derivations.
   const activity = useMemo(() => getAllActivity(60), []);
   const outcomes = useMemo(() => getDailyOutcomes(activity), [activity]);
   const attention = useMemo(() => getAttentionQueue(slaMinutes), [slaMinutes]);
@@ -82,9 +90,16 @@ export default function HomePage() {
     () => getEmaBriefing(ownerFirstName || "there", outcomes, attention, channels),
     [ownerFirstName, outcomes, attention, channels],
   );
+  const sinceLastVisit = useMemo(
+    () => getSinceLastVisit(activity, outcomes, attention, lastVisitAt),
+    [activity, outcomes, attention, lastVisitAt],
+  );
 
   const openEscalations = attention.filter((a) => a.kind === "escalation").length;
   const pendingDrafts = attention.filter((a) => a.kind === "draft").length;
+  const bookingsNeedingConfirmation = allBookings.filter(
+    (b) => b.status === "pending",
+  ).length;
 
   return (
     <DashboardLayout currentPath="/dashboard/home">
@@ -102,12 +117,13 @@ export default function HomePage() {
           }}
         />
 
-        {/* 2. Ema briefing — full-width strategic narrative */}
+        {/* 2. Movement — what changed while the owner was away */}
+        <SinceLastVisit data={sinceLastVisit} />
+
+        {/* 3. Ema decision briefing — win / risk / recommendation / can-wait */}
         <EmaBriefingCard briefing={briefing} />
 
-        {/* 3. Operational dual-pane: human queue (left) + autonomous proof (right).
-             Stacked on tablet, side-by-side from lg up. The left pane is what
-             demands action; the right pane is what reassures. */}
+        {/* 4. Operational dual-pane: human queue (left) + autonomous proof (right). */}
         <div className="grid gap-5 lg:grid-cols-5">
           <div className="lg:col-span-3">
             <AttentionQueue items={attention} slaMinutes={slaMinutes} />
@@ -117,10 +133,10 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 4. Outcomes — what the system produced */}
+        {/* 5. Outcomes — comparative, with drivers */}
         <OutcomesPanel outcomes={outcomes} />
 
-        {/* 5. System flow — channels → AI → outcomes */}
+        {/* 6. System flow — channels → AI → outcomes */}
         <SystemFlowPanel
           channels={channels}
           pendingDrafts={pendingDrafts}
@@ -128,12 +144,19 @@ export default function HomePage() {
           openEscalations={openEscalations}
         />
 
-        {/* 6. Agents — your team on the floor */}
+        {/* 7. Agents — your team on the floor (strategic tags) */}
         <AgentsOverview snapshots={snapshots} />
 
-        {/* 7. Operational launcher */}
-        <QuickActions />
+        {/* 8. Operational launcher — live-state controls */}
+        <QuickActions
+          state={{
+            openEscalations,
+            pendingDrafts,
+            bookingsNeedingConfirmation,
+          }}
+        />
       </div>
     </DashboardLayout>
   );
 }
+

@@ -188,13 +188,13 @@ export default function CommandCenter({
           accent={
             escalations === 0
               ? "0 unresolved"
-              : dueWithinHour > 0
-                ? `${dueWithinHour} due < 1h`
-                : "1h SLA"
+              : dueSoon > 0
+                ? `${dueSoon} due < ${slaShort}`
+                : `${slaShort} SLA`
           }
           ctaLabel={escalations > 0 ? "Open" : undefined}
           onCta={onJumpEscalations}
-          pulse={soonest ? soonestRemaining <= 15 * 60_000 : false}
+          pulse={soonest ? soonestRemaining <= urgentThresholdMs(slaMinutes) : false}
         >
           {escalations === 0 ? (
             <p className="mt-3 text-xs text-muted-foreground">
@@ -202,27 +202,35 @@ export default function CommandCenter({
             </p>
           ) : (
             <ul className="mt-3 space-y-1.5">
-              {sortedEsc.slice(0, 3).map((e) => (
-                <li
-                  key={e.id}
-                  className="flex items-center gap-2 rounded-md border border-ema/15 bg-ema/5 px-2 py-1.5 text-xs"
-                >
-                  <Timer
-                    className={cn(
-                      "h-3 w-3 shrink-0",
-                      e.deadlineAt - now <= 0
-                        ? "text-destructive"
-                        : e.deadlineAt - now <= 15 * 60_000
-                          ? "text-ema"
-                          : "text-muted-foreground",
-                    )}
-                  />
-                  <span className="min-w-0 flex-1 truncate text-foreground/90">
-                    {e.customer}
-                  </span>
-                  <Countdown deadlineAt={e.deadlineAt} now={now} />
-                </li>
-              ))}
+              {sortedEsc.slice(0, 3).map((e) => {
+                const remaining = e.deadlineAt - now;
+                const urgentMs = urgentThresholdMs(slaMinutes);
+                return (
+                  <li
+                    key={e.id}
+                    className="flex items-center gap-2 rounded-md border border-ema/15 bg-ema/5 px-2 py-1.5 text-xs"
+                  >
+                    <Timer
+                      className={cn(
+                        "h-3 w-3 shrink-0",
+                        remaining <= 0
+                          ? "text-destructive"
+                          : remaining <= urgentMs
+                            ? "text-ema"
+                            : "text-muted-foreground",
+                      )}
+                    />
+                    <span className="min-w-0 flex-1 truncate text-foreground/90">
+                      {e.customer}
+                    </span>
+                    <Countdown
+                      deadlineAt={e.deadlineAt}
+                      now={now}
+                      urgentMs={urgentMs}
+                    />
+                  </li>
+                );
+              })}
               {sortedEsc.length > 3 && (
                 <li className="pl-1 text-[11px] text-muted-foreground">
                   +{sortedEsc.length - 3} more waiting

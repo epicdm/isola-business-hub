@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Activity } from "lucide-react";
+import { isFirstArrival } from "@/components/system/ArrivalSequence";
 
 type Props = {
   greeting: string;
@@ -24,11 +25,9 @@ type Props = {
  *   "I'm not on a screen. I'm at the head of an operating system that's
  *    already running my business."
  *
- * Visual hierarchy:
- *   • Eyebrow: business name + live indicator (system is on)
- *   • Greeting (small): warm, time-aware
- *   • Headline (huge): one-sentence narrative of today
- *   • System-state strip: hairline-divided counts that ground the narrative
+ * On a true first arrival (gated by isFirstArrival()), the four stat numbers
+ * count up from 0 and the headline types in character-by-character. On every
+ * subsequent navigation, values render instantly so the page feels snappy.
  */
 export default function ExecutiveHeader({
   greeting,
@@ -52,6 +51,14 @@ export default function ExecutiveHeader({
     const id = setInterval(tick, 30_000);
     return () => clearInterval(id);
   }, []);
+
+  // First-arrival reveal flags — captured once on mount so navigation back to
+  // home doesn't re-trigger the count-up.
+  const animateRef = useRef<boolean | null>(null);
+  if (animateRef.current === null) {
+    animateRef.current = typeof window !== "undefined" && isFirstArrival();
+  }
+  const animate = animateRef.current ?? false;
 
   return (
     <motion.header

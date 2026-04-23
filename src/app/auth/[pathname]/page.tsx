@@ -3,13 +3,14 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
 import { z } from "zod";
-import { Sparkles, Loader2, Mail, Lock, User, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { saveProfile } from "@/lib/profile";
 import { toast } from "sonner";
+import { IsolaWordmark, EmaOrb } from "@/components/brand/IsolaBrand";
 
 type AuthVariant = "sign-in" | "sign-up" | "forgot-password" | "magic-link";
 
@@ -45,17 +46,14 @@ export default function AuthShell({ variant }: AuthShellProps) {
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <BackgroundDecor />
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6 lg:flex-row lg:gap-12">
-        <header className="mb-8 flex items-center justify-between lg:absolute lg:inset-x-6 lg:top-6 lg:mb-0">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary shadow-glow">
-              <Sparkles className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-display text-lg font-bold tracking-tight">Isola</span>
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6 lg:flex-row lg:gap-16">
+        <header className="mb-8 flex items-center justify-between lg:absolute lg:inset-x-6 lg:top-7 lg:mb-0">
+          <Link to="/" className="flex items-center">
+            <IsolaWordmark size={30} />
           </Link>
           <Link
             to="/"
-            className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            className="flex items-center gap-1.5 rounded-full border border-border/40 bg-card/40 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur transition-colors hover:bg-card hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> Back to site
           </Link>

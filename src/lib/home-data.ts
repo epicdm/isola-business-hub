@@ -591,12 +591,35 @@ export function getAgentSnapshots(): AgentSnapshot[] {
 // ---------------------------------------------------------------------------
 // "Since you last checked in" — temporal delta layer
 // ---------------------------------------------------------------------------
+//
+// Persistence model
+// ─────────────────
+// We persist two timestamps in localStorage:
+//
+//   isola.lastVisitAt     → the START of the previous visit (the baseline
+//                            we diff *against*). This is what the strip uses
+//                            to compute "what moved while I was away".
+//   isola.currentVisitAt  → the START of the current visit (used to decide
+//                            when to roll the baseline forward).
+//
+// On each home-page mount we call `touchVisit()`. It rolls
+// `currentVisitAt → lastVisitAt` only when the user has actually been away
+// long enough that re-baselining is meaningful (default: 10+ minutes of
+// inactivity). Re-mounting from in-app navigation within the same session
+// does NOT shift the baseline, so the deltas remain stable while the owner
+// works through the page.
 
 const LAST_VISIT_KEY = "isola.lastVisitAt";
+const CURRENT_VISIT_KEY = "isola.currentVisitAt";
+
+/** Idle gap that triggers a baseline roll. Anything shorter is "same session". */
+const REBASE_AFTER_MIN = 10;
 
 export type SinceLastVisit = {
-  /** Human-readable "27 minutes ago" / "since this morning". */
+  /** Human-readable label for the window, e.g. "Since you stepped away 2h ago". */
   label: string;
+  /** Resolved gap in minutes between the previous visit and now. */
+  gapMinutes: number;
   /** Compact movement chips. */
   changes: Array<{
     kind: "positive" | "neutral" | "negative" | "info";
@@ -606,7 +629,7 @@ export type SinceLastVisit = {
   firstVisit: boolean;
 };
 
-/** Read the last visit timestamp without mutating it. */
+/** Read the persisted previous-visit timestamp without mutating storage. */
 export function readLastVisit(): number | null {
   if (typeof window === "undefined") return null;
   const raw = window.localStorage.getItem(LAST_VISIT_KEY);
@@ -615,40 +638,110 @@ export function readLastVisit(): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-/** Stamp the current moment as the most recent visit. */
+/**
+ * Mark that the user is on the home page right now and, if they've been
+ * away long enough, roll the baseline forward.
+ *
+ * Returns the timestamp the strip should diff against (i.e. the previous
+ * visit's start), so callers can render deltas immediately without a second
+ * round-trip through localStorage.
+ *
+ * Designed to be called once per home-page mount.
+ */
+export function touchVisit(): {
+  /** Baseline timestamp the strip diffs against. `null` on the very first visit. */
+  baseline: number | null;
+  /** Whether the baseline was just rolled forward. */
+  rebased: boolean;
+} {
+  if (typeof window === "undefined") return { baseline: null, rebased: false };
+  const now = Date.now();
+  const ls = window.localStorage;
+
+  const prevCurrentRaw = ls.getItem(CURRENT_VISIT_KEY);
+  const prevCurrent = prevCurrentRaw ? parseInt(prevCurrentRaw, 10) : NaN;
+  const prevLastRaw = ls.getItem(LAST_VISIT_KEY);
+  const prevLast = prevLastRaw ? parseInt(prevLastRaw, 10) : NaN;
+
+  // First visit ever: nothing to diff against. Stamp current and exit.
+  if (!Number.isFinite(prevCurrent)) {
+    ls.setItem(CURRENT_VISIT_KEY, String(now));
+    return { baseline: null, rebased: false };
+  }
+
+  const idleMin = (now - prevCurrent) / 60_000;
+
+  // Long enough away → roll the baseline forward.
+  if (idleMin >= REBASE_AFTER_MIN) {
+    ls.setItem(LAST_VISIT_KEY, String(prevCurrent));
+    ls.setItem(CURRENT_VISIT_KEY, String(now));
+    return { baseline: prevCurrent, rebased: true };
+  }
+
+  // Same session: keep the existing baseline, just bump current activity.
+  ls.setItem(CURRENT_VISIT_KEY, String(now));
+  return {
+    baseline: Number.isFinite(prevLast) ? prevLast : prevCurrent,
+    rebased: false,
+  };
+}
+
+/** Back-compat shim — older callers expected a stamp-only API. */
 export function stampLastVisit(): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(LAST_VISIT_KEY, String(Date.now()));
+  touchVisit();
 }
 
 /**
- * Build the "since you last checked in" strip. Compares the slice of activity
- * that occurred AFTER the last visit timestamp to give the owner a felt sense
- * of motion. Falls back gracefully on first visit.
+ * Build the "since you last checked in" strip from real activity windows.
+ *
+ * The window is the gap between `lastVisitAt` and now (clamped to ≥5m). On
+ * a first visit we fall back to a 4h look-back so the strip still has signal.
+ *
+ * Every chip below is derived from data that actually falls inside that
+ * window — we never surface "vs yesterday" deltas unless the gap actually
+ * spans yesterday. This keeps the strip honest.
  */
 export function getSinceLastVisit(
   activity: AgentActivityEntry[],
   outcomes: DailyOutcomes,
   attention: AttentionItem[],
   lastVisitAt: number | null,
+  slaMinutes = 60,
 ): SinceLastVisit {
   const now = Date.now();
   const firstVisit = lastVisitAt === null;
-  // Default window: 4 hours back if first visit, otherwise actual gap.
-  const windowMin = firstVisit
+  const rawGapMin = firstVisit
     ? 4 * 60
     : Math.max(5, Math.round((now - (lastVisitAt as number)) / 60_000));
+  // Cap at 7 days so the label/window stay sensible after long absences.
+  const windowMin = Math.min(rawGapMin, 7 * 24 * 60);
 
+  // Activity that occurred inside the visit gap.
   const sinceActivity = activity.filter((a) => parseAgo(a.time) <= windowMin);
   const newBookings = sinceActivity.filter((a) => a.outcome === "booked").length;
   const newAnswered = sinceActivity.filter((a) => a.outcome === "answered").length;
-  const newEscalated = sinceActivity.filter((a) => a.outcome === "escalated").length;
+  const newEscalated = sinceActivity.filter(
+    (a) => a.outcome === "escalated",
+  ).length;
+
+  // Drafts that were held during the gap.
   const newDrafts = attention.filter(
     (a) => a.kind === "draft" && a.ageMin <= windowMin,
   ).length;
-  const newHigh = attention.filter(
-    (a) => a.severity === "high" && a.ageMin <= windowMin,
+
+  // SLA-crossings: items that were UNDER SLA at the previous visit but are
+  // OVER it now. ageMin >= slaMinutes (over now) AND ageMin - windowMin <
+  // slaMinutes (was under at the start of the gap).
+  const newlyBreached = attention.filter(
+    (a) =>
+      a.kind === "escalation" &&
+      a.ageMin >= slaMinutes &&
+      a.ageMin - windowMin < slaMinutes,
   ).length;
+
+  // Outcomes deltas are anchored to *yesterday*, so only surface them when
+  // the window actually spans a day or more. Otherwise it's misleading.
+  const gapSpansFullDay = windowMin >= 12 * 60;
 
   const label = firstVisit
     ? "In the last 4 hours"
@@ -656,7 +749,9 @@ export function getSinceLastVisit(
       ? `Since you stepped away ${windowMin}m ago`
       : windowMin < 24 * 60
         ? `Since you stepped away ${Math.round(windowMin / 60)}h ago`
-        : "Since yesterday";
+        : windowMin < 48 * 60
+          ? "Since yesterday"
+          : `Since ${Math.round(windowMin / (24 * 60))} days ago`;
 
   const changes: SinceLastVisit["changes"] = [];
 
@@ -678,10 +773,10 @@ export function getSinceLastVisit(
       text: `${newEscalated} new escalation${newEscalated === 1 ? "" : "s"}`,
     });
   }
-  if (newHigh > 0) {
+  if (newlyBreached > 0) {
     changes.push({
       kind: "negative",
-      text: `${newHigh} item${newHigh === 1 ? "" : "s"} crossed SLA`,
+      text: `${newlyBreached} item${newlyBreached === 1 ? "" : "s"} crossed SLA`,
     });
   }
   if (newDrafts > 0) {
@@ -690,24 +785,35 @@ export function getSinceLastVisit(
       text: `${newDrafts} new draft${newDrafts === 1 ? "" : "s"} held for review`,
     });
   }
-  if (outcomes.deltas.responseDeltaSec < 0) {
-    changes.push({
-      kind: "positive",
-      text: `Response time improved ${Math.abs(outcomes.deltas.responseDeltaSec)}s`,
-    });
-  } else if (outcomes.deltas.bookingsPct >= 15 && outcomes.bookings > 0) {
-    changes.push({
-      kind: "positive",
-      text: `Bookings trending +${outcomes.deltas.bookingsPct}% vs yesterday`,
-    });
+
+  // Comparative deltas — only when the gap actually spans yesterday.
+  if (gapSpansFullDay) {
+    if (outcomes.deltas.responseDeltaSec < 0) {
+      changes.push({
+        kind: "positive",
+        text: `Response time improved ${Math.abs(outcomes.deltas.responseDeltaSec)}s vs yesterday`,
+      });
+    } else if (outcomes.deltas.bookingsPct >= 15 && outcomes.bookings > 0) {
+      changes.push({
+        kind: "positive",
+        text: `Bookings trending +${outcomes.deltas.bookingsPct}% vs yesterday`,
+      });
+    }
   }
 
   if (changes.length === 0) {
     changes.push({
       kind: "neutral",
-      text: "Quiet stretch — nothing material moved while you were away",
+      text: firstVisit
+        ? "Quiet window — the system has been on standby"
+        : "Quiet stretch — nothing material moved while you were away",
     });
   }
 
-  return { label, changes: changes.slice(0, 5), firstVisit };
+  return {
+    label,
+    gapMinutes: windowMin,
+    changes: changes.slice(0, 5),
+    firstVisit,
+  };
 }

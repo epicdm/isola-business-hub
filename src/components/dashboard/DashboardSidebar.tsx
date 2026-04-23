@@ -12,6 +12,12 @@ import {
   CreditCard,
   Settings as SettingsIcon,
   LogOut,
+  ChevronDown,
+  Activity as ActivityIcon,
+  PauseOctagon,
+  Command as CommandIcon,
+  Keyboard,
+  Info,
 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
@@ -20,6 +26,18 @@ import { clearProfile, getInitials, readProfile } from "@/lib/profile";
 import { accountDefaults, agents } from "@/lib/mock-data";
 import logoEpic from "@/assets/logo-epic.png";
 import { IsolaWordmark } from "@/components/brand/IsolaBrand";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { openCommandPalette } from "@/components/system/CommandPalette";
+import AboutModal from "@/components/system/AboutModal";
+import { DND_EVENT, readDnd, toggleDnd } from "@/lib/system-flags";
 
 const MOCK_MODE_KEY = "isola.mockMode";
 

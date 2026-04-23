@@ -60,16 +60,57 @@ const NAV_TARGETS: NavTarget[] = [
   { label: "Settings", path: "/dashboard/settings", icon: SettingsIcon, keywords: "preferences" },
 ];
 
-// Curated example prompts — give the user a one-click on-ramp to Ema instead
-// of staring at an empty input. Order is intentional: highest-signal daily
-// asks first, then weekly review, then ops/admin.
-const EXAMPLE_PROMPTS: string[] = [
-  "Summarize today's inquiries",
-  "What needs my attention right now?",
-  "Draft a reply to the latest escalation",
-  "How are bookings pacing this week?",
-  "Which agents are underperforming?",
-  "Send a follow-up to lapsed regulars",
+// Curated example prompts grouped by intent so the user can scan to the
+// category they care about ("I want a digest" vs "I want to triage inbox")
+// instead of reading every prompt linearly.
+type PromptCategory = {
+  id: string;
+  label: string;
+  icon: typeof Sparkles;
+  prompts: string[];
+};
+
+const PROMPT_CATEGORIES: PromptCategory[] = [
+  {
+    id: "daily-digest",
+    label: "Daily digest",
+    icon: Sunrise,
+    prompts: [
+      "Summarize today's inquiries",
+      "What changed since yesterday?",
+      "Give me my morning briefing",
+    ],
+  },
+  {
+    id: "inbox-triage",
+    label: "Inbox triage",
+    icon: InboxIcon,
+    prompts: [
+      "What needs my attention right now?",
+      "Draft a reply to the latest escalation",
+      "Show me unanswered conversations",
+    ],
+  },
+  {
+    id: "bookings",
+    label: "Bookings",
+    icon: Calendar,
+    prompts: [
+      "How are bookings pacing this week?",
+      "Which slots are still open tonight?",
+      "Send a confirmation to today's reservations",
+    ],
+  },
+  {
+    id: "agents",
+    label: "Agents",
+    icon: Bot,
+    prompts: [
+      "Which agents are underperforming?",
+      "Promote any drafts ready to graduate",
+      "Pause the agent with the most escalations",
+    ],
+  },
 ];
 
 export default function CommandPalette() {

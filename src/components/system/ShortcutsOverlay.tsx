@@ -94,11 +94,14 @@ export default function ShortcutsOverlay() {
     })).filter((g) => g.rows.length > 0);
   }, [query]);
 
-  // Flat list mirrors visual order, used for arrow-key navigation.
-  const flatRowsCount = useMemo(
-    () => filteredGroups.reduce((n, g) => n + g.rows.length, 0),
+  // Flat list mirrors visual order, used for arrow-key navigation and to
+  // resolve the currently highlighted row for the details strip.
+  const flatRows = useMemo(
+    () => filteredGroups.flatMap((g) => g.rows.map((row) => ({ group: g.title, row }))),
     [filteredGroups],
   );
+  const flatRowsCount = flatRows.length;
+  const activeRow = flatRows[activeIndex];
 
   // Clamp + reset the active index when results change.
   useEffect(() => {

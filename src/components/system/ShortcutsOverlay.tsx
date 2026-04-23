@@ -101,7 +101,23 @@ export default function ShortcutsOverlay() {
     [filteredGroups],
   );
   const flatRowsCount = flatRows.length;
-  const activeRow = flatRows[activeIndex];
+  // Resolve the row defensively: during the render right after a query change
+  // `activeIndex` may briefly point past the new (smaller) list. Clamping
+  // here guarantees the details strip never blanks out mid-keystroke.
+  const safeActiveIndex =
+    flatRowsCount === 0
+      ? 0
+      : Math.min(Math.max(activeIndex, 0), flatRowsCount - 1);
+  const activeRow = flatRows[safeActiveIndex];
+
+  // Remember the last row we successfully showed so the details strip stays
+  // populated even if the user types a query that momentarily yields zero
+  // matches — they get to keep seeing what they had highlighted last.
+  const lastShownRowRef = useRef<typeof activeRow | null>(null);
+  if (activeRow) {
+    lastShownRowRef.current = activeRow;
+  }
+  const detailsRow = activeRow ?? lastShownRowRef.current;
 
   // Clamp + reset the active index when results change.
   useEffect(() => {

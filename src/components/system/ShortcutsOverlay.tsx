@@ -56,6 +56,21 @@ export default function ShortcutsOverlay() {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const rowRefs = useRef<Array<HTMLLIElement | null>>([]);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // Place the cursor at the end of the existing query (preserved across opens)
+  // so the user can keep typing without re-selecting text.
+  const focusInput = () => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.focus();
+    const len = el.value.length;
+    try {
+      el.setSelectionRange(len, len);
+    } catch {
+      // Some input types don't support selection — safe to ignore.
+    }
+  };
 
   useEffect(() => {
     const handler = () => setOpen((v) => !v);
@@ -118,15 +133,19 @@ export default function ShortcutsOverlay() {
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setActiveIndex((i) => (i + 1) % flatRowsCount);
+      focusInput();
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setActiveIndex((i) => (i - 1 + flatRowsCount) % flatRowsCount);
+      focusInput();
     } else if (e.key === "Home") {
       e.preventDefault();
       setActiveIndex(0);
+      focusInput();
     } else if (e.key === "End") {
       e.preventDefault();
       setActiveIndex(flatRowsCount - 1);
+      focusInput();
     } else if (e.key === "Enter") {
       // Close the overlay so the user can actually press the shortcut they
       // just looked up. The selection is informational, not actionable.
@@ -142,6 +161,13 @@ export default function ShortcutsOverlay() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
         onKeyDown={handleKeyDown}
+        // Radix tries to focus the first focusable element; we override so
+        // the search input always wins, even with the close button present.
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          // rAF lets the dialog finish mounting before we steal focus.
+          requestAnimationFrame(focusInput);
+        }}
         className="flex max-h-[90vh] w-[calc(100vw-2rem)] max-w-[560px] flex-col gap-0 overflow-hidden border-border/40 bg-card p-4 shadow-float sm:p-6"
       >
         <DialogTitle className="pr-8 font-display text-base font-semibold">
@@ -154,6 +180,7 @@ export default function ShortcutsOverlay() {
         <div className="relative mt-4">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/60" />
           <Input
+            ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search shortcuts…"

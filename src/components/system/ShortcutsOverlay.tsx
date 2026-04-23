@@ -75,13 +75,13 @@ export default function ShortcutsOverlay() {
               <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
                 {g.title}
               </div>
-              <ul className="grid grid-cols-1 gap-x-6 gap-y-1.5 sm:grid-cols-[auto_1fr]">
+              <ul className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-[auto_1fr]">
                 {g.rows.map((s) => (
                   <li
                     key={s.description}
-                    className="contents text-sm"
+                    className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm sm:contents"
                   >
-                    <span className="flex items-center gap-1">
+                    <span className="flex shrink-0 items-center gap-1">
                       {s.keys.map((k, i) =>
                         k === "then" ? (
                           <span
@@ -108,7 +108,7 @@ export default function ShortcutsOverlay() {
           ))}
         </div>
 
-        <div className="mt-4 border-t border-border/40 pt-3 text-[11px] text-muted-foreground">
+        <div className="mt-4 shrink-0 border-t border-border/40 pt-3 text-[11px] text-muted-foreground">
           Tip: shortcuts are disabled while you're typing in an input.
         </div>
       </DialogContent>

@@ -63,13 +63,9 @@ export default function ShortcutsOverlay() {
     return () => window.removeEventListener(SHORTCUTS_OPEN_EVENT, handler);
   }, []);
 
-  // Reset the filter every time the sheet closes so the next open is a clean slate.
-  useEffect(() => {
-    if (!open) {
-      setQuery("");
-      setActiveIndex(0);
-    }
-  }, [open]);
+  // Note: we intentionally preserve `query` across close/reopen so pressing
+  // Escape (or clicking outside) doesn't wipe what the user just typed.
+  // `activeIndex` is reset by the query/length effects below.
 
   const filteredGroups = useMemo(() => {
     const q = query.trim().toLowerCase();

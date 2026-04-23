@@ -443,3 +443,42 @@ function MetricSpark({
     </div>
   );
 }
+
+/**
+ * Countdown — renders the time remaining until `deadlineAt` in mm:ss for the
+ * final 10 minutes, otherwise Xm. Past-due deadlines render as "OVERDUE".
+ * The `now` prop is owned by the parent so all timers tick in sync.
+ */
+function Countdown({ deadlineAt, now }: { deadlineAt: number; now: number }) {
+  const remainingMs = deadlineAt - now;
+  const overdue = remainingMs <= 0;
+  const urgent = !overdue && remainingMs <= 15 * 60_000;
+
+  let display: string;
+  if (overdue) {
+    display = "OVERDUE";
+  } else if (remainingMs <= 10 * 60_000) {
+    const totalSec = Math.floor(remainingMs / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    display = `${m}:${s.toString().padStart(2, "0")}`;
+  } else {
+    display = `${Math.ceil(remainingMs / 60_000)}m`;
+  }
+
+  return (
+    <span
+      className={cn(
+        "shrink-0 font-mono text-[11px] font-semibold tabular-nums",
+        overdue
+          ? "rounded-sm bg-destructive/15 px-1.5 py-0.5 text-destructive"
+          : urgent
+            ? "text-ema"
+            : "text-muted-foreground",
+      )}
+      aria-label={overdue ? "Reply window expired" : `${display} until SLA`}
+    >
+      {display}
+    </span>
+  );
+}

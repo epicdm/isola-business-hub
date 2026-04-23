@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "@tanstack/react-router";
 import {
@@ -11,16 +12,26 @@ import {
   CalendarCheck,
   Clock,
   Zap,
+  Timer,
 } from "lucide-react";
 import Sparkline from "./Sparkline";
 import { cn } from "@/lib/utils";
 import type { Agent, AgentActivityEntry } from "@/lib/mock-data";
 
+/** A single escalated conversation with an SLA deadline (epoch ms). */
+export type EscalationItem = {
+  id: string;
+  customer: string;
+  /** Epoch ms — when the 1h reply window expires. */
+  deadlineAt: number;
+};
+
 type Props = {
   agent: Agent;
   activity: AgentActivityEntry[];
   pendingDrafts: number;
-  escalations: number;
+  /** Open escalations with deadlines — drives the live countdown UI. */
+  escalationItems: EscalationItem[];
   onReviewDrafts?: () => void;
   onJumpEscalations?: () => void;
 };
@@ -39,10 +50,26 @@ export default function CommandCenter({
   agent,
   activity,
   pendingDrafts,
-  escalations,
+  escalationItems,
   onReviewDrafts,
   onJumpEscalations,
 }: Props) {
+  const escalations = escalationItems.length;
+
+  // Live "now" tick — re-renders every 30s so countdowns stay accurate
+  // without wasting frames. The Countdown subcomponent reads this prop.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Soonest-due first — frames the urgency for the operator.
+  const sortedEsc = [...escalationItems].sort((a, b) => a.deadlineAt - b.deadlineAt);
+  const soonest = sortedEsc[0];
+  const soonestRemaining = soonest ? soonest.deadlineAt - now : 0;
+  const dueWithinHour = sortedEsc.filter((e) => e.deadlineAt - now <= 60 * 60_000).length;
+
   // ---- 24h slice -----------------------------------------------------------
   const last24 = activity.slice(0, 24);
   const messages = last24.length;
@@ -141,7 +168,7 @@ export default function CommandCenter({
           </p>
         </TrackCard>
 
-        {/* Escalations (needs you NOW) */}
+        {/* Escalations (needs you NOW) — with live countdown timers */}
         <TrackCard
           tone="escalation"
           icon={AlertTriangle}
@@ -149,15 +176,51 @@ export default function CommandCenter({
           title={escalations > 0 ? "Needs you now" : "All handled"}
           metric={escalations}
           metricLabel={escalations === 1 ? "open" : "open"}
-          accent={escalations > 0 ? "Reply within 1h" : "0 unresolved"}
+          accent={
+            escalations === 0
+              ? "0 unresolved"
+              : dueWithinHour > 0
+                ? `${dueWithinHour} due < 1h`
+                : "1h SLA"
+          }
           ctaLabel={escalations > 0 ? "Open" : undefined}
           onCta={onJumpEscalations}
+          pulse={soonest ? soonestRemaining <= 15 * 60_000 : false}
         >
-          <p className="mt-3 text-xs text-muted-foreground">
-            {escalations === 0
-              ? "No customers waiting on a human reply. Great signal."
-              : "Customers explicitly asked for a human, or hit a confidence floor."}
-          </p>
+          {escalations === 0 ? (
+            <p className="mt-3 text-xs text-muted-foreground">
+              No customers waiting on a human reply. Great signal.
+            </p>
+          ) : (
+            <ul className="mt-3 space-y-1.5">
+              {sortedEsc.slice(0, 3).map((e) => (
+                <li
+                  key={e.id}
+                  className="flex items-center gap-2 rounded-md border border-ema/15 bg-ema/5 px-2 py-1.5 text-xs"
+                >
+                  <Timer
+                    className={cn(
+                      "h-3 w-3 shrink-0",
+                      e.deadlineAt - now <= 0
+                        ? "text-destructive"
+                        : e.deadlineAt - now <= 15 * 60_000
+                          ? "text-ema"
+                          : "text-muted-foreground",
+                    )}
+                  />
+                  <span className="min-w-0 flex-1 truncate text-foreground/90">
+                    {e.customer}
+                  </span>
+                  <Countdown deadlineAt={e.deadlineAt} now={now} />
+                </li>
+              ))}
+              {sortedEsc.length > 3 && (
+                <li className="pl-1 text-[11px] text-muted-foreground">
+                  +{sortedEsc.length - 3} more waiting
+                </li>
+              )}
+            </ul>
+          )}
         </TrackCard>
       </div>
 
@@ -223,6 +286,8 @@ type TrackProps = {
   accent: string;
   ctaLabel?: string;
   onCta?: () => void;
+  /** When true, the accent chip pulses to flag urgency (e.g. SLA <15min). */
+  pulse?: boolean;
   children?: React.ReactNode;
 };
 
@@ -236,6 +301,7 @@ function TrackCard({
   accent,
   ctaLabel,
   onCta,
+  pulse,
   children,
 }: TrackProps) {
   // Tone-specific styling — the visual signal that separates AI/human/escalation.
@@ -282,7 +348,19 @@ function TrackCard({
         >
           <Icon className="h-3 w-3" /> {eyebrow}
         </span>
-        <span className={cn("text-[10px] font-medium uppercase tracking-[0.14em]", styles.accentText)}>
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.14em]",
+            styles.accentText,
+            pulse && "animate-pulse",
+          )}
+        >
+          {pulse && (
+            <span className="relative inline-flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ema/70" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-ema" />
+            </span>
+          )}
           {accent}
         </span>
       </div>
@@ -363,5 +441,44 @@ function MetricSpark({
       </div>
       <div className="mt-0.5 text-[11px] text-muted-foreground">{sub}</div>
     </div>
+  );
+}
+
+/**
+ * Countdown — renders the time remaining until `deadlineAt` in mm:ss for the
+ * final 10 minutes, otherwise Xm. Past-due deadlines render as "OVERDUE".
+ * The `now` prop is owned by the parent so all timers tick in sync.
+ */
+function Countdown({ deadlineAt, now }: { deadlineAt: number; now: number }) {
+  const remainingMs = deadlineAt - now;
+  const overdue = remainingMs <= 0;
+  const urgent = !overdue && remainingMs <= 15 * 60_000;
+
+  let display: string;
+  if (overdue) {
+    display = "OVERDUE";
+  } else if (remainingMs <= 10 * 60_000) {
+    const totalSec = Math.floor(remainingMs / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    display = `${m}:${s.toString().padStart(2, "0")}`;
+  } else {
+    display = `${Math.ceil(remainingMs / 60_000)}m`;
+  }
+
+  return (
+    <span
+      className={cn(
+        "shrink-0 font-mono text-[11px] font-semibold tabular-nums",
+        overdue
+          ? "rounded-sm bg-destructive/15 px-1.5 py-0.5 text-destructive"
+          : urgent
+            ? "text-ema"
+            : "text-muted-foreground",
+      )}
+      aria-label={overdue ? "Reply window expired" : `${display} until SLA`}
+    >
+      {display}
+    </span>
   );
 }

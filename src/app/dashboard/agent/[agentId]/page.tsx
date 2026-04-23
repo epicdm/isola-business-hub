@@ -235,6 +235,31 @@ export default function AgentWorkspacePage() {
     return [...escalated, ...others].slice(0, 6);
   }, []);
 
+  // Derive escalation items with a 1h SLA deadline. Parse the conv's relative
+  // time string ("44m ago", "2h ago") into elapsed minutes, then deadline =
+  // escalatedAt + 60min. Computed once on mount so the timer is stable.
+  const escalationItems = useMemo(() => {
+    const parseElapsedMin = (t: string): number => {
+      const m = t.match(/(\d+)\s*m/);
+      const h = t.match(/(\d+)\s*h/);
+      if (h) return parseInt(h[1], 10) * 60;
+      if (m) return parseInt(m[1], 10);
+      return 0;
+    };
+    const now = Date.now();
+    return conversations
+      .filter((c) => c.status === "escalated")
+      .map((c) => {
+        const elapsedMin = parseElapsedMin(c.time);
+        const escalatedAt = now - elapsedMin * 60_000;
+        return {
+          id: c.id,
+          customer: c.customer,
+          deadlineAt: escalatedAt + 60 * 60_000,
+        };
+      });
+  }, []);
+
   const scrollToDrafts = () => {
     draftsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -340,7 +365,7 @@ export default function AgentWorkspacePage() {
           agent={agent}
           activity={activity}
           pendingDrafts={drafts.length}
-          escalations={agentConvs.filter((c) => c.status === "escalated").length}
+          escalationItems={escalationItems}
           onReviewDrafts={scrollToDrafts}
           onJumpEscalations={() => navigate({ to: "/dashboard/inbox" })}
         />

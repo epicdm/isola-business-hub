@@ -63,13 +63,9 @@ export default function ShortcutsOverlay() {
     return () => window.removeEventListener(SHORTCUTS_OPEN_EVENT, handler);
   }, []);
 
-  // Reset the filter every time the sheet closes so the next open is a clean slate.
-  useEffect(() => {
-    if (!open) {
-      setQuery("");
-      setActiveIndex(0);
-    }
-  }, [open]);
+  // Note: we intentionally preserve `query` across close/reopen so pressing
+  // Escape (or clicking outside) doesn't wipe what the user just typed.
+  // `activeIndex` is reset by the query/length effects below.
 
   const filteredGroups = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -108,6 +104,16 @@ export default function ShortcutsOverlay() {
   }, [activeIndex]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Escape closes immediately. Radix already handles this on the Dialog,
+    // but we wire it explicitly so the behavior survives any future Dialog
+    // refactor and can't be disabled by a stopPropagation upstream. We do
+    // NOT clear `query` — preserving the search box is the whole point.
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      setOpen(false);
+      return;
+    }
     if (flatRowsCount === 0) return;
     if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -227,7 +233,7 @@ export default function ShortcutsOverlay() {
         </div>
 
         <div className="mt-4 shrink-0 border-t border-border/40 pt-3 text-[11px] text-muted-foreground">
-          <span className="hidden sm:inline">↑↓ navigate · Enter close · </span>
+          <span className="hidden sm:inline">↑↓ navigate · Enter / Esc close · </span>
           Tip: shortcuts are disabled while you're typing in an input.
         </div>
       </DialogContent>

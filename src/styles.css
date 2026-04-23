@@ -268,6 +268,77 @@
   .bg-hero {
     background: var(--gradient-hero);
   }
+
+  /*
+   * Ambient time-of-day hero tint. Reads `data-time` from <html> (set by
+   * useTimeOfDay) and gently re-mixes the existing hero stops so the room
+   * feels different at 7am vs 11pm without becoming a different design.
+   * Shifts are intentionally subtle — measured in single-digit % / hue.
+   */
+  .bg-hero-timed {
+    background: var(--gradient-hero);
+    transition: background 1200ms ease;
+  }
+  html[data-time="morning"] .bg-hero-timed {
+    background:
+      radial-gradient(
+        ellipse 70% 55% at 75% 15%,
+        oklch(0.78 0.17 152 / 0.22),
+        transparent 65%
+      ),
+      radial-gradient(
+        ellipse 60% 45% at 15% 85%,
+        oklch(0.78 0.21 30 / 0.18),
+        transparent 65%
+      ),
+      radial-gradient(
+        ellipse 55% 40% at 50% 50%,
+        oklch(0.7 0.22 295 / 0.06),
+        transparent 70%
+      ),
+      linear-gradient(180deg, oklch(0.16 0.018 168), oklch(0.135 0.02 168));
+  }
+  html[data-time="midday"] .bg-hero-timed {
+    background: var(--gradient-hero);
+  }
+  html[data-time="evening"] .bg-hero-timed {
+    background:
+      radial-gradient(
+        ellipse 70% 55% at 75% 15%,
+        oklch(0.78 0.17 152 / 0.22),
+        transparent 65%
+      ),
+      radial-gradient(
+        ellipse 60% 45% at 15% 85%,
+        oklch(0.72 0.19 30 / 0.14),
+        transparent 65%
+      ),
+      radial-gradient(
+        ellipse 55% 40% at 50% 50%,
+        oklch(0.7 0.22 305 / 0.08),
+        transparent 70%
+      ),
+      linear-gradient(180deg, oklch(0.16 0.018 168), oklch(0.135 0.02 168));
+  }
+  html[data-time="night"] .bg-hero-timed {
+    background:
+      radial-gradient(
+        ellipse 70% 55% at 75% 15%,
+        oklch(0.78 0.17 152 / 0.18),
+        transparent 65%
+      ),
+      radial-gradient(
+        ellipse 60% 45% at 15% 85%,
+        oklch(0.72 0.19 30 / 0.12),
+        transparent 65%
+      ),
+      radial-gradient(
+        ellipse 55% 40% at 50% 50%,
+        oklch(0.7 0.22 295 / 0.06),
+        transparent 70%
+      ),
+      linear-gradient(180deg, oklch(0.14 0.018 168), oklch(0.12 0.02 168));
+  }
   .bg-gradient-primary {
     background: var(--gradient-primary);
   }

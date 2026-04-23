@@ -2,6 +2,7 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/r
 
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
+import { useTimeOfDay } from "@/hooks/use-time-of-day";
 
 function NotFoundComponent() {
   return (
@@ -76,6 +77,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  // Tags <html data-time="…"> so .bg-hero-timed and any other ambient
+  // surfaces can drift through morning → midday → evening → night.
+  useTimeOfDay();
   return (
     <>
       <Outlet />

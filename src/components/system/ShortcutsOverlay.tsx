@@ -180,6 +180,7 @@ export default function ShortcutsOverlay() {
         <div className="relative mt-4">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/60" />
           <Input
+            ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search shortcuts…"

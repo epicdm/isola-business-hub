@@ -59,27 +59,29 @@ export default function ShortcutsOverlay() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-[560px] border-border/40 bg-card shadow-float">
-        <DialogTitle className="font-display text-base font-semibold">
+      <DialogContent
+        className="flex max-h-[90vh] w-[calc(100vw-2rem)] max-w-[560px] flex-col gap-0 overflow-hidden border-border/40 bg-card p-4 shadow-float sm:p-6"
+      >
+        <DialogTitle className="pr-8 font-display text-base font-semibold">
           Keyboard shortcuts
         </DialogTitle>
         <div className="mt-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
           Move at the speed of thought
         </div>
 
-        <div className="mt-5 space-y-5">
+        <div className="-mx-1 mt-4 flex-1 space-y-5 overflow-y-auto px-1 sm:mt-5">
           {GROUPS.map((g) => (
             <section key={g.title}>
               <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
                 {g.title}
               </div>
-              <ul className="grid grid-cols-1 gap-x-6 gap-y-1.5 sm:grid-cols-[auto_1fr]">
+              <ul className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-[auto_1fr]">
                 {g.rows.map((s) => (
                   <li
                     key={s.description}
-                    className="contents text-sm"
+                    className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm sm:contents"
                   >
-                    <span className="flex items-center gap-1">
+                    <span className="flex shrink-0 items-center gap-1">
                       {s.keys.map((k, i) =>
                         k === "then" ? (
                           <span
@@ -106,7 +108,7 @@ export default function ShortcutsOverlay() {
           ))}
         </div>
 
-        <div className="mt-4 border-t border-border/40 pt-3 text-[11px] text-muted-foreground">
+        <div className="mt-4 shrink-0 border-t border-border/40 pt-3 text-[11px] text-muted-foreground">
           Tip: shortcuts are disabled while you're typing in an input.
         </div>
       </DialogContent>

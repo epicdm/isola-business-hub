@@ -37,6 +37,9 @@ if (typeof window !== "undefined") {
   if (!Element.prototype.scrollIntoView) {
     Element.prototype.scrollIntoView = () => {};
   }
+  if (!Element.prototype.scrollTo) {
+    (Element.prototype as unknown as { scrollTo: () => void }).scrollTo = () => {};
+  }
   // jsdom warns loudly about scrollTo; silence it.
   window.scrollTo = vi.fn();
 }

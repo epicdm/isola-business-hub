@@ -104,7 +104,7 @@ export default function SystemStatusBar() {
   };
 
   return (
-    <div className="sticky top-0 z-40 flex h-8 items-center gap-3 border-b border-border/30 bg-sidebar/80 px-4 backdrop-blur-xl text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+    <div className="sticky top-0 z-40 flex h-9 items-center gap-3 border-b border-border/30 bg-sidebar/80 px-4 backdrop-blur-xl text-[10px] uppercase tracking-[0.16em] text-muted-foreground before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-primary/20 before:to-transparent relative">
       {/* Status segment */}
       <button
         type="button"
@@ -127,61 +127,68 @@ export default function SystemStatusBar() {
 
       <span className="hidden h-3 w-px bg-border/40 sm:block" />
 
-      {/* Ambient ticker — center */}
-      <AmbientTicker dnd={dnd} />
+      {/* Ambient ticker — center. Hidden below md so the labels keep priority. */}
+      <div className="hidden min-w-0 flex-1 px-4 text-[11px] md:flex">
+        <AmbientTicker dnd={dnd} />
+      </div>
+
+      {/* Spacer for mobile so right cluster pushes to the edge when ticker is hidden */}
+      <div className="flex-1 md:hidden" />
 
       {/* Right cluster */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            className="hidden items-center gap-1.5 transition-colors hover:text-foreground sm:flex"
-            title="Today's date"
+      <div className="flex items-center gap-3 tracking-[0.12em]">
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className="hidden items-center gap-1.5 transition-colors hover:text-foreground sm:flex"
+              title="Today's date"
+            >
+              <CalendarClock className="h-3 w-3" />
+              <span className="tabular-nums">{clockText}</span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            align="end"
+            sideOffset={6}
+            className="w-auto rounded-xl border-border/40 bg-card/95 p-3 text-xs"
           >
-            <CalendarClock className="h-3 w-3" />
-            <span className="tabular-nums">{clockText}</span>
-          </button>
-        </PopoverTrigger>
-        <PopoverContent
-          align="end"
-          sideOffset={6}
-          className="w-auto rounded-xl border-border/40 bg-card/95 p-3 text-xs"
+            <div className="font-display text-sm font-semibold">
+              {now?.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" }) ?? ""}
+            </div>
+            <div className="mt-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+              {Intl.DateTimeFormat().resolvedOptions().timeZone}
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <span className="hidden h-3 w-px bg-border/60 sm:block" />
+
+        <button
+          type="button"
+          onClick={() => navigate({ to: "/dashboard/settings" })}
+          className="hidden items-center gap-1.5 transition-colors hover:text-foreground sm:flex"
+          title="Edit SLA in settings"
         >
-          <div className="font-display text-sm font-semibold">
-            {now?.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" }) ?? ""}
-          </div>
-          <div className="mt-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-            {Intl.DateTimeFormat().resolvedOptions().timeZone}
-          </div>
-        </PopoverContent>
-      </Popover>
+          <Activity className="h-3 w-3" />
+          <span>SLA: <span className="tabular-nums normal-case tracking-normal text-foreground/80">{formatSlaShort(sla)}</span></span>
+        </button>
 
-      <span className="hidden h-3 w-px bg-border/40 sm:block" />
+        <span className="hidden h-3 w-px bg-border/60 sm:block" />
 
-      <button
-        type="button"
-        onClick={() => navigate({ to: "/dashboard/settings" })}
-        className="hidden items-center gap-1.5 transition-colors hover:text-foreground sm:flex"
-        title="Edit SLA in settings"
-      >
-        <Activity className="h-3 w-3" />
-        <span>SLA: <span className="tabular-nums normal-case tracking-normal text-foreground/80">{formatSlaShort(sla)}</span></span>
-      </button>
-
-      <span className="hidden h-3 w-px bg-border/40 sm:block" />
-
-      <button
-        type="button"
-        onClick={onAgentsClick}
-        className="flex items-center gap-1.5 transition-colors hover:text-foreground"
-        title="Open agents"
-      >
-        <CircleDot className={`h-2 w-2 ${dnd ? "text-warning" : "text-success"}`} fill="currentColor" />
-        <span className="tabular-nums normal-case tracking-normal text-foreground/80">
-          {activeAgents}/{agents.length}
-        </span>
-        <span>agents on</span>
-      </button>
+        <button
+          type="button"
+          onClick={onAgentsClick}
+          className="flex items-center gap-1.5 transition-colors hover:text-foreground"
+          title="Open agents"
+        >
+          <CircleDot className={`h-2 w-2 ${dnd ? "text-warning" : "text-success"}`} fill="currentColor" />
+          <span className="tabular-nums normal-case tracking-normal text-foreground/80">
+            {activeAgents}/{agents.length}
+          </span>
+          <span>agents on</span>
+        </button>
+      </div>
     </div>
   );
 }

@@ -19,6 +19,8 @@ import {
   Bot,
   History,
   CornerDownLeft,
+  Sunrise,
+  Inbox as InboxIcon,
 } from "lucide-react";
 import {
   CommandDialog,
@@ -58,16 +60,57 @@ const NAV_TARGETS: NavTarget[] = [
   { label: "Settings", path: "/dashboard/settings", icon: SettingsIcon, keywords: "preferences" },
 ];
 
-// Curated example prompts — give the user a one-click on-ramp to Ema instead
-// of staring at an empty input. Order is intentional: highest-signal daily
-// asks first, then weekly review, then ops/admin.
-const EXAMPLE_PROMPTS: string[] = [
-  "Summarize today's inquiries",
-  "What needs my attention right now?",
-  "Draft a reply to the latest escalation",
-  "How are bookings pacing this week?",
-  "Which agents are underperforming?",
-  "Send a follow-up to lapsed regulars",
+// Curated example prompts grouped by intent so the user can scan to the
+// category they care about ("I want a digest" vs "I want to triage inbox")
+// instead of reading every prompt linearly.
+type PromptCategory = {
+  id: string;
+  label: string;
+  icon: typeof Sparkles;
+  prompts: string[];
+};
+
+const PROMPT_CATEGORIES: PromptCategory[] = [
+  {
+    id: "daily-digest",
+    label: "Daily digest",
+    icon: Sunrise,
+    prompts: [
+      "Summarize today's inquiries",
+      "What changed since yesterday?",
+      "Give me my morning briefing",
+    ],
+  },
+  {
+    id: "inbox-triage",
+    label: "Inbox triage",
+    icon: InboxIcon,
+    prompts: [
+      "What needs my attention right now?",
+      "Draft a reply to the latest escalation",
+      "Show me unanswered conversations",
+    ],
+  },
+  {
+    id: "bookings",
+    label: "Bookings",
+    icon: Calendar,
+    prompts: [
+      "How are bookings pacing this week?",
+      "Which slots are still open tonight?",
+      "Send a confirmation to today's reservations",
+    ],
+  },
+  {
+    id: "agents",
+    label: "Agents",
+    icon: Bot,
+    prompts: [
+      "Which agents are underperforming?",
+      "Promote any drafts ready to graduate",
+      "Pause the agent with the most escalations",
+    ],
+  },
 ];
 
 export default function CommandPalette() {
@@ -148,19 +191,27 @@ export default function CommandPalette() {
           </CommandGroup>
         )}
 
-        {/* Example prompts — always available so the user can try Ema in one click. */}
-        <CommandGroup heading={trimmed.length > 0 ? "Try asking Ema" : "Ask Ema · examples"}>
-          {EXAMPLE_PROMPTS.map((p) => (
-            <PaletteItem
-              key={`example-${p}`}
-              value={`example-${p}`}
-              onSelect={() => askEma(p)}
-              icon={<Sparkles className="h-4 w-4 text-ema/70" />}
-              label={p}
-              shortcut={<CornerDownLeft className="h-3 w-3" />}
-            />
-          ))}
-        </CommandGroup>
+        {/* Example prompts — grouped by category so users can scan to the
+            intent they care about. cmdk's fuzzy filter narrows each group as
+            the user types, and empty groups auto-hide. */}
+        {PROMPT_CATEGORIES.map((cat) => {
+          const Icon = cat.icon;
+          return (
+            <CommandGroup key={cat.id} heading={`Ask Ema · ${cat.label}`}>
+              {cat.prompts.map((p) => (
+                <PaletteItem
+                  key={`${cat.id}-${p}`}
+                  value={`example-${cat.id}-${p} ${cat.label}`}
+                  onSelect={() => askEma(p)}
+                  icon={<Icon className="h-4 w-4 text-ema/80" />}
+                  label={p}
+                  meta={cat.label}
+                  shortcut={<CornerDownLeft className="h-3 w-3" />}
+                />
+              ))}
+            </CommandGroup>
+          );
+        })}
 
         <CommandGroup heading="Jump to">
           {NAV_TARGETS.map((t) => {

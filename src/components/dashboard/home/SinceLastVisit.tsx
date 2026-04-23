@@ -7,9 +7,16 @@ import {
   Activity,
   Clock,
   Sparkles,
+  Info,
 } from "lucide-react";
-import type { SinceLastVisit as SinceLastVisitType } from "@/lib/home-data";
+import { REBASE_AFTER_MIN, type SinceLastVisit as SinceLastVisitType } from "@/lib/home-data";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type Props = {
   data: SinceLastVisitType;
@@ -40,8 +47,26 @@ export default function SinceLastVisit({ data }: Props) {
             <Clock className="h-3 w-3" />
           </span>
           <div className="leading-tight">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              {data.firstVisit ? "Welcome back" : "While you were away"}
+            <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              <span>{data.firstVisit ? "Welcome back" : "While you were away"}</span>
+              <TooltipProvider delayDuration={150}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="How the baseline is calculated"
+                      className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full text-muted-foreground/70 hover:text-foreground transition-colors"
+                    >
+                      <Info className="h-3 w-3" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" align="start" className="max-w-[260px] text-[11px] leading-relaxed normal-case tracking-normal">
+                    {data.firstVisit
+                      ? `This is your first session on this device. The baseline starts now and will roll forward after ${REBASE_AFTER_MIN} minutes of inactivity.`
+                      : `Baseline rebases after ${REBASE_AFTER_MIN} minutes of inactivity. In-app navigation keeps the same baseline so deltas stay stable while you work.`}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
             <div className="text-xs font-semibold text-foreground">
               {data.label}

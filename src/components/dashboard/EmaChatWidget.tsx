@@ -239,7 +239,7 @@ export default function EmaChatWidget() {
                   placeholder="Ask Ema anything…"
                   className="h-9"
                 />
-                <Button type="submit" size="icon" className="h-9 w-9 shrink-0 bg-gradient-ema text-ema-foreground hover:opacity-90">
+                <Button type="submit" size="icon" className="h-9 w-9 shrink-0 bg-gradient-ema text-ema-foreground shadow-ema hover:opacity-90">
                   <Send className="h-4 w-4" />
                 </Button>
               </form>

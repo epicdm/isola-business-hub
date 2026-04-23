@@ -41,6 +41,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AgentHeroHeader from "@/components/dashboard/AgentHeroHeader";
+import CommandCenter from "@/components/dashboard/CommandCenter";
 import FirstWinOverlay, { pickIndustry } from "@/components/dashboard/FirstWinOverlay";
 import ProbationDraftCard from "@/components/dashboard/ProbationDraftCard";
 import Sparkline from "@/components/dashboard/Sparkline";
@@ -333,6 +334,15 @@ export default function AgentWorkspacePage() {
             setAgent((a) => ({ ...a, status: next ? "on_shift" : "paused" }));
             toast.success(next ? `${agent.name} is on shift` : `${agent.name} paused`);
           }}
+        />
+
+        <CommandCenter
+          agent={agent}
+          activity={activity}
+          pendingDrafts={drafts.length}
+          escalations={agentConvs.filter((c) => c.status === "escalated").length}
+          onReviewDrafts={scrollToDrafts}
+          onJumpEscalations={() => navigate({ to: "/dashboard/inbox" })}
         />
 
         <Tabs defaultValue="inbox">

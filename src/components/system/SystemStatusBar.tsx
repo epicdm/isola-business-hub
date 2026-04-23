@@ -223,7 +223,7 @@ function AmbientTicker({ dnd }: { dnd: boolean }) {
 
   if (dnd || events.length === 0 || !cur) {
     return (
-      <div className="min-w-0 flex-1 truncate text-center text-foreground/60 normal-case tracking-normal">
+      <div className="min-w-0 flex-1 truncate text-center text-foreground/60 normal-case tracking-normal opacity-60">
         {dnd ? "Quiet mode — agents paused." : "Quiet moment. All agents standing by."}
       </div>
     );
@@ -231,7 +231,7 @@ function AmbientTicker({ dnd }: { dnd: boolean }) {
 
   const Icon = channelIcon[cur.channel] ?? MessageSquare;
   const preview =
-    cur.preview.length > 60 ? `${cur.preview.slice(0, 60).trimEnd()}…` : cur.preview;
+    cur.preview.length > 48 ? `${cur.preview.slice(0, 48).trimEnd()}…` : cur.preview;
   const agentName = agentNameFor(cur.id);
 
   return (
@@ -250,10 +250,10 @@ function AmbientTicker({ dnd }: { dnd: boolean }) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-          className="flex items-center justify-center gap-2 truncate normal-case tracking-normal"
+          className="flex items-center justify-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap normal-case tracking-normal"
         >
           <Icon className="h-3 w-3 shrink-0 text-primary/70" />
-          <span className="truncate text-foreground/80 group-hover:text-foreground">
+          <span className="overflow-hidden text-ellipsis whitespace-nowrap text-foreground/80 group-hover:text-foreground">
             <span className="font-semibold text-foreground">{cur.customer}</span>
             <span className="mx-1.5 text-muted-foreground/60">·</span>
             <span>{preview}</span>

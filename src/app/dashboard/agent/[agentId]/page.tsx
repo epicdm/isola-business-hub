@@ -365,7 +365,7 @@ export default function AgentWorkspacePage() {
           agent={agent}
           activity={activity}
           pendingDrafts={drafts.length}
-          escalations={agentConvs.filter((c) => c.status === "escalated").length}
+          escalationItems={escalationItems}
           onReviewDrafts={scrollToDrafts}
           onJumpEscalations={() => navigate({ to: "/dashboard/inbox" })}
         />

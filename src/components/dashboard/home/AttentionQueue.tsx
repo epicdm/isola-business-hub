@@ -9,6 +9,7 @@ import {
   PauseCircle,
   ArrowRight,
   Clock,
+  TimerReset,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AttentionItem } from "@/lib/home-data";
@@ -21,6 +22,7 @@ type Props = {
 const kindIcon = {
   escalation: AlertTriangle,
   draft: ShieldCheck,
+  follow_up: TimerReset,
   knowledge_gap: BookOpen,
   agent_paused: PauseCircle,
 } as const;
@@ -28,6 +30,7 @@ const kindIcon = {
 const kindLabel = {
   escalation: "Escalation",
   draft: "Approval",
+  follow_up: "Follow-up",
   knowledge_gap: "Knowledge",
   agent_paused: "Agent off",
 } as const;

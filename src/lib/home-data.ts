@@ -249,6 +249,12 @@ function sevWeight(s: AttentionItem["severity"]) {
   return s === "high" ? 3 : s === "medium" ? 2 : 1;
 }
 
+function formatHours(min: number): string {
+  if (min < 60) return `${min}m`;
+  const h = Math.round(min / 60);
+  return `${h}h`;
+}
+
 // ---------------------------------------------------------------------------
 // Channel mix — what surfaces are working
 // ---------------------------------------------------------------------------

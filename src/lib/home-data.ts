@@ -111,6 +111,7 @@ export function getDailyOutcomes(activity: AgentActivityEntry[]): DailyOutcomes 
 export type AttentionItemKind =
   | "escalation"
   | "draft"
+  | "follow_up"
   | "knowledge_gap"
   | "agent_paused";
 

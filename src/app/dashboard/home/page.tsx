@@ -71,12 +71,15 @@ export default function HomePage() {
     setBusinessName(p.businessName?.trim() || accountDefaults.businessName);
   }, []);
 
-  // "Since you last visited" — read the timestamp on first render, then stamp
-  // the visit so subsequent navigations within the session don't re-trigger.
+  // "Since you last visited" — touchVisit() reads the previous baseline AND
+  // rolls it forward when the user has actually been away for a meaningful
+  // window (see REBASE_AFTER_MIN in home-data.ts). Re-mounting from in-app
+  // navigation within the same session keeps the baseline stable so the
+  // strip's deltas don't blank out while the owner works.
   const [lastVisitAt, setLastVisitAt] = useState<number | null>(null);
   useEffect(() => {
-    setLastVisitAt(readLastVisit());
-    stampLastVisit();
+    const { baseline } = touchVisit();
+    setLastVisitAt(baseline);
   }, []);
 
   // Pure derivations.
@@ -90,8 +93,8 @@ export default function HomePage() {
     [ownerFirstName, outcomes, attention, channels],
   );
   const sinceLastVisit = useMemo(
-    () => getSinceLastVisit(activity, outcomes, attention, lastVisitAt),
-    [activity, outcomes, attention, lastVisitAt],
+    () => getSinceLastVisit(activity, outcomes, attention, lastVisitAt, slaMinutes),
+    [activity, outcomes, attention, lastVisitAt, slaMinutes],
   );
 
   const openEscalations = attention.filter((a) => a.kind === "escalation").length;

@@ -11,7 +11,6 @@ import {
   Plug,
   CreditCard,
   Settings as SettingsIcon,
-  Sparkles,
   LogOut,
 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
@@ -20,6 +19,7 @@ import { toast } from "sonner";
 import { clearProfile, getInitials, readProfile } from "@/lib/profile";
 import { accountDefaults, agents } from "@/lib/mock-data";
 import logoEpic from "@/assets/logo-epic.png";
+import { IsolaWordmark } from "@/components/brand/IsolaBrand";
 
 const MOCK_MODE_KEY = "isola.mockMode";
 
@@ -107,16 +107,15 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
   return (
     <aside className="hidden w-64 shrink-0 border-r border-sidebar-border bg-sidebar lg:block">
       <div className="sticky top-0 flex h-screen flex-col">
-        <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary shadow-glow">
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="font-display text-lg font-bold">Isola</span>
+        <div className="flex h-16 items-center border-b border-sidebar-border px-5">
+          <a href="/dashboard" className="flex items-center">
+            <IsolaWordmark size={30} showSub />
+          </a>
         </div>
-        <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-6">
+        <nav className="flex-1 space-y-7 overflow-y-auto px-3 py-6">
           {sections.map((section) => (
             <div key={section.label}>
-              <div className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+              <div className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/60">
                 {section.label}
               </div>
               <ul className="space-y-0.5">
@@ -131,16 +130,21 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
                     <li key={item.href}>
                       <a
                         href={item.href}
-                        className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
+                        className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all ${
                           active
                             ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                            : "text-sidebar-foreground/65 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground"
                         }`}
                       >
-                        <Icon className="h-4 w-4" />
+                        {active && (
+                          <span className="absolute -left-3 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-gradient-primary shadow-glow" />
+                        )}
+                        <Icon
+                          className={`h-4 w-4 transition-colors ${active ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`}
+                        />
                         <span className="flex-1">{item.label}</span>
                         {"badge" in item && item.badge !== undefined && (
-                          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-bold text-destructive-foreground">
+                          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-ema px-1.5 text-[10px] font-bold text-ema-foreground shadow-ema">
                             {item.badge}
                           </span>
                         )}
@@ -153,9 +157,11 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
           ))}
         </nav>
         <div className="space-y-3 border-t border-sidebar-border p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-sm font-semibold">
-              {initials}
+          <div className="flex items-center gap-3 rounded-xl bg-sidebar-accent/30 p-2.5">
+            <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-gradient-aurora text-[11px] font-semibold text-foreground">
+              <span className="absolute inset-[2px] flex items-center justify-center rounded-full bg-sidebar text-foreground">
+                {initials}
+              </span>
             </div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-medium">{contactName}</div>
@@ -172,7 +178,7 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
           </div>
           <a
             href="https://epic.communications"
-            className="flex items-center gap-2 rounded-md border border-sidebar-border/60 bg-sidebar-accent/30 px-2.5 py-2 text-[10px] uppercase tracking-wider text-muted-foreground transition-colors hover:bg-sidebar-accent/60"
+            className="flex items-center gap-2 rounded-md border border-sidebar-border/60 bg-sidebar-accent/20 px-2.5 py-2 text-[10px] uppercase tracking-[0.15em] text-muted-foreground transition-colors hover:bg-sidebar-accent/50"
           >
             <img src={logoEpic} alt="Epic Communications" className="h-6 w-6 rounded bg-white p-0.5" />
             <span className="leading-tight">

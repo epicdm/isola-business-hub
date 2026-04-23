@@ -53,10 +53,16 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
   const navigate = useNavigate();
   const [profile, setProfile] = useState<{ contactName?: string; businessName?: string }>({});
   const [mode, setMode] = useState<MockMode>("solo");
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [dnd, setDnd] = useState(false);
 
   useEffect(() => {
     setProfile(readProfile());
     setMode(readMockMode());
+    setDnd(readDnd());
+    const onDnd = () => setDnd(readDnd());
+    window.addEventListener(DND_EVENT, onDnd);
+    return () => window.removeEventListener(DND_EVENT, onDnd);
   }, []);
 
   const contactName = profile.contactName?.trim() || accountDefaults.ownerName;

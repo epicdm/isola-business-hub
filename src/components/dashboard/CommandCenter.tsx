@@ -53,6 +53,7 @@ export default function CommandCenter({
   activity,
   pendingDrafts,
   escalationItems,
+  slaMinutes,
   onReviewDrafts,
   onJumpEscalations,
 }: Props) {
@@ -66,11 +67,17 @@ export default function CommandCenter({
     return () => clearInterval(id);
   }, []);
 
-  // Soonest-due first — frames the urgency for the operator.
+  // Soonest-due first — frames the urgency for the operator. Items "due soon"
+  // = within the configured SLA window itself (not a fixed hour) so the
+  // urgency tier scales with the business's reply-time policy.
   const sortedEsc = [...escalationItems].sort((a, b) => a.deadlineAt - b.deadlineAt);
   const soonest = sortedEsc[0];
   const soonestRemaining = soonest ? soonest.deadlineAt - now : 0;
-  const dueWithinHour = sortedEsc.filter((e) => e.deadlineAt - now <= 60 * 60_000).length;
+  const dueSoon = sortedEsc.filter(
+    (e) => e.deadlineAt - now <= slaMinutes * 60_000,
+  ).length;
+  const slaShort =
+    slaMinutes >= 60 && slaMinutes % 60 === 0 ? `${slaMinutes / 60}h` : `${slaMinutes}m`;
 
   // ---- 24h slice -----------------------------------------------------------
   const last24 = activity.slice(0, 24);

@@ -80,6 +80,12 @@ export default function SettingsPage() {
   ]);
   const [keywordDraft, setKeywordDraft] = useState("");
   const [escalationPhone, setEscalationPhone] = useState("+1 767 245 7811");
+  // Per-business escalation SLA (countdown reply window). Persists to
+  // localStorage and notifies subscribers (Command Center) on save.
+  const [slaMinutes, setSlaMinutes] = useState<number>(DEFAULT_SLA_MINUTES);
+  useEffect(() => {
+    setSlaMinutes(readSlaMinutes());
+  }, []);
 
   // Notifications
   const [pushEnabled, setPushEnabled] = useState(false);

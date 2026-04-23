@@ -191,19 +191,27 @@ export default function CommandPalette() {
           </CommandGroup>
         )}
 
-        {/* Example prompts — always available so the user can try Ema in one click. */}
-        <CommandGroup heading={trimmed.length > 0 ? "Try asking Ema" : "Ask Ema · examples"}>
-          {EXAMPLE_PROMPTS.map((p) => (
-            <PaletteItem
-              key={`example-${p}`}
-              value={`example-${p}`}
-              onSelect={() => askEma(p)}
-              icon={<Sparkles className="h-4 w-4 text-ema/70" />}
-              label={p}
-              shortcut={<CornerDownLeft className="h-3 w-3" />}
-            />
-          ))}
-        </CommandGroup>
+        {/* Example prompts — grouped by category so users can scan to the
+            intent they care about. cmdk's fuzzy filter narrows each group as
+            the user types, and empty groups auto-hide. */}
+        {PROMPT_CATEGORIES.map((cat) => {
+          const Icon = cat.icon;
+          return (
+            <CommandGroup key={cat.id} heading={`Ask Ema · ${cat.label}`}>
+              {cat.prompts.map((p) => (
+                <PaletteItem
+                  key={`${cat.id}-${p}`}
+                  value={`example-${cat.id}-${p} ${cat.label}`}
+                  onSelect={() => askEma(p)}
+                  icon={<Icon className="h-4 w-4 text-ema/80" />}
+                  label={p}
+                  meta={cat.label}
+                  shortcut={<CornerDownLeft className="h-3 w-3" />}
+                />
+              ))}
+            </CommandGroup>
+          );
+        })}
 
         <CommandGroup heading="Jump to">
           {NAV_TARGETS.map((t) => {

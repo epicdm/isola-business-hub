@@ -9,6 +9,7 @@
 
 import {
   agents,
+  bookings,
   conversations,
   getAgentActivity,
   type Agent,
@@ -110,6 +111,7 @@ export function getDailyOutcomes(activity: AgentActivityEntry[]): DailyOutcomes 
 export type AttentionItemKind =
   | "escalation"
   | "draft"
+  | "follow_up"
   | "knowledge_gap"
   | "agent_paused";
 
@@ -173,7 +175,32 @@ export function getAttentionQueue(slaMinutes: number): AttentionItem[] {
     }
   }
 
-  // 3. Paused agents — operational gap the owner created
+  // 3. Overdue follow-ups — pending bookings older than 2h still awaiting
+  //    a deposit, owner approval, or other manual nudge. These are the
+  //    booking-flow items that quietly slip if no one chases them.
+  const FOLLOW_UP_AGE_MIN = 120;
+  const pendingBookings = bookings.filter((b) => b.status === "pending");
+  // Mock-data ages for follow-ups (deterministic so the queue is stable).
+  const ageBuckets = [180, 240, 360, 480, 720];
+  pendingBookings.forEach((b, idx) => {
+    const ageMin = ageBuckets[idx % ageBuckets.length];
+    if (ageMin < FOLLOW_UP_AGE_MIN) return;
+    const reason = b.notes?.trim() || "Awaiting customer response";
+    const overSla = ageMin >= slaMinutes * 4;
+    items.push({
+      id: `followup-${b.id}`,
+      kind: "follow_up",
+      title: `Chase ${b.guest} — ${reason.toLowerCase()}`,
+      why: `Booking for ${b.party} on ${b.date} ${b.time} via ${labelForChannel(b.channel)} — no movement in ${formatHours(ageMin)}.`,
+      agentName: agents[0]?.name ?? "Agent",
+      agentId: agents[0]?.id ?? "",
+      ageMin,
+      severity: overSla ? "high" : "medium",
+      cta: { label: "Open booking", to: "/dashboard/bookings" },
+    });
+  });
+
+  // 4. Paused agents — operational gap the owner created
   for (const a of agents.filter((x) => x.status === "paused")) {
     items.push({
       id: `paused-${a.id}`,
@@ -220,6 +247,12 @@ export function getAttentionQueue(slaMinutes: number): AttentionItem[] {
 
 function sevWeight(s: AttentionItem["severity"]) {
   return s === "high" ? 3 : s === "medium" ? 2 : 1;
+}
+
+function formatHours(min: number): string {
+  if (min < 60) return `${min}m`;
+  const h = Math.round(min / 60);
+  return `${h}h`;
 }
 
 // ---------------------------------------------------------------------------

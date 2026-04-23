@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Search } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 export const SHORTCUTS_OPEN_EVENT = "isola:shortcuts-open";
 export const NAV_MODE_EVENT = "isola:nav-mode";
@@ -50,12 +52,30 @@ const GROUPS: Group[] = [
 
 export default function ShortcutsOverlay() {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     const handler = () => setOpen((v) => !v);
     window.addEventListener(SHORTCUTS_OPEN_EVENT, handler);
     return () => window.removeEventListener(SHORTCUTS_OPEN_EVENT, handler);
   }, []);
+
+  // Reset the filter every time the sheet closes so the next open is a clean slate.
+  useEffect(() => {
+    if (!open) setQuery("");
+  }, [open]);
+
+  const filteredGroups = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return GROUPS;
+    return GROUPS.map((g) => ({
+      ...g,
+      rows: g.rows.filter((s) => {
+        const haystack = `${g.title} ${s.description} ${s.keys.join(" ")}`.toLowerCase();
+        return haystack.includes(q);
+      }),
+    })).filter((g) => g.rows.length > 0);
+  }, [query]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -69,8 +89,24 @@ export default function ShortcutsOverlay() {
           Move at the speed of thought
         </div>
 
+        <div className="relative mt-4">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/60" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search shortcuts…"
+            aria-label="Filter shortcuts"
+            className="h-9 border-border/40 bg-background/40 pl-8 text-sm placeholder:text-muted-foreground/60"
+          />
+        </div>
+
         <div className="-mx-1 mt-4 flex-1 space-y-5 overflow-y-auto px-1 sm:mt-5">
-          {GROUPS.map((g) => (
+          {filteredGroups.length === 0 ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              No shortcuts match “{query}”.
+            </div>
+          ) : null}
+          {filteredGroups.map((g) => (
             <section key={g.title}>
               <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
                 {g.title}

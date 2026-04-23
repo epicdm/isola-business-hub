@@ -12,7 +12,7 @@ import {
 // Mock home-data BEFORE importing the component so the module-level binding
 // inside SystemStatusBar picks up our controlled events list.
 const getAllActivityMock = vi.fn();
-const getAttentionQueueMock = vi.fn(() => []);
+const getAttentionQueueMock = vi.fn<(...args: unknown[]) => unknown[]>(() => []);
 vi.mock("@/lib/home-data", () => ({
   getAllActivity: (...args: unknown[]) => getAllActivityMock(...args),
   getAttentionQueue: (...args: unknown[]) => getAttentionQueueMock(...args),

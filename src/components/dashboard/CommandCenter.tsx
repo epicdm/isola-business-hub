@@ -30,7 +30,8 @@ type Props = {
   agent: Agent;
   activity: AgentActivityEntry[];
   pendingDrafts: number;
-  escalations: number;
+  /** Open escalations with deadlines — drives the live countdown UI. */
+  escalationItems: EscalationItem[];
   onReviewDrafts?: () => void;
   onJumpEscalations?: () => void;
 };
@@ -49,10 +50,26 @@ export default function CommandCenter({
   agent,
   activity,
   pendingDrafts,
-  escalations,
+  escalationItems,
   onReviewDrafts,
   onJumpEscalations,
 }: Props) {
+  const escalations = escalationItems.length;
+
+  // Live "now" tick — re-renders every 30s so countdowns stay accurate
+  // without wasting frames. The Countdown subcomponent reads this prop.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Soonest-due first — frames the urgency for the operator.
+  const sortedEsc = [...escalationItems].sort((a, b) => a.deadlineAt - b.deadlineAt);
+  const soonest = sortedEsc[0];
+  const soonestRemaining = soonest ? soonest.deadlineAt - now : 0;
+  const dueWithinHour = sortedEsc.filter((e) => e.deadlineAt - now <= 60 * 60_000).length;
+
   // ---- 24h slice -----------------------------------------------------------
   const last24 = activity.slice(0, 24);
   const messages = last24.length;

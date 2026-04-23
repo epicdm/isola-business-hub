@@ -133,6 +133,7 @@ export default function ShortcutsOverlay() {
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setActiveIndex((i) => (i + 1) % flatRowsCount);
+      focusInput();
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setActiveIndex((i) => (i - 1 + flatRowsCount) % flatRowsCount);

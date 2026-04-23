@@ -148,6 +148,20 @@ export default function CommandPalette() {
           </CommandGroup>
         )}
 
+        {/* Example prompts — always available so the user can try Ema in one click. */}
+        <CommandGroup heading={trimmed.length > 0 ? "Try asking Ema" : "Ask Ema · examples"}>
+          {EXAMPLE_PROMPTS.map((p) => (
+            <PaletteItem
+              key={`example-${p}`}
+              value={`example-${p}`}
+              onSelect={() => askEma(p)}
+              icon={<Sparkles className="h-4 w-4 text-ema/70" />}
+              label={p}
+              shortcut={<CornerDownLeft className="h-3 w-3" />}
+            />
+          ))}
+        </CommandGroup>
+
         <CommandGroup heading="Jump to">
           {NAV_TARGETS.map((t) => {
             const Icon = t.icon;

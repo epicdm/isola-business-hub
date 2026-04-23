@@ -233,7 +233,7 @@ export default function ShortcutsOverlay() {
         </div>
 
         <div className="mt-4 shrink-0 border-t border-border/40 pt-3 text-[11px] text-muted-foreground">
-          <span className="hidden sm:inline">↑↓ navigate · Enter close · </span>
+          <span className="hidden sm:inline">↑↓ navigate · Enter / Esc close · </span>
           Tip: shortcuts are disabled while you're typing in an input.
         </div>
       </DialogContent>

@@ -57,6 +57,40 @@ export default function ShortcutsOverlay() {
   const [activeIndex, setActiveIndex] = useState(0);
   const rowRefs = useRef<Array<HTMLLIElement | null>>([]);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  // Remember whatever was focused before the overlay opened so we can hand
+  // focus back when it closes — keeps keyboard users anchored to where they
+  // were (e.g. a button in the header) instead of dumping them on <body>.
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      previouslyFocusedRef.current =
+        (typeof document !== "undefined" ? (document.activeElement as HTMLElement | null) : null) ??
+        null;
+      return;
+    }
+    // On close, restore focus to the saved element if it's still in the DOM
+    // and focusable. Defer to the next frame so Radix finishes its own
+    // focus-management teardown before we override it.
+    const target = previouslyFocusedRef.current;
+    if (!target) return;
+    const restore = () => {
+      if (typeof document !== "undefined" && document.contains(target)) {
+        try {
+          target.focus({ preventScroll: true });
+        } catch {
+          // Element may have become unfocusable between open and close.
+        }
+      }
+    };
+    const raf =
+      typeof window !== "undefined" ? window.requestAnimationFrame(restore) : null;
+    return () => {
+      if (raf !== null && typeof window !== "undefined") {
+        window.cancelAnimationFrame(raf);
+      }
+    };
+  }, [open]);
 
   // Place the cursor at the end of the existing query (preserved across opens)
   // so the user can keep typing without re-selecting text.

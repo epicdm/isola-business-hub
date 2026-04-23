@@ -167,6 +167,10 @@ export type AttentionItem = {
   kind: AttentionItemKind;
   title: string;
   why: string;
+  /** Concrete consequence if ignored — drives owner judgment. */
+  riskIfIgnored: string;
+  /** Business area affected: Reservations, VIP, Revenue, Knowledge, Operations. */
+  area: string;
   agentName: string;
   agentId: string;
   ageMin: number;
@@ -187,11 +191,18 @@ export function getAttentionQueue(slaMinutes: number): AttentionItem[] {
   for (const c of conversations.filter((x) => x.status === "escalated")) {
     const ageMin = parseAgo(c.time);
     const overSla = ageMin >= slaMinutes;
+    const isVip = /vip|complaint|refund|manager/i.test(c.preview);
     items.push({
       id: `esc-${c.id}`,
       kind: "escalation",
       title: `${c.customer} — needs human reply`,
       why: c.preview,
+      riskIfIgnored: overSla
+        ? "SLA already breached — high churn risk on next reply"
+        : isVip
+          ? "Repeat-customer dissatisfaction; reputation exposure"
+          : "Customer disengagement; likely lost conversation",
+      area: isVip ? "VIP" : "Reservations",
       agentName: agents[0]?.name ?? "Agent",
       agentId: agents[0]?.id ?? "",
       ageMin,
@@ -209,6 +220,8 @@ export function getAttentionQueue(slaMinutes: number): AttentionItem[] {
         kind: "draft",
         title: `Approve draft to ${d.customerName}`,
         why: d.customerMessage,
+        riskIfIgnored: `Customer waiting on ${a.name}'s reply — blocking next interaction`,
+        area: "Approvals",
         agentName: a.name,
         agentId: a.id,
         ageMin,
@@ -223,11 +236,9 @@ export function getAttentionQueue(slaMinutes: number): AttentionItem[] {
   }
 
   // 3. Overdue follow-ups — pending bookings older than 2h still awaiting
-  //    a deposit, owner approval, or other manual nudge. These are the
-  //    booking-flow items that quietly slip if no one chases them.
+  //    a deposit, owner approval, or other manual nudge.
   const FOLLOW_UP_AGE_MIN = 120;
   const pendingBookings = bookings.filter((b) => b.status === "pending");
-  // Mock-data ages for follow-ups (deterministic so the queue is stable).
   const ageBuckets = [180, 240, 360, 480, 720];
   pendingBookings.forEach((b, idx) => {
     const ageMin = ageBuckets[idx % ageBuckets.length];
@@ -239,6 +250,8 @@ export function getAttentionQueue(slaMinutes: number): AttentionItem[] {
       kind: "follow_up",
       title: `Chase ${b.guest} — ${reason.toLowerCase()}`,
       why: `Booking for ${b.party} on ${b.date} ${b.time} via ${labelForChannel(b.channel)} — no movement in ${formatHours(ageMin)}.`,
+      riskIfIgnored: `Likely no-show — ~EC$${AVG_TICKET_XCD * b.party} of revenue at risk`,
+      area: "Revenue",
       agentName: agents[0]?.name ?? "Agent",
       agentId: agents[0]?.id ?? "",
       ageMin,
@@ -254,6 +267,8 @@ export function getAttentionQueue(slaMinutes: number): AttentionItem[] {
       kind: "agent_paused",
       title: `${a.name} is paused`,
       why: a.standupSummary ?? "Off duty — no replies will go out.",
+      riskIfIgnored: `${a.templateLabel} channel is silent — incoming messages will queue up`,
+      area: "Operations",
       agentName: a.name,
       agentId: a.id,
       ageMin: 60 * 6,
@@ -266,7 +281,7 @@ export function getAttentionQueue(slaMinutes: number): AttentionItem[] {
     });
   }
 
-  // 4. Top recurring knowledge gaps (highest askedCount, surface 1)
+  // 5. Top recurring knowledge gaps (highest askedCount, surface 1)
   const allGaps = agents.flatMap((a) =>
     (a.knowledgeGaps ?? []).map((g) => ({ ...g, agent: a })),
   );
@@ -277,6 +292,8 @@ export function getAttentionQueue(slaMinutes: number): AttentionItem[] {
       kind: "knowledge_gap",
       title: `Asked ${topGap.askedCount}× this week — no answer`,
       why: `"${topGap.question}"`,
+      riskIfIgnored: `${topGap.askedCount} customers got an "I don't know" — eroding trust`,
+      area: "Knowledge",
       agentName: topGap.agent.name,
       agentId: topGap.agent.id,
       ageMin: parseAgo(topGap.lastAsked),

@@ -235,9 +235,23 @@ export default function AgentWorkspacePage() {
     return [...escalated, ...others].slice(0, 6);
   }, []);
 
-  // Derive escalation items with a 1h SLA deadline. Parse the conv's relative
-  // time string ("44m ago", "2h ago") into elapsed minutes, then deadline =
-  // escalatedAt + 60min. Computed once on mount so the timer is stable.
+  // Per-business escalation SLA in minutes (configured under Settings → Agent
+  // Personality). Subscribed so the countdown updates immediately when the
+  // owner changes it without a hard refresh.
+  const [slaMinutes, setSlaMinutes] = useState<number>(() => readSlaMinutes());
+  useEffect(() => {
+    const sync = () => setSlaMinutes(readSlaMinutes());
+    window.addEventListener("isola:sla-changed", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("isola:sla-changed", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+
+  // Derive escalation items with the configured SLA deadline. Parse the
+  // conv's relative time string ("44m ago", "2h ago") into elapsed minutes,
+  // then deadline = escalatedAt + slaMinutes. Recomputes when SLA changes.
   const escalationItems = useMemo(() => {
     const parseElapsedMin = (t: string): number => {
       const m = t.match(/(\d+)\s*m/);
@@ -255,10 +269,10 @@ export default function AgentWorkspacePage() {
         return {
           id: c.id,
           customer: c.customer,
-          deadlineAt: escalatedAt + 60 * 60_000,
+          deadlineAt: escalatedAt + slaMinutes * 60_000,
         };
       });
-  }, []);
+  }, [slaMinutes]);
 
   const scrollToDrafts = () => {
     draftsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });

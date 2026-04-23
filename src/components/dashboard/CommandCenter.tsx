@@ -348,7 +348,19 @@ function TrackCard({
         >
           <Icon className="h-3 w-3" /> {eyebrow}
         </span>
-        <span className={cn("text-[10px] font-medium uppercase tracking-[0.14em]", styles.accentText)}>
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.14em]",
+            styles.accentText,
+            pulse && "animate-pulse",
+          )}
+        >
+          {pulse && (
+            <span className="relative inline-flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ema/70" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-ema" />
+            </span>
+          )}
           {accent}
         </span>
       </div>

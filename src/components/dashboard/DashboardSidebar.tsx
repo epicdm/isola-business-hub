@@ -37,6 +37,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { openCommandPalette } from "@/components/system/CommandPalette";
 import AboutModal from "@/components/system/AboutModal";
+import { openShortcutsOverlay } from "@/components/system/ShortcutsOverlay";
+import { clearArrivalFlag } from "@/components/system/ArrivalSequence";
 import { DND_EVENT, readDnd, toggleDnd } from "@/lib/system-flags";
 
 const MOCK_MODE_KEY = "isola.mockMode";
@@ -200,15 +202,20 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
                 <CommandIcon className="h-4 w-4" /> Command palette
                 <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() => {
-                  toast("Keyboard shortcuts", {
-                    description: "Coming soon — ⌘K for the command palette in the meantime.",
-                  });
-                }}
-              >
+              <DropdownMenuItem onSelect={() => openShortcutsOverlay()}>
                 <Keyboard className="h-4 w-4" /> Keyboard shortcuts
                 <DropdownMenuShortcut>?</DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => {
+                  clearArrivalFlag();
+                  toast("Arrival sequence reset", {
+                    description: "Reloading the dashboard so it can play again.",
+                  });
+                  setTimeout(() => window.location.reload(), 600);
+                }}
+              >
+                <ActivityIcon className="h-4 w-4" /> Replay arrival
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => setAboutOpen(true)}>

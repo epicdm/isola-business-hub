@@ -19,6 +19,8 @@ import {
   Bot,
   History,
   CornerDownLeft,
+  Sunrise,
+  Inbox as InboxIcon,
 } from "lucide-react";
 import {
   CommandDialog,

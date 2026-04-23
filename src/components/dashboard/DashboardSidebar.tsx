@@ -113,7 +113,7 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
     <aside className="hidden w-64 shrink-0 border-r border-sidebar-border bg-sidebar lg:block">
       <div className="sticky top-0 flex h-screen flex-col">
         <div className="flex h-16 items-center border-b border-sidebar-border px-5">
-          <a href="/dashboard" className="flex items-center">
+          <a href="/dashboard/home" className="flex items-center">
             <IsolaWordmark size={30} showSub />
           </a>
         </div>

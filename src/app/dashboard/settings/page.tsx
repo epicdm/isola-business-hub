@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/dialog";
 import { accountDefaults, tenantLabels as seedLabels, labelPalette, labelColorClasses, type LabelDef, type LabelColor } from "@/lib/mock-data";
 import { clearProfile, readProfile } from "@/lib/profile";
+import { readSlaMinutes, saveSlaMinutes, SLA_PRESETS, DEFAULT_SLA_MINUTES } from "@/lib/escalation-sla";
 
 const verticals = ["Restaurant", "Hotel", "Clinic", "Tour operator", "Retail", "Other"];
 const TONE_LABELS = ["Formal", "Balanced", "Casual"];

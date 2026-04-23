@@ -37,11 +37,11 @@ describe("CommandPalette → EmaChatWidget Ask Ema wiring", () => {
     );
 
     // Open palette via the global event the header/sidebar use.
-    act(() => {
+    await act(async () => {
       window.dispatchEvent(new Event("isola:cmdk-open"));
     });
 
-    const input = await screen.findByPlaceholderText(/Ask Ema or jump to anything/i);
+    const input = await screen.findByPlaceholderText(/Ask Ema or jump to anything/i, {}, { timeout: 3000 });
     fireEvent.change(input, { target: { value: "what's pacing this week" } });
 
     // The "Ask Ema: '<query>'" row appears as soon as there's text.

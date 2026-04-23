@@ -98,19 +98,20 @@ export default function ExecutiveHeader({
       <div className="mt-5 max-w-3xl">
         <p className="text-sm font-medium text-muted-foreground">{greeting}</p>
         <h1 className="mt-2 font-display text-2xl font-semibold leading-[1.15] tracking-tight sm:text-[34px]">
-          {headline}
+          {animate ? <TypeIn text={headline} /> : headline}
         </h1>
       </div>
 
       {/* System-state strip */}
       <div className="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border/40 bg-border/40 sm:grid-cols-4">
-        <Stat label="Conversations · 24h" value={stats.messages} tone="aqua" />
-        <Stat label="Bookings · 24h" value={stats.bookings} tone="primary" />
-        <Stat label="Auto-resolved" value={`${stats.autoPct}%`} tone="violet" />
+        <Stat label="Conversations · 24h" value={stats.messages} tone="aqua" animate={animate} />
+        <Stat label="Bookings · 24h" value={stats.bookings} tone="primary" animate={animate} />
+        <Stat label="Auto-resolved" value={stats.autoPct} suffix="%" tone="violet" animate={animate} />
         <Stat
           label="Needs you"
           value={stats.needsYou}
           tone={stats.needsYou > 0 ? "ema" : "muted"}
+          animate={animate}
         />
       </div>
     </motion.header>
@@ -120,11 +121,15 @@ export default function ExecutiveHeader({
 function Stat({
   label,
   value,
+  suffix,
   tone,
+  animate,
 }: {
   label: string;
-  value: number | string;
+  value: number;
+  suffix?: string;
   tone: "aqua" | "primary" | "violet" | "ema" | "muted";
+  animate: boolean;
 }) {
   const toneClass =
     tone === "aqua"
@@ -137,6 +142,8 @@ function Stat({
             ? "text-ema"
             : "text-muted-foreground";
 
+  const display = useCountUp(value, animate ? 600 : 0);
+
   return (
     <div className="bg-card/70 px-5 py-4">
       <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -145,8 +152,65 @@ function Stat({
       <div
         className={`mt-1 font-display text-2xl font-semibold leading-none tabular-nums ${toneClass}`}
       >
-        {value}
+        {display}
+        {suffix ?? ""}
       </div>
     </div>
+  );
+}
+
+/**
+ * Count up from 0 to `target` over `durationMs` using an ease-out curve.
+ * When `durationMs` is 0 (post-arrival visits) we render the final value
+ * immediately so the page feels snappy on every navigation.
+ */
+function useCountUp(target: number, durationMs: number): number {
+  const [v, setV] = useState(durationMs === 0 ? target : 0);
+  useEffect(() => {
+    if (durationMs === 0) {
+      setV(target);
+      return;
+    }
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / durationMs);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setV(Math.round(target * eased));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, durationMs]);
+  return v;
+}
+
+/**
+ * Type-in effect for the headline. Reveals one character every ~30ms after
+ * a short initial delay so the orb intro can land first.
+ */
+function TypeIn({ text }: { text: string }) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    setN(0);
+    const start = performance.now() + 200;
+    let raf = 0;
+    const tick = (now: number) => {
+      if (now < start) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+      const i = Math.min(text.length, Math.floor((now - start) / 28));
+      setN(i);
+      if (i < text.length) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [text]);
+  return (
+    <>
+      {text.slice(0, n)}
+      <span className="ml-0.5 inline-block h-[0.9em] w-[2px] -mb-1 animate-pulse bg-foreground/60 align-baseline" />
+    </>
   );
 }

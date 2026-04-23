@@ -336,6 +336,15 @@ export default function AgentWorkspacePage() {
           }}
         />
 
+        <CommandCenter
+          agent={agent}
+          activity={activity}
+          pendingDrafts={drafts.length}
+          escalations={agentConvs.filter((c) => c.status === "escalated").length}
+          onReviewDrafts={scrollToDrafts}
+          onJumpEscalations={() => navigate({ to: "/dashboard/inbox" })}
+        />
+
         <Tabs defaultValue="inbox">
           <TabsList className="flex w-full flex-wrap justify-start gap-1 bg-muted/40 p-1">
             <TabsTrigger value="inbox" className="gap-1.5">

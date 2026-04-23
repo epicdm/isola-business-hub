@@ -58,6 +58,18 @@ const NAV_TARGETS: NavTarget[] = [
   { label: "Settings", path: "/dashboard/settings", icon: SettingsIcon, keywords: "preferences" },
 ];
 
+// Curated example prompts — give the user a one-click on-ramp to Ema instead
+// of staring at an empty input. Order is intentional: highest-signal daily
+// asks first, then weekly review, then ops/admin.
+const EXAMPLE_PROMPTS: string[] = [
+  "Summarize today's inquiries",
+  "What needs my attention right now?",
+  "Draft a reply to the latest escalation",
+  "How are bookings pacing this week?",
+  "Which agents are underperforming?",
+  "Send a follow-up to lapsed regulars",
+];
+
 export default function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");

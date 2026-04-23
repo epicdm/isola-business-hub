@@ -1,11 +1,12 @@
 "use client";
 
-import { Search, Users2, User } from "lucide-react";
+import { Search, Users2, User, Command as CommandIcon } from "lucide-react";
 import AlertTray from "./AlertTray";
 import { useEffect, useState } from "react";
 import { useLocation } from "@tanstack/react-router";
 import { accountDefaults, agents } from "@/lib/mock-data";
 import { getInitials, readProfile } from "@/lib/profile";
+import { openCommandPalette } from "@/components/system/CommandPalette";
 
 const MOCK_MODE_KEY = "isola.mockMode";
 
@@ -50,8 +51,12 @@ export default function DashboardHeader() {
     window.location.href = "/dashboard";
   };
 
+  // When the page title takes over the search slot, give the user a separate
+  // way to invoke the command palette so it's reachable without remembering ⌘K.
+  const showInlineCmdK = !!pageTitle;
+
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border/40 bg-background/70 px-5 backdrop-blur-xl lg:px-7">
+    <header className="sticky top-8 z-30 flex h-16 items-center gap-3 border-b border-border/40 bg-background/70 px-5 backdrop-blur-xl lg:px-7">
       {pageTitle ? (
         <div className="min-w-0 flex-1">
           <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -62,19 +67,33 @@ export default function DashboardHeader() {
           </h1>
         </div>
       ) : (
-        <div className="relative max-w-md flex-1">
+        <button
+          type="button"
+          onClick={openCommandPalette}
+          className="group relative max-w-md flex-1 cursor-pointer text-left"
+          aria-label="Open command palette"
+        >
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="search"
-            placeholder="Search conversations, contacts, invoices…"
-            className="h-10 w-full rounded-full border border-border/50 bg-card/40 pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
-          />
+          <div className="flex h-10 w-full items-center rounded-full border border-border/50 bg-card/40 pl-10 pr-4 text-sm text-muted-foreground transition-colors group-hover:border-primary/40 group-hover:text-foreground">
+            Search conversations, contacts, invoices…
+          </div>
           <kbd className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded border border-border/60 bg-background/40 px-1.5 py-0.5 text-[10px] text-muted-foreground sm:inline-block">
             ⌘K
           </kbd>
-        </div>
+        </button>
       )}
       <div className="ml-auto flex items-center gap-2.5">
+        {showInlineCmdK && (
+          <button
+            type="button"
+            onClick={openCommandPalette}
+            title="Open command palette (⌘K)"
+            className="hidden items-center gap-1.5 rounded-full border border-border/60 bg-card/40 px-3 py-1.5 text-[10px] uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:border-primary/40 hover:bg-accent hover:text-foreground sm:inline-flex"
+          >
+            <CommandIcon className="h-3 w-3" />
+            <span className="tabular-nums normal-case tracking-normal">⌘K</span>
+          </button>
+        )}
         <button
           type="button"
           onClick={flipMode}

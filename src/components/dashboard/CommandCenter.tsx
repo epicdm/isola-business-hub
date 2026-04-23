@@ -32,6 +32,8 @@ type Props = {
   pendingDrafts: number;
   /** Open escalations with deadlines — drives the live countdown UI. */
   escalationItems: EscalationItem[];
+  /** Configured per-business SLA in minutes. Surfaced in the accent label. */
+  slaMinutes: number;
   onReviewDrafts?: () => void;
   onJumpEscalations?: () => void;
 };

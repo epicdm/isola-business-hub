@@ -9,6 +9,7 @@
 
 import {
   agents,
+  bookings,
   conversations,
   getAgentActivity,
   type Agent,

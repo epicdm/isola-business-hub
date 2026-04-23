@@ -381,6 +381,7 @@ export default function AgentWorkspacePage() {
           activity={activity}
           pendingDrafts={drafts.length}
           escalationItems={escalationItems}
+          slaMinutes={slaMinutes}
           onReviewDrafts={scrollToDrafts}
           onJumpEscalations={() => navigate({ to: "/dashboard/inbox" })}
         />

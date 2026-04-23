@@ -60,6 +60,7 @@ import {
   saveAgentSettings,
   isAgentApiConfigured,
 } from "@/lib/agent-api";
+import { readSlaMinutes } from "@/lib/escalation-sla";
 import { cn } from "@/lib/utils";
 
 const channelIcon: Record<AgentChannel, typeof Phone> = {

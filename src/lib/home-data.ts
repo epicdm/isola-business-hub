@@ -480,11 +480,13 @@ export function getEmaBriefing(
 }
 
 function timeGreeting(): string {
+  // Mirrors the buckets in src/hooks/use-time-of-day.ts so the greeting and
+  // the ambient hero tint always agree on which "part of day" it is.
   const h = new Date().getHours();
-  if (h < 5) return "Still up";
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
+  if (h >= 5 && h < 11) return "Good morning";
+  if (h >= 11 && h < 17) return "Good afternoon";
+  if (h >= 17 && h < 21) return "Good evening";
+  return "Working late";
 }
 
 export function labelForChannel(c: AgentChannel | Channel): string {

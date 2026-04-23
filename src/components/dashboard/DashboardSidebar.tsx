@@ -37,6 +37,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { openCommandPalette } from "@/components/system/CommandPalette";
 import AboutModal from "@/components/system/AboutModal";
+import { openShortcutsOverlay } from "@/components/system/ShortcutsOverlay";
+import { clearArrivalFlag } from "@/components/system/ArrivalSequence";
 import { DND_EVENT, readDnd, toggleDnd } from "@/lib/system-flags";
 
 const MOCK_MODE_KEY = "isola.mockMode";
@@ -200,15 +202,20 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
                 <CommandIcon className="h-4 w-4" /> Command palette
                 <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() => {
-                  toast("Keyboard shortcuts", {
-                    description: "Coming soon — ⌘K for the command palette in the meantime.",
-                  });
-                }}
-              >
+              <DropdownMenuItem onSelect={() => openShortcutsOverlay()}>
                 <Keyboard className="h-4 w-4" /> Keyboard shortcuts
                 <DropdownMenuShortcut>?</DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => {
+                  clearArrivalFlag();
+                  toast("Arrival sequence reset", {
+                    description: "Reloading the dashboard so it can play again.",
+                  });
+                  setTimeout(() => window.location.reload(), 600);
+                }}
+              >
+                <ActivityIcon className="h-4 w-4" /> Replay arrival
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => setAboutOpen(true)}>
@@ -266,6 +273,27 @@ export default function DashboardSidebar({ currentPath = "/dashboard" }: { curre
           ))}
         </nav>
         <div className="space-y-3 border-t border-sidebar-border p-4">
+          {/* Operational status strip — tiny "is the platform itself healthy" signal,
+              distinct from the per-agent dots and the SLA/escalation status bar. */}
+          <button
+            type="button"
+            onClick={() => setAboutOpen(true)}
+            className="flex w-full items-center justify-between rounded-md border border-sidebar-border/40 bg-sidebar-accent/15 px-2.5 py-1.5 text-left transition-colors hover:bg-sidebar-accent/35"
+            title="System info"
+          >
+            <span className="flex items-center gap-2">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inset-0 animate-ping rounded-full bg-success/70 opacity-60" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/80">
+                Operational
+              </span>
+            </span>
+            <span className="text-[10px] tabular-nums text-muted-foreground">
+              28d · 99.98%
+            </span>
+          </button>
           <div className="flex items-center gap-3 rounded-xl bg-sidebar-accent/30 p-2.5">
             <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-gradient-aurora text-[11px] font-semibold text-foreground">
               <span className="absolute inset-[2px] flex items-center justify-center rounded-full bg-sidebar text-foreground">

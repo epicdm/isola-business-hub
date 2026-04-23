@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "@tanstack/react-router";
 import {
@@ -11,10 +12,19 @@ import {
   CalendarCheck,
   Clock,
   Zap,
+  Timer,
 } from "lucide-react";
 import Sparkline from "./Sparkline";
 import { cn } from "@/lib/utils";
 import type { Agent, AgentActivityEntry } from "@/lib/mock-data";
+
+/** A single escalated conversation with an SLA deadline (epoch ms). */
+export type EscalationItem = {
+  id: string;
+  customer: string;
+  /** Epoch ms — when the 1h reply window expires. */
+  deadlineAt: number;
+};
 
 type Props = {
   agent: Agent;

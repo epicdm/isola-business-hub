@@ -207,25 +207,11 @@ function AmbientTicker({ dnd }: { dnd: boolean }) {
   }, [hovering, events.length]);
 
   const cur = events[idx];
-  const agentNameById = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const a of agents) {
-      for (const e of a.id ? [] : []) void e; // noop
-    }
-    // Build agent → first activity match. Cheaper: just grab the agent whose
-    // activity feed contains the conversationId. For ticker scope we take the
-    // first agent that owns this entry by id prefix lookup.
-    return map;
-  }, []);
 
-  // Resolve agent name by re-scanning agents (cheap, ≤ 5 events).
+  // Activity ids look like "{agentId}-act-{n}" — split to recover the agent.
   const agentNameFor = (entryId: string) => {
-    for (const a of agents) {
-      // entry ids in mock-data are formed deterministically — checking the
-      // raw text isn't reliable, so fall back to first agent.
-      if (a.id && entryId.includes(a.id)) return a.name;
-    }
-    return agents[0]?.name ?? "agent";
+    const agentId = entryId.split("-act-")[0];
+    return agents.find((a) => a.id === agentId)?.name ?? agents[0]?.name ?? "agent";
   };
 
   if (dnd || events.length === 0 || !cur) {

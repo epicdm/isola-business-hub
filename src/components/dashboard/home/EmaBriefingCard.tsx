@@ -109,7 +109,6 @@ export default function EmaBriefingCard({ briefing }: Props) {
             {briefing.recommendation.cta && (
               <Link
                 to={briefing.recommendation.cta.to}
-                search={{ from: "ema-recommendation" } as never}
                 className="hidden shrink-0 items-center gap-1.5 self-center rounded-full bg-ema px-3.5 py-2 text-xs font-semibold text-ema-foreground transition-transform hover:-translate-y-0.5 sm:inline-flex"
               >
                 {briefing.recommendation.cta.label}
@@ -120,7 +119,6 @@ export default function EmaBriefingCard({ briefing }: Props) {
           {briefing.recommendation.cta && (
             <Link
               to={briefing.recommendation.cta.to}
-              search={{ from: "ema-recommendation" } as never}
               className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-ema px-3.5 py-2 text-xs font-semibold text-ema-foreground transition-transform hover:-translate-y-0.5 sm:hidden"
             >
               {briefing.recommendation.cta.label}
@@ -188,7 +186,6 @@ function InsightBlock({
       {insight.cta && (
         <Link
           to={insight.cta.to}
-          search={{ from: tone === "success" ? "ema-win" : "ema-risk" } as never}
           className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-foreground/80 hover:text-foreground hover:underline"
         >
           {insight.cta.label} <ArrowRight className="h-2.5 w-2.5" />

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 export const SHORTCUTS_OPEN_EVENT = "isola:shortcuts-open";
 export const NAV_MODE_EVENT = "isola:nav-mode";
@@ -53,6 +54,8 @@ const GROUPS: Group[] = [
 export default function ShortcutsOverlay() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [activeIndex, setActiveIndex] = useState(0);
+  const rowRefs = useRef<Array<HTMLLIElement | null>>([]);
 
   useEffect(() => {
     const handler = () => setOpen((v) => !v);
@@ -62,7 +65,10 @@ export default function ShortcutsOverlay() {
 
   // Reset the filter every time the sheet closes so the next open is a clean slate.
   useEffect(() => {
-    if (!open) setQuery("");
+    if (!open) {
+      setQuery("");
+      setActiveIndex(0);
+    }
   }, [open]);
 
   const filteredGroups = useMemo(() => {
@@ -77,9 +83,59 @@ export default function ShortcutsOverlay() {
     })).filter((g) => g.rows.length > 0);
   }, [query]);
 
+  // Flat list mirrors visual order, used for arrow-key navigation.
+  const flatRowsCount = useMemo(
+    () => filteredGroups.reduce((n, g) => n + g.rows.length, 0),
+    [filteredGroups],
+  );
+
+  // Clamp + reset the active index when results change.
+  useEffect(() => {
+    setActiveIndex((i) => {
+      if (flatRowsCount === 0) return 0;
+      if (i > flatRowsCount - 1) return flatRowsCount - 1;
+      return i;
+    });
+  }, [flatRowsCount]);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [query]);
+
+  // Keep the highlighted row in view as the user arrows through results.
+  useEffect(() => {
+    rowRefs.current[activeIndex]?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (flatRowsCount === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((i) => (i + 1) % flatRowsCount);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) => (i - 1 + flatRowsCount) % flatRowsCount);
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      setActiveIndex(0);
+    } else if (e.key === "End") {
+      e.preventDefault();
+      setActiveIndex(flatRowsCount - 1);
+    } else if (e.key === "Enter") {
+      // Close the overlay so the user can actually press the shortcut they
+      // just looked up. The selection is informational, not actionable.
+      e.preventDefault();
+      setOpen(false);
+    }
+  };
+
+  // Visual index counter, incremented as we render rows in document order.
+  let flatIdx = -1;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
+        onKeyDown={handleKeyDown}
         className="flex max-h-[90vh] w-[calc(100vw-2rem)] max-w-[560px] flex-col gap-0 overflow-hidden border-border/40 bg-card p-4 shadow-float sm:p-6"
       >
         <DialogTitle className="pr-8 font-display text-base font-semibold">
@@ -96,11 +152,20 @@ export default function ShortcutsOverlay() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search shortcuts…"
             aria-label="Filter shortcuts"
+            aria-controls="shortcuts-listbox"
+            aria-activedescendant={
+              flatRowsCount > 0 ? `shortcut-row-${activeIndex}` : undefined
+            }
             className="h-9 border-border/40 bg-background/40 pl-8 text-sm placeholder:text-muted-foreground/60"
           />
         </div>
 
-        <div className="-mx-1 mt-4 flex-1 space-y-5 overflow-y-auto px-1 sm:mt-5">
+        <div
+          id="shortcuts-listbox"
+          role="listbox"
+          aria-label="Shortcuts"
+          className="-mx-1 mt-4 flex-1 space-y-5 overflow-y-auto px-1 sm:mt-5"
+        >
           {filteredGroups.length === 0 ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
               No shortcuts match “{query}”.
@@ -111,40 +176,58 @@ export default function ShortcutsOverlay() {
               <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
                 {g.title}
               </div>
-              <ul className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-[auto_1fr]">
-                {g.rows.map((s) => (
-                  <li
-                    key={s.description}
-                    className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm sm:contents"
-                  >
-                    <span className="flex shrink-0 items-center gap-1">
-                      {s.keys.map((k, i) =>
-                        k === "then" ? (
-                          <span
-                            key={i}
-                            className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground/70"
-                          >
-                            then
-                          </span>
-                        ) : (
-                          <kbd
-                            key={i}
-                            className="rounded border border-border/60 bg-background/40 px-1.5 py-0.5 text-[11px] font-mono text-foreground/80"
-                          >
-                            {k}
-                          </kbd>
-                        ),
+              <ul className="flex flex-col gap-1">
+                {g.rows.map((s) => {
+                  flatIdx += 1;
+                  const idx = flatIdx;
+                  const isActive = idx === activeIndex;
+                  return (
+                    <li
+                      key={s.description}
+                      ref={(el) => {
+                        rowRefs.current[idx] = el;
+                      }}
+                      id={`shortcut-row-${idx}`}
+                      role="option"
+                      aria-selected={isActive}
+                      onMouseEnter={() => setActiveIndex(idx)}
+                      className={cn(
+                        "flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md px-2 py-1.5 text-sm transition-colors",
+                        isActive
+                          ? "bg-primary/10 ring-1 ring-inset ring-primary/30 text-foreground"
+                          : "text-foreground/80",
                       )}
-                    </span>
-                    <span className="text-foreground/80">{s.description}</span>
-                  </li>
-                ))}
+                    >
+                      <span className="flex shrink-0 items-center gap-1">
+                        {s.keys.map((k, i) =>
+                          k === "then" ? (
+                            <span
+                              key={i}
+                              className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground/70"
+                            >
+                              then
+                            </span>
+                          ) : (
+                            <kbd
+                              key={i}
+                              className="rounded border border-border/60 bg-background/40 px-1.5 py-0.5 text-[11px] font-mono text-foreground/80"
+                            >
+                              {k}
+                            </kbd>
+                          ),
+                        )}
+                      </span>
+                      <span>{s.description}</span>
+                    </li>
+                  );
+                })}
               </ul>
             </section>
           ))}
         </div>
 
         <div className="mt-4 shrink-0 border-t border-border/40 pt-3 text-[11px] text-muted-foreground">
+          <span className="hidden sm:inline">↑↓ navigate · Enter close · </span>
           Tip: shortcuts are disabled while you're typing in an input.
         </div>
       </DialogContent>

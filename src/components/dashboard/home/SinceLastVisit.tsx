@@ -7,9 +7,16 @@ import {
   Activity,
   Clock,
   Sparkles,
+  Info,
 } from "lucide-react";
-import type { SinceLastVisit as SinceLastVisitType } from "@/lib/home-data";
+import { REBASE_AFTER_MIN, type SinceLastVisit as SinceLastVisitType } from "@/lib/home-data";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type Props = {
   data: SinceLastVisitType;

@@ -47,37 +47,48 @@ export default function DashboardHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-xl lg:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border/40 bg-background/70 px-5 backdrop-blur-xl lg:px-7">
       {pageTitle ? (
         <div className="min-w-0 flex-1">
-          <h1 className="truncate font-display text-base font-semibold">{pageTitle}</h1>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            Workspace
+          </div>
+          <h1 className="mt-0.5 truncate font-display text-base font-semibold leading-tight">
+            {pageTitle}
+          </h1>
         </div>
       ) : (
-        <div className="relative flex-1 max-w-md">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <div className="relative max-w-md flex-1">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="search"
             placeholder="Search conversations, contacts, invoices…"
-            className="h-9 w-full rounded-md border border-border bg-background/60 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            className="h-10 w-full rounded-full border border-border/50 bg-card/40 pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
+          <kbd className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded border border-border/60 bg-background/40 px-1.5 py-0.5 text-[10px] text-muted-foreground sm:inline-block">
+            ⌘K
+          </kbd>
         </div>
       )}
-      <div className="ml-auto flex items-center gap-3">
+      <div className="ml-auto flex items-center gap-2.5">
         <button
           type="button"
           onClick={flipMode}
           title={`Demo: switch to ${mode === "solo" ? "team" : "solo"} view`}
-          className="hidden items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-1 text-[10px] uppercase tracking-wider text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:inline-flex"
+          className="hidden items-center gap-1.5 rounded-full border border-dashed border-border/60 px-3 py-1.5 text-[10px] uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:border-primary/40 hover:bg-accent hover:text-foreground sm:inline-flex"
         >
           {mode === "solo" ? <User className="h-3 w-3" /> : <Users2 className="h-3 w-3" />}
-          {mode === "solo" ? "Solo" : "Team"} mode
+          {mode === "solo" ? "Solo" : "Team"} view
         </button>
         <AlertTray />
-        <div
-          aria-label={contactName}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-xs font-semibold"
-        >
-          {initials}
+        <div className="relative">
+          <span className="absolute -inset-0.5 rounded-full bg-gradient-aurora opacity-60 blur-sm" />
+          <div
+            aria-label={contactName}
+            className="relative flex h-9 w-9 items-center justify-center rounded-full bg-card text-xs font-semibold ring-1 ring-border"
+          >
+            {initials}
+          </div>
         </div>
       </div>
     </header>

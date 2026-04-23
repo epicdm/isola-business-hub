@@ -3,13 +3,14 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
 import { z } from "zod";
-import { Sparkles, Loader2, Mail, Lock, User, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { saveProfile } from "@/lib/profile";
 import { toast } from "sonner";
+import { IsolaWordmark, EmaOrb } from "@/components/brand/IsolaBrand";
 
 type AuthVariant = "sign-in" | "sign-up" | "forgot-password" | "magic-link";
 
@@ -45,17 +46,14 @@ export default function AuthShell({ variant }: AuthShellProps) {
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <BackgroundDecor />
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6 lg:flex-row lg:gap-12">
-        <header className="mb-8 flex items-center justify-between lg:absolute lg:inset-x-6 lg:top-6 lg:mb-0">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary shadow-glow">
-              <Sparkles className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-display text-lg font-bold tracking-tight">Isola</span>
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6 lg:flex-row lg:gap-16">
+        <header className="mb-8 flex items-center justify-between lg:absolute lg:inset-x-6 lg:top-7 lg:mb-0">
+          <Link to="/" className="flex items-center">
+            <IsolaWordmark size={30} />
           </Link>
           <Link
             to="/"
-            className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            className="flex items-center gap-1.5 rounded-full border border-border/40 bg-card/40 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur transition-colors hover:bg-card hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> Back to site
           </Link>
@@ -608,17 +606,17 @@ function SidePanel({ variant }: { variant: AuthVariant }) {
     "sign-in": {
       kicker: "Welcome back",
       title: "Your Caribbean concierge is awake.",
-      body: "Inbox, bookings, contacts and Ema are all in sync. Pick up exactly where you left off.",
+      body: "Inbox, bookings, contacts and Ema are in sync. Pick up exactly where you left off.",
     },
     "sign-up": {
       kicker: "Start free for 14 days",
       title: "Reply on WhatsApp at island speed.",
-      body: "Bring your existing number. Ema handles 80% of routine questions so you can run the floor.",
+      body: "Bring your number. Ema handles 80% of routine questions so you can run the floor.",
     },
     "forgot-password": {
       kicker: "Quick recovery",
       title: "We'll have you back in two minutes.",
-      body: "Reset links expire after 1 hour for safety. You can keep all your existing chats and bookings.",
+      body: "Reset links expire after 1 hour. Your chats and bookings stay exactly as they were.",
     },
     "magic-link": {
       kicker: "Passwordless",
@@ -629,24 +627,33 @@ function SidePanel({ variant }: { variant: AuthVariant }) {
 
   return (
     <div className="relative w-full max-w-md">
-      <div className="absolute -inset-6 rounded-[2rem] bg-gradient-primary opacity-20 blur-3xl" />
-      <Card className="relative overflow-hidden border-border/40 bg-card/40 p-8 backdrop-blur-xl">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
-          {copy.kicker}
-        </span>
-        <h2 className="mt-3 font-display text-3xl font-bold leading-tight">{copy.title}</h2>
-        <p className="mt-3 text-sm text-muted-foreground">{copy.body}</p>
+      <div className="absolute -inset-8 rounded-[2.5rem] bg-gradient-aurora opacity-15 blur-3xl" />
 
-        <div className="mt-7 space-y-3">
-          <ChatBubble side="in" name="Asha" text="Hi! Do you have a table for 4 at 7pm tonight?" />
-          <ChatBubble side="out" name="Ema · Coalpot" text="We do — 7:00 by the window, under Asha. Want me to lock it in? 🌴" />
-          <ChatBubble side="in" name="Asha" text="Yes please!" />
-        </div>
+      <Card className="relative overflow-hidden border-border/40 bg-card/50 p-8 backdrop-blur-xl shadow-elegant grain">
+        {/* Ambient corner glow */}
+        <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-primary/20 blur-3xl" />
 
-        <div className="mt-7 grid grid-cols-3 gap-3 border-t border-border/40 pt-5 text-center">
-          <Stat value="80%" label="auto-handled" />
-          <Stat value="<2m" label="response time" />
-          <Stat value="14d" label="free trial" />
+        <div className="relative">
+          <div className="flex items-center gap-2.5">
+            <EmaOrb size={28} pulse={false} />
+            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-ema">
+              {copy.kicker}
+            </span>
+          </div>
+          <h2 className="mt-4 font-display text-3xl font-bold leading-[1.1]">{copy.title}</h2>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{copy.body}</p>
+
+          <div className="mt-7 space-y-2.5">
+            <ChatBubble side="in" name="Asha" text="Hi! Do you have a table for 4 at 7pm tonight?" />
+            <ChatBubble side="out" name="Ema · Coalpot" text="We do — 7:00 by the window, under Asha. Want me to lock it in? 🌴" />
+            <ChatBubble side="in" name="Asha" text="Yes please!" />
+          </div>
+
+          <div className="mt-7 grid grid-cols-3 gap-px overflow-hidden rounded-xl border border-border/40 bg-border/40 text-center">
+            <Stat value="80%" label="auto-handled" />
+            <Stat value="<2m" label="reply time" />
+            <Stat value="14d" label="free trial" />
+          </div>
         </div>
       </Card>
     </div>
@@ -673,9 +680,9 @@ function ChatBubble({ side, name, text }: { side: "in" | "out"; name: string; te
 
 function Stat({ value, label }: { value: string; label: string }) {
   return (
-    <div>
-      <div className="font-display text-xl font-bold text-primary">{value}</div>
-      <div className="mt-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+    <div className="bg-card/60 px-2 py-3">
+      <div className="font-display text-xl font-bold text-gradient-primary">{value}</div>
+      <div className="mt-0.5 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">{label}</div>
     </div>
   );
 }
@@ -683,16 +690,18 @@ function Stat({ value, label }: { value: string; label: string }) {
 function BackgroundDecor() {
   return (
     <>
-      <div className="pointer-events-none absolute -left-32 top-0 h-96 w-96 rounded-full bg-primary/15 blur-[120px]" />
-      <div className="pointer-events-none absolute -right-32 bottom-0 h-96 w-96 rounded-full bg-ema/10 blur-[120px]" />
+      <div className="pointer-events-none absolute -left-32 top-0 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[140px]" />
+      <div className="pointer-events-none absolute -right-32 bottom-0 h-[500px] w-[500px] rounded-full bg-ema/12 blur-[140px]" />
+      <div className="pointer-events-none absolute left-1/2 top-1/3 h-96 w-96 -translate-x-1/2 rounded-full bg-violet/8 blur-[140px]" />
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.04]"
         style={{
           backgroundImage:
             "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
-          backgroundSize: "28px 28px",
+          backgroundSize: "32px 32px",
         }}
       />
+      <div className="pointer-events-none absolute inset-0 grain opacity-100" />
     </>
   );
 }

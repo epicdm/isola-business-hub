@@ -31,26 +31,17 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Isola — Your AI business team on WhatsApp" },
-      {
-        name: "description",
-        content:
-          "24/7 coverage across WhatsApp, Instagram, Messenger, and voice. Plus Ema, your personal AI chief-of-staff. Built for Caribbean small businesses.",
-      },
       { name: "author", content: "Isola" },
       { property: "og:title", content: "Isola — Your AI business team on WhatsApp" },
-      {
-        property: "og:description",
-        content: "Built for Caribbean small businesses. Meet Ema, your AI chief-of-staff.",
-      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:site", content: "@isola_app" },
       { name: "twitter:title", content: "Isola — Your AI business team on WhatsApp" },
       { name: "description", content: "Isola Business Hub is a SaaS operating system for Caribbean small businesses, powered by AI." },
       { property: "og:description", content: "Isola Business Hub is a SaaS operating system for Caribbean small businesses, powered by AI." },
       { name: "twitter:description", content: "Isola Business Hub is a SaaS operating system for Caribbean small businesses, powered by AI." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/6bb42196-162c-4826-94a6-7ea14eae7dca/id-preview-4bf8702c--46aaf56b-ca98-4207-800b-7979d6d7f6d2.lovable.app-1776886834656.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/6bb42196-162c-4826-94a6-7ea14eae7dca/id-preview-4bf8702c--46aaf56b-ca98-4207-800b-7979d6d7f6d2.lovable.app-1776886834656.png" },
+      { property: "og:image", content: "https://isola.app/og-image.png" },
+      { name: "twitter:image", content: "https://isola.app/og-image.png" },
     ],
     links: [
       {
@@ -73,7 +64,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
         />
       </head>
       <body>

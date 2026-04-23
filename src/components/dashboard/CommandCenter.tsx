@@ -32,6 +32,8 @@ type Props = {
   pendingDrafts: number;
   /** Open escalations with deadlines — drives the live countdown UI. */
   escalationItems: EscalationItem[];
+  /** Configured per-business SLA in minutes. Surfaced in the accent label. */
+  slaMinutes: number;
   onReviewDrafts?: () => void;
   onJumpEscalations?: () => void;
 };
@@ -51,6 +53,7 @@ export default function CommandCenter({
   activity,
   pendingDrafts,
   escalationItems,
+  slaMinutes,
   onReviewDrafts,
   onJumpEscalations,
 }: Props) {
@@ -64,11 +67,17 @@ export default function CommandCenter({
     return () => clearInterval(id);
   }, []);
 
-  // Soonest-due first — frames the urgency for the operator.
+  // Soonest-due first — frames the urgency for the operator. Items "due soon"
+  // = within the configured SLA window itself (not a fixed hour) so the
+  // urgency tier scales with the business's reply-time policy.
   const sortedEsc = [...escalationItems].sort((a, b) => a.deadlineAt - b.deadlineAt);
   const soonest = sortedEsc[0];
   const soonestRemaining = soonest ? soonest.deadlineAt - now : 0;
-  const dueWithinHour = sortedEsc.filter((e) => e.deadlineAt - now <= 60 * 60_000).length;
+  const dueSoon = sortedEsc.filter(
+    (e) => e.deadlineAt - now <= slaMinutes * 60_000,
+  ).length;
+  const slaShort =
+    slaMinutes >= 60 && slaMinutes % 60 === 0 ? `${slaMinutes / 60}h` : `${slaMinutes}m`;
 
   // ---- 24h slice -----------------------------------------------------------
   const last24 = activity.slice(0, 24);
@@ -179,13 +188,13 @@ export default function CommandCenter({
           accent={
             escalations === 0
               ? "0 unresolved"
-              : dueWithinHour > 0
-                ? `${dueWithinHour} due < 1h`
-                : "1h SLA"
+              : dueSoon > 0
+                ? `${dueSoon} due < ${slaShort}`
+                : `${slaShort} SLA`
           }
           ctaLabel={escalations > 0 ? "Open" : undefined}
           onCta={onJumpEscalations}
-          pulse={soonest ? soonestRemaining <= 15 * 60_000 : false}
+          pulse={soonest ? soonestRemaining <= urgentThresholdMs(slaMinutes) : false}
         >
           {escalations === 0 ? (
             <p className="mt-3 text-xs text-muted-foreground">
@@ -193,27 +202,35 @@ export default function CommandCenter({
             </p>
           ) : (
             <ul className="mt-3 space-y-1.5">
-              {sortedEsc.slice(0, 3).map((e) => (
-                <li
-                  key={e.id}
-                  className="flex items-center gap-2 rounded-md border border-ema/15 bg-ema/5 px-2 py-1.5 text-xs"
-                >
-                  <Timer
-                    className={cn(
-                      "h-3 w-3 shrink-0",
-                      e.deadlineAt - now <= 0
-                        ? "text-destructive"
-                        : e.deadlineAt - now <= 15 * 60_000
-                          ? "text-ema"
-                          : "text-muted-foreground",
-                    )}
-                  />
-                  <span className="min-w-0 flex-1 truncate text-foreground/90">
-                    {e.customer}
-                  </span>
-                  <Countdown deadlineAt={e.deadlineAt} now={now} />
-                </li>
-              ))}
+              {sortedEsc.slice(0, 3).map((e) => {
+                const remaining = e.deadlineAt - now;
+                const urgentMs = urgentThresholdMs(slaMinutes);
+                return (
+                  <li
+                    key={e.id}
+                    className="flex items-center gap-2 rounded-md border border-ema/15 bg-ema/5 px-2 py-1.5 text-xs"
+                  >
+                    <Timer
+                      className={cn(
+                        "h-3 w-3 shrink-0",
+                        remaining <= 0
+                          ? "text-destructive"
+                          : remaining <= urgentMs
+                            ? "text-ema"
+                            : "text-muted-foreground",
+                      )}
+                    />
+                    <span className="min-w-0 flex-1 truncate text-foreground/90">
+                      {e.customer}
+                    </span>
+                    <Countdown
+                      deadlineAt={e.deadlineAt}
+                      now={now}
+                      urgentMs={urgentMs}
+                    />
+                  </li>
+                );
+              })}
               {sortedEsc.length > 3 && (
                 <li className="pl-1 text-[11px] text-muted-foreground">
                   +{sortedEsc.length - 3} more waiting
@@ -445,19 +462,38 @@ function MetricSpark({
 }
 
 /**
- * Countdown — renders the time remaining until `deadlineAt` in mm:ss for the
- * final 10 minutes, otherwise Xm. Past-due deadlines render as "OVERDUE".
+ * Urgency threshold scales with the SLA so it stays meaningful at every
+ * window — 25% of the SLA, clamped to [2min, 30min]. With a 1h SLA this
+ * yields the previous 15-minute warning; with 30m it gives ~7m; with 4h
+ * it caps at 30m so we don't scream too early.
+ */
+function urgentThresholdMs(slaMinutes: number): number {
+  const ms = slaMinutes * 60_000 * 0.25;
+  return Math.min(Math.max(ms, 2 * 60_000), 30 * 60_000);
+}
+
+/**
+ * Countdown — renders the time remaining until `deadlineAt`. Switches to
+ * mm:ss inside the urgency window, otherwise Xm. Past-due → "OVERDUE".
  * The `now` prop is owned by the parent so all timers tick in sync.
  */
-function Countdown({ deadlineAt, now }: { deadlineAt: number; now: number }) {
+function Countdown({
+  deadlineAt,
+  now,
+  urgentMs,
+}: {
+  deadlineAt: number;
+  now: number;
+  urgentMs: number;
+}) {
   const remainingMs = deadlineAt - now;
   const overdue = remainingMs <= 0;
-  const urgent = !overdue && remainingMs <= 15 * 60_000;
+  const urgent = !overdue && remainingMs <= urgentMs;
 
   let display: string;
   if (overdue) {
     display = "OVERDUE";
-  } else if (remainingMs <= 10 * 60_000) {
+  } else if (urgent) {
     const totalSec = Math.floor(remainingMs / 1000);
     const m = Math.floor(totalSec / 60);
     const s = totalSec % 60;

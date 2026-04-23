@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/dialog";
 import { accountDefaults, tenantLabels as seedLabels, labelPalette, labelColorClasses, type LabelDef, type LabelColor } from "@/lib/mock-data";
 import { clearProfile, readProfile } from "@/lib/profile";
+import { readSlaMinutes, saveSlaMinutes, SLA_PRESETS, DEFAULT_SLA_MINUTES } from "@/lib/escalation-sla";
 
 const verticals = ["Restaurant", "Hotel", "Clinic", "Tour operator", "Retail", "Other"];
 const TONE_LABELS = ["Formal", "Balanced", "Casual"];
@@ -79,6 +80,12 @@ export default function SettingsPage() {
   ]);
   const [keywordDraft, setKeywordDraft] = useState("");
   const [escalationPhone, setEscalationPhone] = useState("+1 767 245 7811");
+  // Per-business escalation SLA (countdown reply window). Persists to
+  // localStorage and notifies subscribers (Command Center) on save.
+  const [slaMinutes, setSlaMinutes] = useState<number>(DEFAULT_SLA_MINUTES);
+  useEffect(() => {
+    setSlaMinutes(readSlaMinutes());
+  }, []);
 
   // Notifications
   const [pushEnabled, setPushEnabled] = useState(false);
@@ -381,6 +388,32 @@ export default function SettingsPage() {
                   hint="Where the AI sends an SMS/WhatsApp ping when escalating."
                 >
                   <Input value={escalationPhone} onChange={(e) => setEscalationPhone(e.target.value)} />
+                </Field>
+
+                <Field
+                  label="Escalation reply SLA"
+                  hint="How long after an escalation you commit to replying. Drives the live countdown timer in your Command Center."
+                >
+                  <Select
+                    value={String(slaMinutes)}
+                    onValueChange={(v) => {
+                      const n = parseInt(v, 10);
+                      setSlaMinutes(n);
+                      saveSlaMinutes(n);
+                      toast.success(`Escalation SLA set to ${SLA_PRESETS.find((p) => p.value === n)?.label ?? `${n}m`}`);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SLA_PRESETS.map((p) => (
+                        <SelectItem key={p.value} value={String(p.value)}>
+                          {p.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </Field>
               </div>
               <SaveBar onSave={() => toast.success("Agent personality saved")} />

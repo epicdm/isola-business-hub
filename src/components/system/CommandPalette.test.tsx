@@ -40,6 +40,9 @@ describe("CommandPalette → EmaChatWidget Ask Ema wiring", () => {
     await act(async () => {
       window.dispatchEvent(new Event("isola:cmdk-open"));
     });
+    await new Promise((r) => setTimeout(r, 50));
+    // eslint-disable-next-line no-console
+    console.log("BODY HTML:", document.body.innerHTML.slice(0, 2000));
 
     const input = await screen.findByPlaceholderText(/Ask Ema or jump to anything/i, {}, { timeout: 3000 });
     fireEvent.change(input, { target: { value: "what's pacing this week" } });

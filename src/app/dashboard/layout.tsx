@@ -59,7 +59,7 @@ export default function DashboardLayout({
       <div className="flex min-w-0 flex-1 flex-col">
         <SystemStatusBar />
         <DashboardHeader />
-        <main className="flex-1 overflow-x-hidden">{children}</main>
+        <main className="flex-1 overflow-x-hidden bg-hero-timed">{children}</main>
       </div>
       <EmaChatWidget />
       <CommandPalette />

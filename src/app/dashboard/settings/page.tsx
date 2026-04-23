@@ -389,6 +389,32 @@ export default function SettingsPage() {
                 >
                   <Input value={escalationPhone} onChange={(e) => setEscalationPhone(e.target.value)} />
                 </Field>
+
+                <Field
+                  label="Escalation reply SLA"
+                  hint="How long after an escalation you commit to replying. Drives the live countdown timer in your Command Center."
+                >
+                  <Select
+                    value={String(slaMinutes)}
+                    onValueChange={(v) => {
+                      const n = parseInt(v, 10);
+                      setSlaMinutes(n);
+                      saveSlaMinutes(n);
+                      toast.success(`Escalation SLA set to ${SLA_PRESETS.find((p) => p.value === n)?.label ?? `${n}m`}`);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SLA_PRESETS.map((p) => (
+                        <SelectItem key={p.value} value={String(p.value)}>
+                          {p.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
               </div>
               <SaveBar onSave={() => toast.success("Agent personality saved")} />
             </Card>

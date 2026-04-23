@@ -101,7 +101,23 @@ export default function ShortcutsOverlay() {
     [filteredGroups],
   );
   const flatRowsCount = flatRows.length;
-  const activeRow = flatRows[activeIndex];
+  // Resolve the row defensively: during the render right after a query change
+  // `activeIndex` may briefly point past the new (smaller) list. Clamping
+  // here guarantees the details strip never blanks out mid-keystroke.
+  const safeActiveIndex =
+    flatRowsCount === 0
+      ? 0
+      : Math.min(Math.max(activeIndex, 0), flatRowsCount - 1);
+  const activeRow = flatRows[safeActiveIndex];
+
+  // Remember the last row we successfully showed so the details strip stays
+  // populated even if the user types a query that momentarily yields zero
+  // matches — they get to keep seeing what they had highlighted last.
+  const lastShownRowRef = useRef<typeof activeRow | null>(null);
+  if (activeRow) {
+    lastShownRowRef.current = activeRow;
+  }
+  const detailsRow = activeRow ?? lastShownRowRef.current;
 
   // Clamp + reset the active index when results change.
   useEffect(() => {
@@ -262,23 +278,33 @@ export default function ShortcutsOverlay() {
           ))}
         </div>
 
-        {/* Details strip — full label + group for the currently highlighted row. */}
+        {/* Details strip — stays mounted across query/keystroke changes so the
+            user always sees the most recent highlighted shortcut. Falls back
+            to the last-shown row when the current query yields no matches. */}
         <div
           aria-live="polite"
-          className="mt-3 shrink-0 rounded-md border border-border/40 bg-background/30 px-3 py-2 text-sm"
+          className={cn(
+            "mt-3 shrink-0 rounded-md border border-border/40 bg-background/30 px-3 py-2 text-sm transition-opacity",
+            !activeRow && detailsRow && "opacity-60",
+          )}
         >
-          {activeRow ? (
+          {detailsRow ? (
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
-                  {activeRow.group}
+                <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
+                  <span>{detailsRow.group}</span>
+                  {!activeRow && (
+                    <span className="rounded-full border border-border/40 px-1.5 py-px text-[9px] font-medium normal-case tracking-normal text-muted-foreground/80">
+                      no match for “{query}”
+                    </span>
+                  )}
                 </div>
                 <div className="mt-0.5 truncate text-foreground">
-                  {activeRow.row.description}
+                  {detailsRow.row.description}
                 </div>
               </div>
               <span className="flex shrink-0 items-center gap-1">
-                {activeRow.row.keys.map((k, i) =>
+                {detailsRow.row.keys.map((k, i) =>
                   k === "then" ? (
                     <span
                       key={i}

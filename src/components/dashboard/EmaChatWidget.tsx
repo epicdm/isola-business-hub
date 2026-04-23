@@ -121,17 +121,19 @@ export default function EmaChatWidget() {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             onClick={() => setOpen(true)}
-            className="group fixed bottom-6 right-6 z-50 flex h-14 items-center gap-2 overflow-hidden rounded-full bg-gradient-ema pl-4 pr-5 shadow-ema transition-all hover:scale-105 sm:h-12"
+            className="group fixed bottom-6 right-6 z-50 flex items-center gap-2.5 overflow-hidden rounded-full border border-ema/30 bg-card/80 py-1.5 pl-1.5 pr-4 shadow-ema backdrop-blur-xl transition-all hover:scale-[1.03]"
             aria-label="Ask Ema"
           >
-            <Sparkles className="h-5 w-5 shrink-0 text-ema-foreground" />
-            <span className="hidden text-sm font-semibold text-ema-foreground sm:inline">
-              Ask Ema
+            <EmaOrb size={36} pulse />
+            <span className="hidden flex-col items-start text-left leading-none sm:flex">
+              <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                Ask
+              </span>
+              <span className="mt-0.5 text-sm font-semibold text-foreground">Ema</span>
             </span>
-            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+            <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-ema text-[10px] font-bold text-ema-foreground shadow-ema">
               1
             </span>
-            <span className="absolute inset-0 -z-10 animate-ping rounded-full bg-ema/30" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -142,18 +144,19 @@ export default function EmaChatWidget() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-6 right-6 z-50 flex h-[600px] w-[400px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card"
+            className="fixed bottom-6 right-6 z-50 flex h-[600px] w-[400px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-3xl border border-border/60 bg-card shadow-float"
           >
-            <header className="flex items-center justify-between border-b border-border bg-gradient-ema px-4 py-3">
-              <div className="flex items-center gap-2">
-                <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-background/20 backdrop-blur">
-                  <Sparkles className="h-4 w-4 text-ema-foreground" />
+            <header className="relative flex items-center justify-between overflow-hidden border-b border-border/40 bg-gradient-ema-soft px-4 py-3.5">
+              <div className="absolute inset-0 grain opacity-60" />
+              <div className="relative flex items-center gap-3">
+                <div className="relative">
+                  <EmaOrb size={40} pulse={false} />
                   {connected !== null && (
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <span
-                            className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-ema ${
+                            className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-card ${
                               odooReady ? "bg-success" : "bg-warning"
                             }`}
                             aria-label={odooReady ? "Odoo connected" : "Odoo not connected"}
@@ -169,11 +172,16 @@ export default function EmaChatWidget() {
                   )}
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-ema-foreground">Ema</div>
-                  <div className="text-[11px] text-ema-foreground/70">your AI chief of staff</div>
+                  <div className="font-display text-base font-semibold leading-none">Ema</div>
+                  <div className="mt-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                    Your AI chief of staff
+                  </div>
                 </div>
               </div>
-              <button onClick={() => setOpen(false)} className="rounded-md p-1 text-ema-foreground/80 hover:bg-background/10">
+              <button
+                onClick={() => setOpen(false)}
+                className="relative rounded-md p-1.5 text-foreground/70 transition-colors hover:bg-background/40 hover:text-foreground"
+              >
                 <X className="h-4 w-4" />
               </button>
             </header>

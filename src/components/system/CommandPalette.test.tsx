@@ -44,9 +44,6 @@ describe("CommandPalette → EmaChatWidget Ask Ema wiring", () => {
       await new Promise((r) => setTimeout(r, 0));
     });
 
-    await new Promise((r) => setTimeout(r, 100));
-    // eslint-disable-next-line no-console
-    console.log("BODY:", document.body.innerHTML.slice(0, 3000));
     const input = await screen.findByPlaceholderText(/Ask Ema or jump to anything/i, {}, { timeout: 3000 });
     fireEvent.change(input, { target: { value: "what's pacing this week" } });
 

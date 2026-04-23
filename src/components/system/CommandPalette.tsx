@@ -78,13 +78,7 @@ export default function CommandPalette() {
 
   // External open trigger (header pill, kbd hint, sidebar menu)
   useEffect(() => {
-    // eslint-disable-next-line no-console
-    if (typeof process !== "undefined" && process.env.VITEST) console.log("[CMDK] mount listener");
-    const handler = () => {
-      // eslint-disable-next-line no-console
-      if (typeof process !== "undefined" && process.env.VITEST) console.log("[CMDK] open event");
-      setOpen(true);
-    };
+    const handler = () => setOpen(true);
     window.addEventListener(COMMAND_PALETTE_OPEN_EVENT, handler);
     return () => window.removeEventListener(COMMAND_PALETTE_OPEN_EVENT, handler);
   }, []);

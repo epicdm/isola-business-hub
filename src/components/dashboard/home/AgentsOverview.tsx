@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   CalendarCheck,
@@ -16,9 +17,37 @@ import {
   GraduationCap,
   Activity,
 } from "lucide-react";
-import { agentStatusMeta } from "@/lib/mock-data";
+import { agentStatusMeta, getAgentActivity, type AgentStatus } from "@/lib/mock-data";
 import type { AgentSnapshot, AgentTag } from "@/lib/home-data";
 import { cn } from "@/lib/utils";
+import { DND_EVENT, readDnd } from "@/lib/system-flags";
+
+// Map raw agent.status → presence state used by the dot in the card corner.
+type Presence = "on" | "busy" | "paused" | "off";
+
+function presenceFor(status: AgentStatus): Presence {
+  switch (status) {
+    case "active":
+    case "on_shift":
+      return "on";
+    case "on_probation":
+      return "busy";
+    case "paused":
+      return "paused";
+    default:
+      return "off";
+  }
+}
+
+const presenceMeta: Record<
+  Presence,
+  { label: string; dot: string; ring: string; pulse: "breathe" | "ping" | "slow" | "none" }
+> = {
+  on: { label: "On shift", dot: "bg-success", ring: "ring-success/40", pulse: "breathe" },
+  busy: { label: "Working through drafts", dot: "bg-success", ring: "ring-success/50", pulse: "ping" },
+  paused: { label: "Paused", dot: "bg-warning", ring: "ring-warning/30", pulse: "slow" },
+  off: { label: "Off duty", dot: "bg-muted-foreground/40", ring: "ring-muted/40", pulse: "none" },
+};
 
 type Props = {
   snapshots: AgentSnapshot[];

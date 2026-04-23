@@ -24,6 +24,7 @@ import {
 import { readSlaMinutes } from "@/lib/escalation-sla";
 import { accountDefaults, bookings as allBookings } from "@/lib/mock-data";
 import { readProfile } from "@/lib/profile";
+import ArrivalSequence from "@/components/system/ArrivalSequence";
 
 /**
  * /dashboard/home — Isola business command center.
@@ -105,6 +106,7 @@ export default function HomePage() {
 
   return (
     <DashboardLayout currentPath="/dashboard/home">
+      <ArrivalSequence />
       <div className="mx-auto max-w-7xl space-y-6 p-5 sm:p-7 lg:p-8">
         {/* 1. Arrival */}
         <ExecutiveHeader

@@ -68,12 +68,33 @@ export type DailyOutcomes = {
   revenueInfluenced: number;
   /** Approximate avg response time in seconds (mock anchor). */
   avgResponseSec: number;
+  /** Yesterday's snapshot for comparison rendering. */
+  yesterday: {
+    messages: number;
+    bookings: number;
+    autoPct: number;
+    revenueInfluenced: number;
+    avgResponseSec: number;
+  };
+  /** Pre-computed deltas vs. yesterday — UI renders directly. */
+  deltas: {
+    messagesPct: number;
+    bookingsPct: number;
+    autoPctDelta: number;
+    revenuePct: number;
+    responseDeltaSec: number;
+  };
 };
 
 const AVG_TICKET_XCD = 95;
 
 export function getDailyOutcomes(activity: AgentActivityEntry[]): DailyOutcomes {
   const today = activity.filter((a) => parseAgo(a.time) <= 24 * 60);
+  const yest = activity.filter((a) => {
+    const ago = parseAgo(a.time);
+    return ago > 24 * 60 && ago <= 48 * 60;
+  });
+
   const messages = today.length;
   const bookings = today.filter((a) => a.outcome === "booked").length;
   const autoResolved = today.filter((a) => a.outcome === "answered").length;
@@ -81,6 +102,13 @@ export function getDailyOutcomes(activity: AgentActivityEntry[]): DailyOutcomes 
   const autoPct = messages
     ? Math.round(((autoResolved + bookings) / messages) * 100)
     : 100;
+
+  const yMessages = yest.length;
+  const yBookings = yest.filter((a) => a.outcome === "booked").length;
+  const yAutoOk = yest.filter((a) => a.outcome !== "escalated").length;
+  const yAutoPct = yMessages ? Math.round((yAutoOk / yMessages) * 100) : 100;
+  const yRevenue = yBookings * AVG_TICKET_XCD;
+  const yAvgResponseSec = 2.7;
 
   // 12 hourly buckets, oldest → newest left → right
   const hourlyVolume = Array.from({ length: 12 }, (_, i) => {
@@ -92,6 +120,11 @@ export function getDailyOutcomes(activity: AgentActivityEntry[]): DailyOutcomes 
     }).length;
   });
 
+  const pctChange = (now: number, then: number): number => {
+    if (then === 0) return now > 0 ? 100 : 0;
+    return Math.round(((now - then) / then) * 100);
+  };
+
   return {
     messages,
     bookings,
@@ -101,6 +134,20 @@ export function getDailyOutcomes(activity: AgentActivityEntry[]): DailyOutcomes 
     hourlyVolume,
     revenueInfluenced: bookings * AVG_TICKET_XCD,
     avgResponseSec: 2.4,
+    yesterday: {
+      messages: yMessages,
+      bookings: yBookings,
+      autoPct: yAutoPct,
+      revenueInfluenced: yRevenue,
+      avgResponseSec: yAvgResponseSec,
+    },
+    deltas: {
+      messagesPct: pctChange(messages, yMessages),
+      bookingsPct: pctChange(bookings, yBookings),
+      autoPctDelta: autoPct - yAutoPct,
+      revenuePct: pctChange(bookings * AVG_TICKET_XCD, yRevenue),
+      responseDeltaSec: +(2.4 - yAvgResponseSec).toFixed(1),
+    },
   };
 }
 

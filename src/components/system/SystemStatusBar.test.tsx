@@ -186,7 +186,7 @@ describe("SystemStatusBar — AmbientTicker idle vs active", () => {
     // layout primitives that make the swap read as "smooth" rather than janky:
     // centered flex, no-wrap, ellipsis truncation.
     const customerEl = screen.getByText("Carlos R.");
-    const motionRow = customerEl.closest("[class*='whitespace-nowrap']") as HTMLElement | null;
+    const motionRow = customerEl.closest("[class*='justify-center']") as HTMLElement | null;
     expect(motionRow).not.toBeNull();
     expect(motionRow!.className).toMatch(/flex/);
     expect(motionRow!.className).toMatch(/items-center/);

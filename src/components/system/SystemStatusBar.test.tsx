@@ -126,20 +126,29 @@ describe("SystemStatusBar — AmbientTicker idle vs active", () => {
     }
   });
 
-  it("transitions from idle → active when an event arrives via re-render", async () => {
-    // Start idle.
+  it("transitions from idle → active with the expected CSS/DOM class shape", async () => {
+    // ---- Idle frame ---------------------------------------------------------
     getAllActivityMock.mockReturnValue([]);
     const { rerender, unmount } = renderBar();
     await act(async () => {
       await new Promise((r) => setTimeout(r, 0));
     });
-    expect(
-      screen.getByText(/Quiet moment\. All agents standing by\./i),
-    ).toBeInTheDocument();
 
-    // The ticker memoizes events at mount, so to verify the active path renders
-    // after a transition we unmount and remount with new mock data — this
-    // simulates the next page visit when activity has arrived.
+    const idle = screen.getByText(/Quiet moment\. All agents standing by\./i);
+    // Idle DOM contract: a plain <div> (NOT a button) carrying the calm
+    // opacity-60 hook plus the centered, truncated layout classes. This is
+    // what makes the bar "exhale" when nothing is happening.
+    expect(idle.tagName).toBe("DIV");
+    expect(idle.className).toMatch(/opacity-60/);
+    expect(idle.className).toMatch(/text-center/);
+    expect(idle.className).toMatch(/truncate/);
+    expect(idle.className).toMatch(/flex-1/);
+    // No active-state machinery should be in the DOM yet.
+    expect(screen.queryByTitle(/open inbox/i)).toBeNull();
+
+    // ---- Transition to active ----------------------------------------------
+    // The ticker memoizes events at mount, so remounting with new mock data
+    // simulates the next render tick when activity has arrived.
     unmount();
     getAllActivityMock.mockReturnValue([
       {
@@ -157,11 +166,37 @@ describe("SystemStatusBar — AmbientTicker idle vs active", () => {
       await new Promise((r) => setTimeout(r, 0));
     });
 
-    expect(screen.getByText("Carlos R.")).toBeInTheDocument();
-    expect(screen.getByText(/Booked a table for tomorrow\./i)).toBeInTheDocument();
+    // ---- Active frame -------------------------------------------------------
+    // Idle copy is gone.
     expect(
       screen.queryByText(/Quiet moment\. All agents standing by\./i),
     ).toBeNull();
+
+    // Active DOM contract: the ticker is now a focusable <button> wrapping the
+    // event row, and the row itself is the framer-motion node carrying the
+    // smooth-transition layout classes.
+    const triggerBtn = screen.getByTitle(/open inbox/i);
+    expect(triggerBtn.tagName).toBe("BUTTON");
+    // The button must NOT carry the idle opacity hook — the bar is "alive" now.
+    expect(triggerBtn.className).not.toMatch(/opacity-60/);
+    expect(triggerBtn.className).toMatch(/flex-1/);
+    expect(triggerBtn.className).toMatch(/overflow-hidden/);
+
+    // The motion row is the direct child of the button; assert the transition
+    // layout primitives that make the swap read as "smooth" rather than janky:
+    // centered flex, no-wrap, ellipsis truncation.
+    const customerEl = screen.getByText("Carlos R.");
+    const motionRow = customerEl.closest("[class*='whitespace-nowrap']") as HTMLElement | null;
+    expect(motionRow).not.toBeNull();
+    expect(motionRow!.className).toMatch(/flex/);
+    expect(motionRow!.className).toMatch(/items-center/);
+    expect(motionRow!.className).toMatch(/justify-center/);
+    expect(motionRow!.className).toMatch(/whitespace-nowrap/);
+    expect(motionRow!.className).toMatch(/overflow-hidden/);
+    expect(motionRow!.className).toMatch(/text-ellipsis/);
+    // And of course the actual content is rendered.
+    expect(screen.getByText(/Booked a table for tomorrow\./i)).toBeInTheDocument();
+
     // Mark rerender as used (kept for clarity in case future tests need it).
     void rerender;
   });

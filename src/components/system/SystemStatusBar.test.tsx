@@ -227,4 +227,66 @@ describe("SystemStatusBar — AmbientTicker idle vs active", () => {
       screen.queryByText(/Should not be shown while DnD is on\./i),
     ).toBeNull();
   });
+
+  it("never wraps the ticker preview at small widths (overflow-hidden + whitespace-nowrap contract)", async () => {
+    // A deliberately long preview — if wrapping were allowed, this would push
+    // the 36px bar to two lines on narrow viewports. The contract below
+    // guarantees the row stays a single ellipsised line at any width.
+    getAllActivityMock.mockReturnValue([
+      {
+        id: "agent-maya-act-9",
+        channel: "whatsapp",
+        customer: "Joana M.",
+        preview:
+          "This is an intentionally very long preview that would absolutely wrap onto a second line if the ticker container ever lost its no-wrap contract at small widths.",
+        time: "1m ago",
+        outcome: "resolved",
+      },
+    ]);
+
+    renderBar();
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0));
+    });
+
+    // 1. The center ticker SLOT itself (the wrapper that holds AmbientTicker)
+    //    must be hidden below md so the right cluster owns the bar on mobile.
+    //    This is the first line of defense against wrapping at small widths:
+    //    on phones the ticker simply isn't rendered visually.
+    const customerEl = screen.getByText("Joana M.");
+    const slot = customerEl.closest("div.hidden.md\\:flex") as HTMLElement | null;
+    expect(slot).not.toBeNull();
+    expect(slot!.className).toMatch(/hidden/);
+    expect(slot!.className).toMatch(/md:flex/);
+    // Slot must constrain width so the inner button/row can truncate against it.
+    expect(slot!.className).toMatch(/min-w-0/);
+    expect(slot!.className).toMatch(/flex-1/);
+
+    // 2. The ticker BUTTON (the AmbientTicker root when active) must clip
+    //    overflow so a long preview cannot push the 36px bar taller.
+    const triggerBtn = screen.getByTitle(/open inbox/i);
+    expect(triggerBtn.tagName).toBe("BUTTON");
+    expect(triggerBtn.className).toMatch(/overflow-hidden/);
+    expect(triggerBtn.className).toMatch(/min-w-0/);
+    expect(triggerBtn.className).toMatch(/flex-1/);
+
+    // 3. The motion ROW inside the button must forbid wrapping and ellipsise.
+    const motionRow = customerEl.closest(
+      "[class*='justify-center']",
+    ) as HTMLElement | null;
+    expect(motionRow).not.toBeNull();
+    expect(motionRow!.className).toMatch(/whitespace-nowrap/);
+    expect(motionRow!.className).toMatch(/overflow-hidden/);
+    expect(motionRow!.className).toMatch(/text-ellipsis/);
+
+    // 4. The inner <span> that actually carries the long text must ALSO carry
+    //    the no-wrap + ellipsis contract, otherwise the text node could wrap
+    //    inside the row even if the row itself doesn't.
+    const innerSpan = customerEl.parentElement as HTMLElement | null;
+    expect(innerSpan).not.toBeNull();
+    expect(innerSpan!.tagName).toBe("SPAN");
+    expect(innerSpan!.className).toMatch(/whitespace-nowrap/);
+    expect(innerSpan!.className).toMatch(/overflow-hidden/);
+    expect(innerSpan!.className).toMatch(/text-ellipsis/);
+  });
 });
